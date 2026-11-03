@@ -11,14 +11,17 @@
   const USER_ROUTES = ['inicio', 'agendar', 'reservas', 'planes', 'pagos', 'entrenamiento', 'perfil'];
   const ADMIN_ROUTES = [
     'admin', 'admin/agenda', 'admin/usuarios', 'admin/planes', 'admin/pagos',
-    'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/configuracion', 'admin/seguridad',
+    'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/resenas',
+    'admin/configuracion', 'admin/seguridad',
   ];
-  const PUBLIC_ROUTES = ['login', 'cotizar', 'cotizar-gracias'];
+  const PUBLIC_ROUTES = ['login', 'cotizar', 'cotizar-gracias', 'resenas', 'sauna'];
 
   const TITLES = {
     login: 'Ingresar',
     cotizar: 'Cotización empresas',
     'cotizar-gracias': 'Solicitud recibida',
+    resenas: 'Reseñas de clientes',
+    sauna: 'Beneficios del sauna húmedo',
     inicio: 'Inicio',
     agendar: 'Agendar sesión',
     reservas: 'Mis reservas',
@@ -34,6 +37,7 @@
     'admin/finanzas': 'Finanzas',
     'admin/honorarios': 'Honorarios',
     'admin/cotizaciones': 'Cotizaciones',
+    'admin/resenas': 'Reseñas',
     'admin/configuracion': 'Configuración',
     'admin/seguridad': 'Seguridad',
   };
@@ -65,6 +69,7 @@
           { route: 'admin/finanzas', icon: 'bar-chart', label: 'Finanzas' },
           { route: 'admin/honorarios', icon: 'receipt', label: 'Honorarios' },
           { route: 'admin/cotizaciones', icon: 'briefcase', label: 'Cotizaciones', badge: quotes },
+          { route: 'admin/resenas', icon: 'message-square', label: 'Reseñas' },
         ] },
         { label: 'Sistema', items: [
           { route: 'admin/configuracion', icon: 'settings', label: 'Configuración' },
@@ -78,11 +83,13 @@
         { route: 'inicio', icon: 'grid', label: 'Inicio' },
         { route: 'agendar', icon: 'calendar', label: 'Agendar sesión' },
         { route: 'reservas', icon: 'calendar-check', label: 'Mis reservas' },
+        { route: 'sauna', icon: 'droplet', label: 'Sauna húmedo' },
       ] },
       { label: 'Mi cuenta', items: [
         { route: 'planes', icon: 'layers', label: 'Planes' },
         { route: 'pagos', icon: 'credit-card', label: 'Pagos', badge: pending },
         { route: 'entrenamiento', icon: 'activity', label: 'Entrenamiento' },
+        { route: 'resenas', icon: 'star', label: 'Reseñas' },
         { route: 'perfil', icon: 'user', label: 'Mi perfil' },
       ] },
     ];
@@ -140,7 +147,7 @@
         <strong>${role === 'admin' ? 'Panel de administración' : 'Mi cuenta'}</strong>
       </div>
       <div class="topbar-actions">
-        <span class="demo-chip" title="Datos guardados localmente en este navegador">${UI.icon('sparkles', 13)} Demo local</span>
+        <span class="demo-chip" title="Tu cuenta y reservas se guardan en este navegador. Las reseñas son compartidas.">${UI.icon('sparkles', 13)} Datos locales</span>
         <a class="icon-btn topbar-help" href="${RS.data.whatsappUrl('Hola Recovery Studio, necesito ayuda.')}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${UI.icon('whatsapp', 19)}</a>
         <a class="icon-btn topbar-bell" href="#/${notificationRoute}" title="Notificaciones" aria-label="Notificaciones">${UI.icon('bell', 19)}${badge ? `<span class="bell-badge">${badge}</span>` : ''}</a>
         <a class="topbar-user" href="#/${role === 'admin' ? 'admin/seguridad' : 'perfil'}" title="Mi cuenta">
@@ -172,6 +179,8 @@
       login: () => RS.Auth.renderLogin(),
       cotizar: () => RS.Auth.renderQuote(),
       'cotizar-gracias': () => RS.Auth.renderQuoteThanks(),
+      resenas: () => RS.Reviews.renderReviewsPage(),
+      sauna: () => RS.Reviews.renderSaunaPage(),
       inicio: () => RS.User.renderHome(),
       agendar: () => RS.User.renderBooking(),
       reservas: () => RS.User.renderAppointments(),
@@ -187,6 +196,7 @@
       'admin/finanzas': () => RS.Admin.renderFinance(),
       'admin/honorarios': () => RS.Admin.renderHonorarios(),
       'admin/cotizaciones': () => RS.Admin.renderQuotes(),
+      'admin/resenas': () => RS.Reviews.renderAdminPage(),
       'admin/configuracion': () => RS.Admin.renderSettings(),
       'admin/seguridad': () => RS.Admin.renderSecurity(),
     };
@@ -253,6 +263,11 @@
       app.innerHTML = view();
     } else {
       app.innerHTML = renderShell(session.role, view());
+    }
+    try {
+      if (RS.Reviews && RS.Reviews.mount) RS.Reviews.mount(route);
+    } catch (err) {
+      console.error(err);
     }
     document.title = `${TITLES[route] || 'Recovery Studio'} · Recovery Studio`;
     document.body.dataset.role = session ? session.role : 'public';

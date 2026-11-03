@@ -398,6 +398,7 @@
               <li>${UI.icon('check-circle', 18)} Agenda online y reagenda con 12 h de anticipación.</li>
               <li>${UI.icon('check-circle', 18)} Tu rutina y maximales siempre disponibles.</li>
               <li>${UI.icon('check-circle', 18)} Paga por transferencia y envía tu comprobante.</li>
+              <li>${UI.icon('check-circle', 18)} Sauna húmedo para recuperar y soltar tensión.</li>
             </ul>
             <div class="hero-stats">
               <div><strong>12 h</strong><span>Política de cambios</span></div>
@@ -446,6 +447,12 @@
             <span><strong>¿Representas una empresa?</strong><span>Cotiza programas de bienestar para tu equipo</span></span>
             ${UI.icon('arrow-right', 18)}
           </a>
+          <a class="company-cta sauna-cta" href="#/sauna">
+            <span class="company-cta-icon">${UI.icon('droplet', 20)}</span>
+            <span><strong>Beneficios del sauna húmedo</strong><span>Calor, movilidad y recuperación profunda</span></span>
+            ${UI.icon('arrow-right', 18)}
+          </a>
+          <a class="reviews-teaser" href="#/resenas" data-reviews-teaser hidden aria-label="Ver reseñas y calificaciones de clientes"></a>
           <p class="auth-legal">
             <button class="link-btn" data-action="show-terms">Términos</button>
             <span>·</span>
@@ -471,14 +478,14 @@
           <label for="login-identifier">Correo o nombre</label>
           <div class="input-icon">
             ${UI.icon('user', 18)}
-            <input id="login-identifier" name="identifier" type="text" autocomplete="username" placeholder="tu@correo.cl" required>
+            <input class="input" id="login-identifier" name="identifier" type="text" autocomplete="username" placeholder="tu@correo.cl" required>
           </div>
         </div>
         <div class="field">
           <label for="login-password">Contraseña</label>
           <div class="input-icon has-action">
             ${UI.icon('lock', 18)}
-            <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required>
+            <input class="input" id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required>
             <button type="button" class="input-action" data-action="toggle-password" data-target="login-password" aria-label="Mostrar contraseña">${UI.icon('eye', 18)}</button>
           </div>
         </div>
@@ -499,7 +506,7 @@
           <span class="demo-text"><strong>Admin demo</strong><span>recoverystudio7@gmail.com · PIN 2468</span></span>
         </button>
       </div>
-      <p class="auth-tip">${UI.icon('info', 14)} Demo funcional: los datos se guardan solo en este navegador.</p>
+      <p class="auth-tip">${UI.icon('info', 14)} Demo funcional: tu cuenta y reservas se guardan en este navegador. Las reseñas sí son compartidas.</p>
     </div>`;
   }
 
@@ -513,16 +520,16 @@
       <form data-form="register" novalidate>
         <div class="field">
           <label for="reg-name">Nombre completo</label>
-          <div class="input-icon">${UI.icon('user', 18)}<input id="reg-name" name="name" type="text" autocomplete="name" placeholder="Nombre y apellido" required></div>
+          <div class="input-icon">${UI.icon('user', 18)}<input class="input" id="reg-name" name="name" type="text" autocomplete="name" placeholder="Nombre y apellido" required></div>
         </div>
         <div class="grid grid-2 gap-sm">
           <div class="field">
             <label for="reg-email">Correo</label>
-            <div class="input-icon">${UI.icon('mail', 18)}<input id="reg-email" name="email" type="email" autocomplete="email" placeholder="tu@correo.cl" required></div>
+            <div class="input-icon">${UI.icon('mail', 18)}<input class="input" id="reg-email" name="email" type="email" autocomplete="email" placeholder="tu@correo.cl" required></div>
           </div>
           <div class="field">
             <label for="reg-phone">WhatsApp</label>
-            <div class="input-icon">${UI.icon('phone', 18)}<input id="reg-phone" name="phone" type="tel" autocomplete="tel" placeholder="+56 9 …" required></div>
+            <div class="input-icon">${UI.icon('phone', 18)}<input class="input" id="reg-phone" name="phone" type="tel" autocomplete="tel" placeholder="+56 9 …" required></div>
           </div>
         </div>
         <div class="grid grid-2 gap-sm">
@@ -530,13 +537,13 @@
             <label for="reg-password">Contraseña</label>
             <div class="input-icon has-action">
               ${UI.icon('lock', 18)}
-              <input id="reg-password" name="password" type="password" autocomplete="new-password" placeholder="Mín. 8 caracteres" required>
+              <input class="input" id="reg-password" name="password" type="password" autocomplete="new-password" placeholder="Mín. 8 caracteres" required>
               <button type="button" class="input-action" data-action="toggle-password" data-target="reg-password" aria-label="Mostrar contraseña">${UI.icon('eye', 18)}</button>
             </div>
           </div>
           <div class="field">
             <label for="reg-confirm">Repetir contraseña</label>
-            <div class="input-icon">${UI.icon('lock', 18)}<input id="reg-confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Repite tu clave" required></div>
+            <div class="input-icon">${UI.icon('lock', 18)}<input class="input" id="reg-confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Repite tu clave" required></div>
           </div>
         </div>
         <label class="check check-top"><input type="checkbox" name="terms" required><span>Acepto los términos y la política de reagendamiento de 12 h.</span></label>
