@@ -1,0 +1,966 @@
+/* ==========================================================================
+   Recovery Studio — Autenticación, seguridad y cotizaciones públicas
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  const RS = (window.RS = window.RS || {});
+  const U = RS.util;
+  const UI = RS.UI;
+
+  RS.actions = RS.actions || {};
+  RS.forms = RS.forms || {};
+  RS.changes = RS.changes || {};
+  RS.inputs = RS.inputs || {};
+
+  let currentSession = null;
+  let pendingAdmin = null;
+  let locking = false;
+  let activityBound = false;
+
+  function state() {
+    return RS.DB.get();
+  }
+
+  function saveSession() {
+    if (!currentSession) return;
+    try {
+      sessionStorage.setItem(RS.SESSION_KEY, JSON.stringify(currentSession));
+    } catch (e) {
+      /* noop */
+    }
+  }
+
+  function clearSession() {
+    currentSession = null;
+    try {
+      sessionStorage.removeItem(RS.SESSION_KEY);
+    } catch (e) {
+      /* noop */
+    }
+  }
+
+  function validateSession(session) {
+    if (!session || !session.userId) return false;
+    const user = RS.data.getUser(session.userId);
+    if (!user || !user.active) return false;
+    if (session.role === 'admin' && session.stamp !== RS.DB.stamp()) return false;
+    const age = Date.now() - (session.createdAt || 0);
+    if (age > 12 * 3600000) return false;
+    return true;
+  }
+
+  function getSession() {
+    if (currentSession && validateSession(currentSession)) return currentSession;
+    try {
+      const raw = sessionStorage.getItem(RS.SESSION_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!validateSession(parsed)) {
+        clearSession();
+        return null;
+      }
+      currentSession = parsed;
+      return currentSession;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function getUser() {
+    const session = getSession();
+    return session ? RS.data.getUser(session.userId) : null;
+  }
+
+  function isAdmin() {
+    return getSession() && getSession().role === 'admin';
+  }
+
+  function startSession(user) {
+    currentSession = {
+      userId: user.id,
+      role: user.role,
+      name: user.name,
+      stamp: user.role === 'admin' ? RS.DB.stamp() : '',
+      createdAt: Date.now(),
+      lastActivity: Date.now(),
+    };
+    saveSession();
+  }
+
+  function logout(options) {
+    const o = options || {};
+    const user = getUser();
+    if (user && o.silent !== true) {
+      RS.data.addAudit(user.name, 'Cierre de sesión', o.reason || 'Cierre de sesión manual.');
+    }
+    clearSession();
+    locking = false;
+    if (RS.App && RS.App.go) {
+      RS.App.go('login');
+      if (location.hash === '#/login') RS.App.render(true);
+    } else {
+      location.hash = '#/login';
+    }
+    if (o.toast) UI.toast(o.toast, 'info');
+  }
+
+  function touch() {
+    if (!currentSession) return;
+    currentSession.lastActivity = Date.now();
+  }
+
+  function checkAutoLock() {
+    const session = getSession();
+    if (!session || session.role !== 'admin') return;
+    const settings = state().settings;
+    const limit = Math.max(1, Number(settings.autoLockMin) || 15) * 60000;
+    if (Date.now() - (session.lastActivity || session.createdAt) > limit && !locking) {
+      showLockScreen(true);
+    }
+  }
+
+  function initActivity() {
+    if (activityBound) return;
+    activityBound = true;
+    const bump = () => {
+      if (currentSession && !locking) touch();
+    };
+    document.addEventListener('pointerdown', bump, { passive: true });
+    document.addEventListener('keydown', bump);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) checkAutoLock();
+    });
+    setInterval(checkAutoLock, 15000);
+  }
+
+  async function verifyPin(pin) {
+    const st = state();
+    const sec = st.security;
+    if (Date.now() < (sec.pinLockUntil || 0)) {
+      return { ok: false, locked: true, waitMs: sec.pinLockUntil - Date.now() };
+    }
+    const hashed = await U.hashPassword(pin);
+    if (hashed === sec.adminPinHash) {
+      sec.pinFailures = 0;
+      sec.pinLockUntil = 0;
+      RS.DB.save();
+      return { ok: true };
+    }
+    sec.pinFailures = (Number(sec.pinFailures) || 0) + 1;
+    let locked = false;
+    if (sec.pinFailures >= 5) {
+      sec.pinLockUntil = Date.now() + 2 * 60000;
+      sec.pinFailures = 0;
+      locked = true;
+      RS.data.addAudit('Sistema', 'PIN bloqueado', 'Se superaron 5 intentos fallidos. Bloqueo temporal de 2 minutos.');
+    }
+    RS.DB.save();
+    return { ok: false, locked, attemptsLeft: sec.pinFailures ? 5 - sec.pinFailures : 0, waitMs: locked ? 120000 : 0 };
+  }
+
+  function pinModal(opts) {
+    const o = opts || {};
+    let timer = null;
+    const root = UI.modal({
+      title: o.title || 'Verificación en dos pasos',
+      subtitle: o.subtitle || 'Ingresa tu PIN de seguridad para continuar.',
+      size: 'sm',
+      dismissible: o.dismissible !== false,
+      body: `<div class="pin-wrap">
+        <span class="pin-lock">${UI.icon('shield-check', 26)}</span>
+        <label class="pin-label" for="admin-pin">PIN de 4 dígitos</label>
+        <input id="admin-pin" class="pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="••••" aria-label="PIN de administrador">
+        <p class="pin-error" id="pin-error" role="alert"></p>
+        <p class="pin-hint">${o.hint === false ? '' : 'PIN demo: <strong>2468</strong> · cámbialo en Seguridad.'}</p>
+      </div>`,
+      footer: `${o.dismissible === false ? '<button class="btn btn-ghost" data-action="force-logout">Cerrar sesión</button>' : '<button class="btn btn-ghost" data-modal-close>Cancelar</button>'}
+        <button class="btn btn-primary" data-pin-submit>${o.buttonLabel || 'Verificar PIN'}</button>`,
+    });
+    if (!root) return;
+    const input = root.querySelector('#admin-pin');
+    const error = root.querySelector('#pin-error');
+    const submitBtn = root.querySelector('[data-pin-submit]');
+    let busy = false;
+
+    const setError = (msg, tone) => {
+      error.textContent = msg || '';
+      error.className = `pin-error ${tone ? `is-${tone}` : ''}`;
+      input.classList.toggle('is-error', !!msg);
+    };
+
+    const startCountdown = (waitMs) => {
+      const end = Date.now() + waitMs;
+      input.disabled = true;
+      submitBtn.disabled = true;
+      const tick = () => {
+        const left = Math.max(0, end - Date.now());
+        if (left <= 0) {
+          clearInterval(timer);
+          input.disabled = false;
+          submitBtn.disabled = false;
+          setError('');
+          input.focus();
+          return;
+        }
+        setError(`Demasiados intentos. Espera ${Math.ceil(left / 1000)} s.`, 'error');
+      };
+      tick();
+      timer = setInterval(tick, 500);
+    };
+
+    const submit = async () => {
+      if (busy) return;
+      const value = input.value.replace(/\D/g, '');
+      if (value.length !== 4) {
+        setError('Ingresa los 4 dígitos de tu PIN.');
+        input.focus();
+        return;
+      }
+      busy = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Verificando…';
+      const result = await verifyPin(value);
+      busy = false;
+      submitBtn.disabled = false;
+      submitBtn.textContent = o.buttonLabel || 'Verificar PIN';
+
+      if (result.ok) {
+        clearInterval(timer);
+        if (o.onSuccess) {
+          o.onSuccess(result);
+        } else {
+          unlockSession();
+        }
+        return;
+      }
+      if (result.locked) {
+        setError('PIN bloqueado por seguridad. Espera 2 minutos.', 'error');
+        startCountdown(result.waitMs || 120000);
+        input.value = '';
+        return;
+      }
+      input.value = '';
+      input.classList.remove('shake');
+      void input.offsetWidth;
+      input.classList.add('shake');
+      input.focus();
+      setError(result.attemptsLeft != null ? `PIN incorrecto. Te quedan ${result.attemptsLeft} intentos.` : 'PIN incorrecto.', 'error');
+    };
+
+    submitBtn.addEventListener('click', submit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submit();
+      }
+    });
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/\D/g, '').slice(0, 4);
+      setError('');
+    });
+    setTimeout(() => input.focus(), 80);
+  }
+
+  function openAdminPin(user) {
+    pendingAdmin = user;
+    pinModal({
+      title: 'Acceso administrador',
+      subtitle: `Hola ${user.name.split(' ')[0]}. Confirma tu identidad con el PIN de seguridad.`,
+      buttonLabel: 'Entrar al panel',
+      onSuccess: () => {
+        if (!pendingAdmin) return;
+        startSession(pendingAdmin);
+        RS.data.addAudit(pendingAdmin.name, 'Acceso administrador', 'Inicio de sesión con contraseña y PIN correctos.');
+        pendingAdmin = null;
+        UI.closeModal();
+        initActivity();
+        UI.toast('Acceso verificado. Bienvenido, Daniel.', 'success');
+        RS.App.go('admin');
+      },
+    });
+  }
+
+  function showLockScreen(auto) {
+    locking = true;
+    const session = getSession();
+    pinModal({
+      title: 'Sesión bloqueada',
+      subtitle: auto ? 'Bloqueamos tu panel por inactividad para proteger la información.' : 'Ingresa tu PIN para desbloquear el panel.',
+      dismissible: false,
+      buttonLabel: 'Desbloquear',
+      hint: false,
+      onSuccess: () => {
+        const s = getSession();
+        if (s) {
+          s.lastActivity = Date.now();
+          saveSession();
+        }
+        locking = false;
+        UI.closeModal();
+        RS.data.addAudit((session && session.name) || 'Administrador', 'Sesión desbloqueada', 'PIN correcto.');
+        UI.toast('Panel desbloqueado.', 'success');
+      },
+    });
+  }
+
+  function unlockSession() {
+    const s = getSession();
+    if (s) {
+      s.lastActivity = Date.now();
+      saveSession();
+    }
+    locking = false;
+    UI.closeModal();
+  }
+
+  async function attemptLogin(identifier, password) {
+    const st = state();
+    const idNorm = U.normalize(identifier);
+    const user = st.users.find(
+      (u) => U.normalize(u.email) === idNorm || (idNorm.length > 3 && U.normalize(u.name) === idNorm)
+    );
+    if (!user) return { ok: false, error: 'No encontramos una cuenta con ese correo o nombre.' };
+    if (!user.active) return { ok: false, error: 'Tu cuenta está desactivada. Contacta al studio por WhatsApp.' };
+    const hashed = await U.hashPassword(password);
+    if (hashed !== user.passwordHash) return { ok: false, error: 'La contraseña no es correcta. Intenta nuevamente.' };
+    if (user.role === 'admin') return { ok: true, needsPin: true, user };
+    startSession(user);
+    RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso de usuario a la app.');
+    return { ok: true, needsPin: false, user };
+  }
+
+  async function changePassword(user, currentPassword, newPassword) {
+    const currentHash = await U.hashPassword(currentPassword);
+    if (currentHash !== user.passwordHash) return { ok: false, error: 'La contraseña actual no es correcta.' };
+    if (String(newPassword).length < 8) return { ok: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' };
+    user.passwordHash = await U.hashPassword(newPassword);
+    state().security.lastPasswordChange = new Date().toISOString();
+    RS.DB.save();
+    RS.data.addAudit(user.name, 'Contraseña actualizada', 'Cambio de contraseña desde la app.');
+    return { ok: true };
+  }
+
+  async function changePin(currentPin, newPin) {
+    const pin = String(newPin);
+    if (!/^\d{4}$/.test(pin)) return { ok: false, error: 'El nuevo PIN debe tener exactamente 4 dígitos.' };
+    const check = await verifyPin(currentPin);
+    if (!check.ok) {
+      if (check.locked) return { ok: false, error: 'PIN bloqueado temporalmente. Espera 2 minutos.' };
+      return { ok: false, error: 'El PIN actual no es correcto.' };
+    }
+    state().security.adminPinHash = await U.hashPassword(pin);
+    RS.DB.save();
+    RS.data.addAudit('Administrador', 'PIN actualizado', 'Se modificó el PIN de seguridad del panel.');
+    return { ok: true };
+  }
+
+  /* ------------------------------- vistas login ---------------------------- */
+
+  function loginError(message) {
+    const box = document.getElementById('auth-error');
+    if (!box) {
+      UI.toast(message, 'error');
+      return;
+    }
+    box.textContent = message;
+    box.classList.add('show');
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function setLoading(btn, loading, label) {
+    if (!btn) return;
+    if (loading) {
+      btn.dataset.label = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner"></span>${U.esc(label || 'Ingresando…')}`;
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = btn.dataset.label || label || 'Ingresar';
+    }
+  }
+
+  function renderLogin() {
+    const tab = (RS.ui && RS.ui.authTab) || 'login';
+    const isRegister = tab === 'register';
+    return `<div class="auth-page">
+      <section class="auth-hero">
+        <div class="hero-orb hero-orb-1"></div>
+        <div class="hero-orb hero-orb-2"></div>
+        <div class="hero-grid"></div>
+        <div class="auth-hero-inner">
+          <a class="brand-link" href="#/login" aria-label="Recovery Studio">${UI.logoLockup({ light: true, size: 44 })}</a>
+          <div class="hero-copy">
+            <span class="hero-eyebrow">${UI.icon('sparkles', 14)} Agenda · Recuperación · Performance</span>
+            <h1>Recupera mejor.<br><em>Vuelve más fuerte.</em></h1>
+            <p class="hero-lead">Reserva tus sesiones, sigue tu plan de entrenamiento y revisa tus maximales en un solo lugar. Recuperación profesional, sin fricción.</p>
+            <ul class="hero-list">
+              <li>${UI.icon('check-circle', 18)} Agenda online y reagenda con 12 h de anticipación.</li>
+              <li>${UI.icon('check-circle', 18)} Tu rutina y maximales siempre disponibles.</li>
+              <li>${UI.icon('check-circle', 18)} Paga por transferencia y envía tu comprobante.</li>
+            </ul>
+            <div class="hero-stats">
+              <div><strong>12 h</strong><span>Política de cambios</span></div>
+              <div><strong>1:1</strong><span>Atención personalizada</span></div>
+              <div><strong>100%</strong><span>Seguimiento</span></div>
+            </div>
+          </div>
+          <div class="hero-preview" aria-hidden="true">
+            <div class="preview-head">
+              <span class="preview-pill">Próxima sesión</span>
+              <span class="preview-muted">Mié · 10:00</span>
+            </div>
+            <div class="preview-main">
+              <div class="preview-date"><strong>12</strong><span>NOV</span></div>
+              <div class="preview-info">
+                <strong>Recovery + movilidad</strong>
+                <span>${UI.icon('clock', 14)} 60 min · Daniel Barrueto</span>
+              </div>
+              <span class="preview-check">${UI.icon('check', 16)}</span>
+            </div>
+            <div class="preview-plan">
+              <div class="preview-plan-top"><span>Plan Performance</span><strong>5 / 12 sesiones</strong></div>
+              <div class="preview-bar"><span style="width:42%"></span></div>
+            </div>
+            <div class="preview-foot">
+              <span>${UI.icon('shield-check', 14)} Datos protegidos</span>
+              <span>${UI.icon('whatsapp', 14)} +56 9 6505 8439</span>
+            </div>
+          </div>
+          <p class="hero-foot">Recovery Studio · Santiago, Chile · ${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</p>
+        </div>
+      </section>
+
+      <section class="auth-panel">
+        <div class="auth-panel-inner">
+          <a class="auth-mobile-brand" href="#/login">${UI.logoLockup({ size: 40 })}</a>
+          <div class="auth-card">
+            <div class="auth-tabs" role="tablist">
+              <button class="auth-tab ${!isRegister ? 'active' : ''}" data-action="auth-tab" data-tab="login" role="tab" aria-selected="${!isRegister}">Ingresar</button>
+              <button class="auth-tab ${isRegister ? 'active' : ''}" data-action="auth-tab" data-tab="register" role="tab" aria-selected="${isRegister}">Crear cuenta</button>
+            </div>
+            ${isRegister ? renderRegisterForm() : renderLoginForm()}
+          </div>
+          <a class="company-cta" href="#/cotizar">
+            <span class="company-cta-icon">${UI.icon('briefcase', 20)}</span>
+            <span><strong>¿Representas una empresa?</strong><span>Cotiza programas de bienestar para tu equipo</span></span>
+            ${UI.icon('arrow-right', 18)}
+          </a>
+          <p class="auth-legal">
+            <button class="link-btn" data-action="show-terms">Términos</button>
+            <span>·</span>
+            <button class="link-btn" data-action="show-privacy">Privacidad</button>
+            <span>·</span>
+            <button class="link-btn" data-action="reset-demo">Restablecer demo</button>
+          </p>
+          <p class="auth-copy">© ${new Date().getFullYear()} Recovery Studio. Todos los derechos reservados.</p>
+        </div>
+      </section>
+    </div>`;
+  }
+
+  function renderLoginForm() {
+    return `<div class="auth-form-wrap">
+      <div class="auth-heading">
+        <h2>Bienvenido de vuelta</h2>
+        <p>Ingresa para ver tu agenda, tu plan y tus pagos.</p>
+      </div>
+      <p class="form-error" id="auth-error" role="alert"></p>
+      <form data-form="login" novalidate>
+        <div class="field">
+          <label for="login-identifier">Correo o nombre</label>
+          <div class="input-icon">
+            ${UI.icon('user', 18)}
+            <input id="login-identifier" name="identifier" type="text" autocomplete="username" placeholder="tu@correo.cl" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="login-password">Contraseña</label>
+          <div class="input-icon has-action">
+            ${UI.icon('lock', 18)}
+            <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required>
+            <button type="button" class="input-action" data-action="toggle-password" data-target="login-password" aria-label="Mostrar contraseña">${UI.icon('eye', 18)}</button>
+          </div>
+        </div>
+        <div class="form-row between">
+          <label class="check"><input type="checkbox" name="remember" checked><span>Mantener sesión</span></label>
+          <button type="button" class="link-btn" data-action="forgot-password">¿Olvidaste tu clave?</button>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" type="submit" data-login-submit>Ingresar a mi cuenta ${UI.icon('arrow-right', 18)}</button>
+      </form>
+      <div class="auth-divider"><span>o explora la demo</span></div>
+      <div class="demo-grid">
+        <button class="demo-btn" type="button" data-action="demo-login" data-role="user">
+          <span class="demo-avatar">${UI.avatar('Valentina Rojas', 36)}</span>
+          <span class="demo-text"><strong>Usuario demo</strong><span>valentina@demo.cl · demo1234</span></span>
+        </button>
+        <button class="demo-btn" type="button" data-action="demo-login" data-role="admin">
+          <span class="demo-avatar admin">${UI.avatar('Daniel Barrueto', 36)}</span>
+          <span class="demo-text"><strong>Admin demo</strong><span>recoverystudio7@gmail.com · PIN 2468</span></span>
+        </button>
+      </div>
+      <p class="auth-tip">${UI.icon('info', 14)} Demo funcional: los datos se guardan solo en este navegador.</p>
+    </div>`;
+  }
+
+  function renderRegisterForm() {
+    return `<div class="auth-form-wrap">
+      <div class="auth-heading">
+        <h2>Crea tu cuenta</h2>
+        <p>Agenda tu primera sesión en menos de un minuto.</p>
+      </div>
+      <p class="form-error" id="auth-error" role="alert"></p>
+      <form data-form="register" novalidate>
+        <div class="field">
+          <label for="reg-name">Nombre completo</label>
+          <div class="input-icon">${UI.icon('user', 18)}<input id="reg-name" name="name" type="text" autocomplete="name" placeholder="Nombre y apellido" required></div>
+        </div>
+        <div class="grid grid-2 gap-sm">
+          <div class="field">
+            <label for="reg-email">Correo</label>
+            <div class="input-icon">${UI.icon('mail', 18)}<input id="reg-email" name="email" type="email" autocomplete="email" placeholder="tu@correo.cl" required></div>
+          </div>
+          <div class="field">
+            <label for="reg-phone">WhatsApp</label>
+            <div class="input-icon">${UI.icon('phone', 18)}<input id="reg-phone" name="phone" type="tel" autocomplete="tel" placeholder="+56 9 …" required></div>
+          </div>
+        </div>
+        <div class="grid grid-2 gap-sm">
+          <div class="field">
+            <label for="reg-password">Contraseña</label>
+            <div class="input-icon has-action">
+              ${UI.icon('lock', 18)}
+              <input id="reg-password" name="password" type="password" autocomplete="new-password" placeholder="Mín. 8 caracteres" required>
+              <button type="button" class="input-action" data-action="toggle-password" data-target="reg-password" aria-label="Mostrar contraseña">${UI.icon('eye', 18)}</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="reg-confirm">Repetir contraseña</label>
+            <div class="input-icon">${UI.icon('lock', 18)}<input id="reg-confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Repite tu clave" required></div>
+          </div>
+        </div>
+        <label class="check check-top"><input type="checkbox" name="terms" required><span>Acepto los términos y la política de reagendamiento de 12 h.</span></label>
+        <button class="btn btn-accent btn-block btn-lg" type="submit" data-register-submit>Crear mi cuenta ${UI.icon('arrow-right', 18)}</button>
+      </form>
+      <div class="auth-divider"><span>¿Prefieres que te inscribamos?</span></div>
+      <a class="btn btn-outline btn-block" href="https://wa.me/${RS.BRAND.whatsapp}?text=${encodeURIComponent('Hola Recovery Studio, quiero inscribirme y agendar mi primera evaluación.')}" target="_blank" rel="noopener">${UI.icon('whatsapp', 18)} Escríbenos por WhatsApp</a>
+    </div>`;
+  }
+
+  /* ------------------------------ cotización ------------------------------- */
+
+  function serviceById(id) {
+    return state().services.find((s) => s.id === id);
+  }
+
+  function quoteEstimate(serviceIds, people) {
+    const list = serviceIds.map(serviceById).filter(Boolean);
+    const perPerson = U.sum(list, (s) => Number(s.companyPrice) || 0);
+    const subtotal = perPerson * Math.max(1, Number(people) || 1);
+    const rate = people >= 10 ? 0.15 : people >= 5 ? 0.1 : 0;
+    const discount = Math.round(subtotal * rate);
+    return { perPerson, subtotal, rate, discount, total: subtotal - discount };
+  }
+
+  function quoteSelected() {
+    return Array.from(document.querySelectorAll('input[name="services"]:checked')).map((i) => i.value);
+  }
+
+  function updateQuoteEstimate() {
+    const peopleInput = document.getElementById('quote-people');
+    const people = Math.max(1, Number(peopleInput && peopleInput.value) || 1);
+    const ids = quoteSelected();
+    const est = quoteEstimate(ids, people);
+    const countEl = document.getElementById('quote-service-count');
+    const perEl = document.getElementById('quote-per-person');
+    const subtotalEl = document.getElementById('quote-subtotal');
+    const discountRow = document.getElementById('quote-discount-row');
+    const discountEl = document.getElementById('quote-discount');
+    const totalEl = document.getElementById('quote-total');
+    const rateEl = document.getElementById('quote-rate');
+    const emptyEl = document.getElementById('quote-empty');
+    if (countEl) countEl.textContent = U.pluralize(ids.length, 'servicio', 'servicios');
+    if (perEl) perEl.textContent = U.fmtMoney(est.perPerson);
+    if (subtotalEl) subtotalEl.textContent = U.fmtMoney(est.subtotal);
+    if (discountRow) discountRow.style.display = est.rate ? 'flex' : 'none';
+    if (discountEl) discountEl.textContent = `− ${U.fmtMoney(est.discount)}`;
+    if (rateEl) rateEl.textContent = `${Math.round(est.rate * 100)}%`;
+    if (totalEl) totalEl.textContent = U.fmtMoney(est.total);
+    if (emptyEl) emptyEl.style.display = ids.length ? 'none' : 'block';
+    const btn = document.getElementById('quote-submit');
+    if (btn) btn.disabled = !ids.length;
+  }
+
+  function renderQuote() {
+    const services = state().services.filter((s) => s.active && Number(s.companyPrice) > 0);
+    return `<div class="public-page">
+      <header class="public-nav">
+        <a class="brand-link" href="#/login">${UI.logoLockup({ size: 40 })}</a>
+        <div class="public-nav-actions">
+          <span class="public-nav-note">${UI.icon('sparkles', 14)} Programas para equipos</span>
+          <a class="btn btn-outline btn-sm" href="#/login">${UI.icon('arrow-left', 16)} Volver al ingreso</a>
+        </div>
+      </header>
+      <main class="public-main">
+        <div class="quote-head">
+          <span class="hero-eyebrow dark">${UI.icon('briefcase', 14)} Cotización empresas</span>
+          <h1>Bienestar que se nota<br>en tu equipo.</h1>
+          <p>Diseñamos programas de recuperación, movimiento y prevención de lesiones para empresas. Cuéntanos qué necesitas y te enviamos una propuesta a medida.</p>
+        </div>
+        <div class="quote-grid">
+          <form class="card quote-form" data-form="quote" novalidate>
+            <div class="card-head"><h2 class="card-title">Cuéntanos sobre tu empresa</h2><p class="card-sub">Los campos con * son obligatorios.</p></div>
+            <div class="card-body">
+              <p class="form-error" id="quote-error" role="alert"></p>
+              <div class="grid grid-2 gap-sm">
+                <div class="field"><label for="q-company">Empresa *</label><input class="input" id="q-company" name="company" required placeholder="Razón social"></div>
+                <div class="field"><label for="q-rut">RUT empresa</label><input class="input" id="q-rut" name="rut" placeholder="76.543.210-8"></div>
+                <div class="field"><label for="q-contact">Nombre de contacto *</label><input class="input" id="q-contact" name="contact" required placeholder="Nombre y apellido"></div>
+                <div class="field"><label for="q-email">Correo corporativo *</label><input class="input" id="q-email" name="email" type="email" required placeholder="nombre@empresa.cl"></div>
+                <div class="field"><label for="q-phone">Teléfono *</label><input class="input" id="q-phone" name="phone" type="tel" required placeholder="+56 9 …"></div>
+                <div class="field"><label for="q-people">N° de participantes *</label><input class="input" id="q-people" name="people" type="number" min="1" max="500" value="10" required data-input="quote-people"></div>
+                <div class="field"><label for="q-date">Fecha estimada de inicio</label><input class="input" id="q-date" name="date" type="date" min="${U.todayISO()}"></div>
+                <div class="field"><label for="q-company-size">Tamaño del equipo</label>
+                  <select class="input" id="q-company-size" name="size"><option>1 – 20 personas</option><option>21 – 50 personas</option><option>51 – 100 personas</option><option>+100 personas</option></select>
+                </div>
+              </div>
+              <div class="field field-top">
+                <label>Servicios de interés *</label>
+                <div class="quote-services">
+                  ${services.map((s) => `<label class="quote-service">
+                    <input type="checkbox" name="services" value="${s.id}" data-input="quote-service">
+                    <span class="quote-service-body">
+                      <span class="quote-service-top"><strong>${U.esc(s.name)}</strong><span>${U.fmtMoney(s.companyPrice)}<small>/persona</small></span></span>
+                      <span class="quote-service-desc">${U.esc(s.description)}</span>
+                    </span>
+                  </label>`).join('')}
+                </div>
+              </div>
+              <div class="field field-top"><label for="q-message">¿Qué necesita tu equipo?</label><textarea class="input" id="q-message" name="message" rows="3" placeholder="Objetivos, horarios, ubicación…"></textarea></div>
+              <label class="check check-top"><input type="checkbox" name="privacy" required><span>Acepto el tratamiento de mis datos para recibir esta cotización.</span></label>
+              <button class="btn btn-accent btn-block btn-lg" id="quote-submit" type="submit" disabled>Solicitar cotización ${UI.icon('arrow-right', 18)}</button>
+              <p class="quote-legal">${UI.icon('info', 14)} Los valores son referenciales. La propuesta final se ajusta según horarios y ubicación.</p>
+            </div>
+          </form>
+
+          <aside class="quote-summary card">
+            <div class="quote-summary-head">
+              <span class="quote-summary-icon">${UI.icon('bar-chart-2', 20)}</span>
+              <div><h3>Resumen estimado</h3><p id="quote-service-count">0 servicios</p></div>
+            </div>
+            <div class="quote-summary-body">
+              <div class="quote-line"><span>Valor por persona</span><strong id="quote-per-person">$0</strong></div>
+              <div class="quote-line"><span>Participantes</span><strong id="quote-people-mirror">10</strong></div>
+              <div class="quote-line"><span>Subtotal</span><strong id="quote-subtotal">$0</strong></div>
+              <div class="quote-line quote-discount" id="quote-discount-row" style="display:none"><span>Descuento volumen <em id="quote-rate">0%</em></span><strong id="quote-discount">− $0</strong></div>
+              <div class="quote-total"><span>Total estimado / mes</span><strong id="quote-total">$0</strong></div>
+              <p class="quote-min" id="quote-empty">Selecciona al menos un servicio para ver tu estimación.</p>
+              <ul class="quote-benefits">
+                <li>${UI.icon('check', 15)} Propuesta en menos de 24 h hábiles</li>
+                <li>${UI.icon('check', 15)} Descuento desde 5 participantes</li>
+                <li>${UI.icon('check', 15)} Sesiones en tu oficina o en el studio</li>
+              </ul>
+              <a class="btn btn-ghost btn-block" href="https://wa.me/${RS.BRAND.whatsapp}?text=${encodeURIComponent('Hola Recovery Studio, necesito cotizar un programa para mi empresa.')}" target="_blank" rel="noopener">${UI.icon('whatsapp', 18)} Hablar con un asesor</a>
+            </div>
+          </aside>
+        </div>
+      </main>
+      <footer class="public-foot">
+        <span>© ${new Date().getFullYear()} Recovery Studio · Santiago, Chile</span>
+        <span>${UI.icon('map-pin', 14)} ${U.esc(state().settings.address)}</span>
+      </footer>
+    </div>`;
+  }
+
+  function renderQuoteThanks() {
+    const quote = (RS.ui && RS.ui.lastQuote) || null;
+    const b = quoteEstimate(quote ? quote.serviceIds : [], quote ? quote.people : 1);
+    return `<div class="public-page">
+      <header class="public-nav">
+        <a class="brand-link" href="#/login">${UI.logoLockup({ size: 40 })}</a>
+        <a class="btn btn-outline btn-sm" href="#/login">${UI.icon('arrow-left', 16)} Volver al ingreso</a>
+      </header>
+      <main class="public-main thanks-main">
+        <div class="thanks-card card">
+          <span class="thanks-icon">${UI.icon('check', 34)}</span>
+          <span class="hero-eyebrow dark">${UI.icon('sparkles', 14)} Solicitud recibida</span>
+          <h1>¡Gracias${quote ? `, ${U.esc(quote.contact.split(' ')[0])}` : ''}!</h1>
+          <p>Recibimos tu solicitud de cotización. Te contactaremos en menos de 24 horas hábiles al correo indicado.</p>
+          ${quote ? `<div class="thanks-ref"><span>Referencia</span><strong>${U.esc(quote.ref)}</strong></div>
+          <div class="thanks-summary">
+            <div class="detail-row"><span class="detail-label">Empresa</span><span class="detail-value">${U.esc(quote.company)}</span></div>
+            <div class="detail-row"><span class="detail-label">Participantes</span><span class="detail-value">${U.esc(quote.people)}</span></div>
+            <div class="detail-row"><span class="detail-label">Estimación</span><span class="detail-value">${U.fmtMoney(b.total)} / mes</span></div>
+          </div>` : ''}
+          <div class="thanks-actions">
+            <a class="btn btn-accent" href="https://wa.me/${RS.BRAND.whatsapp}?text=${encodeURIComponent(`Hola Recovery Studio, acabo de enviar la cotización ${quote ? quote.ref : ''} para ${quote ? quote.company : 'mi empresa'}. Quisiera coordinar una llamada.`)}" target="_blank" rel="noopener">${UI.icon('whatsapp', 18)} Hablar por WhatsApp</a>
+            <a class="btn btn-outline" href="#/login">Volver al inicio</a>
+          </div>
+          <p class="quote-legal">${UI.icon('clock', 14)} Horario de atención: lunes a viernes de 08:00 a 20:00 h.</p>
+        </div>
+      </main>
+    </div>`;
+  }
+
+  /* ------------------------------- acciones -------------------------------- */
+
+  RS.actions['auth-tab'] = (el) => {
+    RS.ui.authTab = el.dataset.tab;
+    RS.App.render(true);
+    setTimeout(() => {
+      const first = document.querySelector('.auth-form-wrap input');
+      if (first) first.focus();
+    }, 60);
+  };
+
+  RS.actions['toggle-password'] = (el) => {
+    const input = document.getElementById(el.dataset.target);
+    if (!input) return;
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    el.innerHTML = UI.icon(show ? 'eye-off' : 'eye', 18);
+    el.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+  };
+
+  RS.actions['demo-login'] = async (el) => {
+    const role = el.dataset.role;
+    const identifier = role === 'admin' ? RS.BRAND.adminEmail : 'valentina@demo.cl';
+    const password = role === 'admin' ? 'Recovery2026!' : 'demo1234';
+    el.disabled = true;
+    const result = await attemptLogin(identifier, password);
+    el.disabled = false;
+    if (!result.ok) {
+      loginError(result.error);
+      return;
+    }
+    if (result.needsPin) {
+      openAdminPin(result.user);
+      return;
+    }
+    initActivity();
+    UI.toast(`Hola ${result.user.name.split(' ')[0]}, qué bueno verte.`, 'success');
+    RS.App.go('inicio');
+  };
+
+  RS.actions['forgot-password'] = () => {
+    UI.modal({
+      title: 'Restablecer contraseña',
+      subtitle: 'Por seguridad, el cambio se gestiona directamente con el studio.',
+      size: 'sm',
+      body: `<div class="stack">
+        <p class="muted">Escríbenos desde tu WhatsApp registrado indicando tu nombre y correo. Validaremos tu identidad y te entregaremos una clave temporal.</p>
+        <div class="callout callout-blue">${UI.icon('info', 18)}<span>El administrador también puede restablecer tu clave desde su panel.</span></div>
+      </div>`,
+      footer: `<a class="btn btn-accent btn-block" href="https://wa.me/${RS.BRAND.whatsapp}?text=${encodeURIComponent('Hola Recovery Studio, necesito restablecer mi contraseña.')}" target="_blank" rel="noopener">${UI.icon('whatsapp', 18)} Solicitar por WhatsApp</a>`,
+    });
+  };
+
+  RS.actions['show-terms'] = () => {
+    UI.modal({
+      title: 'Términos y política de reservas',
+      size: 'md',
+      body: `<div class="prose">
+        <p><strong>Reservas.</strong> Toda sesión debe ser agendada con al menos 2 horas de anticipación y queda sujeta a disponibilidad.</p>
+        <p><strong>Reagendamiento.</strong> Puedes reagendar tu sesión hasta 12 horas antes del horario reservado. Si avisas con menos de 12 horas, la sesión no será reagendada y se considerará utilizada.</p>
+        <p><strong>Pagos.</strong> Las reservas con transferencia quedan pendientes hasta que el equipo valide el comprobante. Los planes activan sus sesiones al ser aprobados.</p>
+        <p><strong>Asistencia.</strong> Te recomendamos llegar 10 minutos antes. Si llegas más de 15 minutos tarde, la sesión podría reducirse para respetar la agenda.</p>
+      </div>`,
+      footer: '<button class="btn btn-primary" data-modal-close>Entendido</button>',
+    });
+  };
+
+  RS.actions['show-privacy'] = () => {
+    UI.modal({
+      title: 'Privacidad y datos',
+      size: 'md',
+      body: `<div class="prose">
+        <p>Esta versión de demostración guarda la información en el almacenamiento local de tu navegador. No se envía a servidores externos.</p>
+        <p>En una implementación productiva, los datos de salud, pagos y entrenamiento deben protegerse con cifrado en tránsito y en reposo, control de acceso por roles y una política de retención.</p>
+        <p>Puedes borrar todos los datos locales usando “Restablecer demo” en la pantalla de ingreso.</p>
+      </div>`,
+      footer: '<button class="btn btn-primary" data-modal-close>Entendido</button>',
+    });
+  };
+
+  RS.actions['reset-demo'] = async () => {
+    const ok = await UI.confirm({
+      title: 'Restablecer datos demo',
+      message: 'Se borrarán todos los cambios guardados en este navegador y se restaurarán los datos de ejemplo. Esta acción no se puede deshacer.',
+      okText: 'Restablecer demo',
+      danger: true,
+    });
+    if (!ok) return;
+    await RS.DB.reset();
+    clearSession();
+    RS.ui = { authTab: 'login' };
+    UI.toast('Datos demo restablecidos.', 'success');
+    RS.App.go('login');
+    RS.App.render(true);
+  };
+
+  RS.forms.login = async (form, submitter) => {
+    const identifier = form.identifier.value.trim();
+    const password = form.password.value;
+    const error = document.getElementById('auth-error');
+    if (error) error.classList.remove('show');
+    if (!identifier || !password) {
+      loginError('Completa tu correo (o nombre) y contraseña.');
+      return;
+    }
+    setLoading(submitter, true, 'Ingresando…');
+    const result = await attemptLogin(identifier, password);
+    setLoading(submitter, false);
+    if (!result.ok) {
+      loginError(result.error);
+      const pass = form.password;
+      pass.classList.add('shake');
+      setTimeout(() => pass.classList.remove('shake'), 400);
+      return;
+    }
+    if (result.needsPin) {
+      openAdminPin(result.user);
+      return;
+    }
+    initActivity();
+    UI.toast(`Bienvenido, ${result.user.name.split(' ')[0]}.`, 'success');
+    RS.App.go('inicio');
+  };
+
+  RS.forms.register = async (form, submitter) => {
+    const name = form.name.value.trim();
+    const email = form.email.value.trim().toLowerCase();
+    const phone = form.phone.value.trim();
+    const password = form.password.value;
+    const confirm = form.confirm.value;
+    const error = document.getElementById('auth-error');
+    if (error) error.classList.remove('show');
+    if (name.length < 3) return loginError('Ingresa tu nombre y apellido.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return loginError('Ingresa un correo válido.');
+    if (phone.replace(/\D/g, '').length < 8) return loginError('Ingresa un WhatsApp válido.');
+    if (password.length < 8) return loginError('La contraseña debe tener al menos 8 caracteres.');
+    if (password !== confirm) return loginError('Las contraseñas no coinciden.');
+    if (!form.terms.checked) return loginError('Debes aceptar los términos y la política de reservas.');
+    const st = state();
+    if (st.users.some((u) => U.normalize(u.email) === U.normalize(email))) {
+      return loginError('Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.');
+    }
+    setLoading(submitter, true, 'Creando cuenta…');
+    const user = {
+      id: U.uid('usr'),
+      role: 'user',
+      name,
+      email,
+      phone,
+      passwordHash: await U.hashPassword(password),
+      active: true,
+      credits: 0,
+      planLabel: 'Sin plan activo',
+      goal: '',
+      notes: 'Registro desde la app.',
+      createdAt: new Date().toISOString(),
+      source: 'registro',
+    };
+    st.users.push(user);
+    RS.DB.save();
+    RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email}.`);
+    startSession(user);
+    initActivity();
+    setLoading(submitter, false);
+    UI.toast('¡Cuenta creada! Agenda tu primera sesión.', 'success');
+    RS.App.go('agendar');
+  };
+
+  RS.forms.quote = async (form, submitter) => {
+    const err = document.getElementById('quote-error');
+    if (err) err.classList.remove('show');
+    const get = (n) => (form[n] ? String(form[n].value || '').trim() : '');
+    const ids = Array.from(form.querySelectorAll('input[name="services"]:checked')).map((i) => i.value);
+    const people = Number(get('people')) || 0;
+    const company = get('company');
+    const contact = get('contact');
+    const email = get('email');
+    const phone = get('phone');
+    const messages = [];
+    if (!company) messages.push('Ingresa el nombre de la empresa.');
+    if (!contact) messages.push('Ingresa el nombre de contacto.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) messages.push('Ingresa un correo válido.');
+    if (phone.replace(/\D/g, '').length < 8) messages.push('Ingresa un teléfono válido.');
+    if (people < 1) messages.push('Indica cuántas personas participarán.');
+    if (!ids.length) messages.push('Selecciona al menos un servicio.');
+    if (!form.privacy.checked) messages.push('Debes aceptar el tratamiento de datos.');
+    if (messages.length) {
+      if (err) {
+        err.innerHTML = messages.map((m) => `• ${U.esc(m)}`).join('<br>');
+        err.classList.add('show');
+        err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        UI.toast(messages[0], 'error');
+      }
+      return;
+    }
+    const est = quoteEstimate(ids, people);
+    const st = state();
+    const quote = {
+      id: U.uid('qte'),
+      ref: U.ref('COT'),
+      company,
+      rut: get('rut'),
+      contact,
+      email,
+      phone,
+      companySize: get('size'),
+      people,
+      serviceIds: ids,
+      date: get('date'),
+      message: get('message'),
+      status: 'nueva',
+      estimate: est.total,
+      finalAmount: 0,
+      notes: '',
+      createdAt: new Date().toISOString(),
+    };
+    st.quotes.unshift(quote);
+    RS.DB.save();
+    RS.data.addAudit(contact, 'Cotización solicitada', `${quote.ref} · ${company} · ${people} personas.`);
+    RS.ui.lastQuote = quote;
+    setLoading(submitter, true, 'Enviando…');
+    setTimeout(() => {
+      setLoading(submitter, false);
+      RS.App.go('cotizar-gracias');
+    }, 450);
+  };
+
+  RS.inputs['quote-people'] = () => {
+    const input = document.getElementById('quote-people');
+    const mirror = document.getElementById('quote-people-mirror');
+    if (input && mirror) mirror.textContent = input.value || '1';
+    updateQuoteEstimate();
+  };
+
+  RS.inputs['quote-service'] = () => updateQuoteEstimate();
+
+  RS.actions['force-logout'] = () => {
+    UI.closeModal();
+    logout({ reason: 'Sesión bloqueada cerrada por el usuario.', toast: 'Sesión cerrada.' });
+  };
+
+  RS.Auth = {
+    getSession,
+    getUser,
+    startSession,
+    logout,
+    isAdmin,
+    touch,
+    initActivity,
+    openAdminPin,
+    showLockScreen,
+    verifyPin,
+    changePassword,
+    changePin,
+    renderLogin,
+    renderQuote,
+    renderQuoteThanks,
+    clearSession,
+    quoteEstimate,
+  };
+})();

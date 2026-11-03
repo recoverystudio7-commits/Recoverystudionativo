@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Recovery Studio · Agenda, recuperación y performance</title>
+  <meta name="description" content="Agenda tus sesiones de recuperación y entrenamiento, sigue tu plan, revisa tus maximales y gestiona tus pagos en Recovery Studio.">
+  <meta name="theme-color" content="#0A2342">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/views.css">
+</head>
+<body>
+  <div id="app" class="app-root">
+    <div class="boot-screen">
+      <div class="boot-logo">
+        <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="bootGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#123F70"/><stop offset="1" stop-color="#071B34"/>
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#bootGrad)"/>
+          <path d="M23 48V18h11.5c6 0 10 3.6 10 9.3 0 4.4-2.3 7.6-6.3 8.9L47 48" fill="none" stroke="#FFFFFF" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="47" cy="18" r="4.4" fill="#FF7A18"/>
+        </svg>
+      </div>
+      <div class="boot-spinner"></div>
+      <p>Cargando tu studio…</p>
+    </div>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/user.js"></script>
+  <script src="assets/js/admin-base.js"></script>
+  <script src="assets/js/admin-people.js"></script>
+  <script src="assets/js/admin-money.js"></script>
+  <script src="assets/js/admin-system.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
