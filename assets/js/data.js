@@ -7,7 +7,7 @@
 
   const RS = (window.RS = window.RS || {});
 
-  const APP_VERSION = 1;
+  const APP_VERSION = 4;
   const STORAGE_KEY = 'recoveryStudio.state.v1';
   const SESSION_KEY = 'recoveryStudio.session.v1';
 
