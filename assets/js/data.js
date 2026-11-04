@@ -849,27 +849,35 @@
       },
     ];
 
-    const settings = {
-      openDays: [1, 2, 3, 4, 5, 6],
-      start: '08:00',
-      end: '20:00',
-      slot: 60,
-      leadHours: 2,
-      policyHours: 12,
-      horizonDays: 45,
-      autoLockMin: 15,
-      retention: 15.25,
-      whatsapp: BRAND.whatsapp,
-      address: 'Av. Providencia 1234, oficina 502 · Santiago',
-      bank: {
+     const settings = {
+    openDays: [1, 2, 3, 4, 5],
+    start: '18:30',
+    end: '22:30',
+    slot: 60,
+    leadHours: 2,
+    policyHours: 12,
+    horizonDays: 45,
+    autoLockMin: 15,
+    retention: 15.25,
+    whatsapp: BRAND.whatsapp,
+    address: 'Gorbea, Región de la Araucania',
+    bank: {
         holder: 'DANIEL ESTEBAN BARRUETO',
         rut: '17.375.282-2',
         bankName: 'Banco BCI',
         accountType: 'Cuenta Corriente',
         account: '72771619',
         email: BRAND.adminEmail,
-      },
-    };
+    },
+    // Horario por día - 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
+    scheduleByDay: {
+        1: { start: '18:30', end: '22:30' }, // Lunes
+        2: { start: '18:30', end: '22:30' }, // Martes
+        3: { start: '17:30', end: '19:30' }, // Miércoles
+        4: { start: '18:30', end: '22:30' }, // Jueves
+        5: { start: '15:00', end: '19:30' }, // Viernes
+    },
+};
 
     const audits = [
       { id: 'aud_seed_1', at: `${today}T08:00:00`, actor: 'Sistema', action: 'Inicio de demo', detail: 'Datos de demostración cargados correctamente.' },
@@ -1016,8 +1024,15 @@
     const settings = state.settings;
     const day = parseISO(date).getDay();
     if (!settings.openDays.includes(day)) return [];
-    const startMin = timeToMin(settings.start);
-    const endMin = timeToMin(settings.end);
+   function availableSlots(date, serviceId, opts) {
+    const options = opts || {};
+    const settings = state.settings;
+    const day = parseISO(date).getDay();
+    if (!settings.openDays.includes(day)) return [];
+    const daySchedule = settings.scheduleByDay ? settings.scheduleByDay[day] : null;
+    if (!daySchedule) return [];
+    const startMin = timeToMin(daySchedule.start);
+    const endMin = timeToMin(daySchedule.end);
     const step = Number(settings.slot) || 60;
     const service = getService(serviceId);
     const duration = service ? Number(service.duration) || 60 : 60;
