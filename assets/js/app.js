@@ -147,7 +147,7 @@
         <strong>${role === 'admin' ? 'Panel de administración' : 'Mi cuenta'}</strong>
       </div>
       <div class="topbar-actions">
-        <span class="demo-chip" title="Tu cuenta y reservas se guardan en este navegador. Las reseñas son compartidas.">${UI.icon('sparkles', 13)} Datos locales</span>
+        <span class="local-chip" title="Tu cuenta y reservas se guardan en este navegador.">${UI.icon('sparkles', 13)} Guardado local</span>
         <a class="icon-btn topbar-help" href="${RS.data.whatsappUrl('Hola Recovery Studio, necesito ayuda.')}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${UI.icon('whatsapp', 19)}</a>
         <a class="icon-btn topbar-bell" href="#/${notificationRoute}" title="Notificaciones" aria-label="Notificaciones">${UI.icon('bell', 19)}${badge ? `<span class="bell-badge">${badge}</span>` : ''}</a>
         <a class="topbar-user" href="#/${role === 'admin' ? 'admin/seguridad' : 'perfil'}" title="Mi cuenta">

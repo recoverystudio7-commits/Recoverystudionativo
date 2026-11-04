@@ -56,22 +56,13 @@
       .join('');
   }
 
-  function timeOptions(selected) {
-    const s = st().settings;
-    const start = U.timeToMin(s.start);
-    const end = U.timeToMin(s.end);
-    const step = Number(s.slot) || 60;
-    const opts = [];
-    const times = [];
-    for (let m = start; m + step <= end; m += step) {
-      const t = U.minToTime(m);
-      times.push(t);
-      opts.push(`<option value="${t}" ${t === selected ? 'selected' : ''}>${t} h</option>`);
-    }
-    if (selected && !times.includes(selected)) {
-      opts.push(`<option value="${U.esc(selected)}" selected>${U.esc(selected)} h</option>`);
-    }
-    return opts.join('');
+  function timeOptions(selected, date, serviceId, ignoreSessionId) {
+    const slots = RS.data.availableSlots(date, serviceId, { ignoreRules: true, ignoreSessionId });
+    const times = slots.filter((slot) => slot.available || slot.time === selected).map((slot) => slot.time);
+    if (selected && !times.includes(selected)) times.unshift(selected);
+    return times.length
+      ? times.map((time) => `<option value="${time}" ${time === selected ? 'selected' : ''}>${time} h</option>`).join('')
+      : '<option value="">No hay horarios disponibles</option>';
   }
 
   function hasConflict(date, time, serviceId, ignoreId) {
@@ -265,7 +256,10 @@
       const svc = RS.data.getService(s.serviceId);
       return svc ? svc.price : 0;
     });
-    const freeSlots = RS.data.availableSlots(selected, 'srv-recovery', { ignoreRules: true }).filter((s) => s.available);
+    const allSlots = RS.data.availableSlots(selected, 'srv-recovery', { ignoreRules: true });
+    const freeSlots = allSlots.filter((s) => s.available);
+    const blockedSlots = RS.data.blockedSlotsOn(selected);
+    const dayHours = RS.data.hoursForDay(selected);
 
     return `<div class="view">
       <div class="page-head">
@@ -299,7 +293,7 @@
         <section class="card agenda-day-card">
           <div class="card-head head-row">
             <div><h2 class="card-title">${U.fmtDate(selected, 'long')}</h2><p class="card-sub">${U.pluralize(active.length, 'sesión activa', 'sesiones activas')} · ${U.fmtMoney(revenue)} en agenda</p></div>
-            <span class="head-chip">${UI.icon('clock', 14)} ${st().settings.start} – ${st().settings.end}</span>
+            <span class="head-chip">${UI.icon('clock', 14)} ${dayHours.enabled ? `${dayHours.start} – ${dayHours.end}` : 'Cerrado'}</span>
           </div>
           <div class="card-body">
             ${daySessions.length ? `<div class="agenda-timeline">${daySessions.map(agendaSessionCard).join('')}</div>` : UI.empty({ icon: 'calendar', title: 'No hay sesiones este día', text: 'Aprovecha los horarios libres para agendar una nueva sesión.', action: `<button class="btn btn-accent btn-sm" data-action="admin-new-session" data-date="${selected}">Nueva sesión</button>` })}
@@ -310,7 +304,8 @@
           <section class="card">
             <div class="card-head"><h2 class="card-title">Horarios libres</h2><p class="card-sub">Disponibilidad del día</p></div>
             <div class="card-body">
-              ${freeSlots.length ? `<div class="free-slots">${freeSlots.map((s) => `<button class="free-slot" data-action="admin-new-session" data-date="${selected}" data-time="${s.time}">${UI.icon('plus', 13)} ${s.time}</button>`).join('')}</div>` : '<p class="muted small">No quedan horarios libres este día.</p>'}
+              ${freeSlots.length ? `<div class="free-slots">${freeSlots.map((s) => `<div class="free-slot-row"><button class="free-slot" data-action="admin-new-session" data-date="${selected}" data-time="${s.time}">${UI.icon('plus', 13)} ${s.time}</button><button class="icon-btn danger" title="Bloquear horario" aria-label="Bloquear horario ${s.time}" data-action="admin-block-slot" data-date="${selected}" data-time="${s.time}">${UI.icon('lock', 15)}</button></div>`).join('')}</div>` : '<p class="muted small">No quedan horarios libres este día.</p>'}
+              ${blockedSlots.length ? `<div class="blocked-slots"><strong>Bloqueados</strong>${blockedSlots.map((s) => `<div class="blocked-slot-row"><span>${U.esc(s.time)}</span><button class="link-btn" data-action="admin-unblock-slot" data-id="${U.esc(s.id)}">Desbloquear</button></div>`).join('')}</div>` : ''}
               <div class="free-legend">${UI.icon('info', 14)} Los horarios consideran ${st().settings.slot} min por bloque.</div>
             </div>
           </section>
@@ -336,11 +331,14 @@
   function openSessionModal(opts) {
     const o = opts || {};
     const existing = o.id ? st().sessions.find((s) => s.id === o.id) : null;
+    const defaultDate = (existing && existing.date) || o.date || ensureUi().agendaDate || U.todayISO();
+    const defaultServiceId = (existing && existing.serviceId) || o.serviceId || (st().services.find((s) => s.kind === 'Sesión') || {}).id;
+    const firstAvailable = RS.data.availableSlots(defaultDate, defaultServiceId, { ignoreRules: true }).find((slot) => slot.available);
     const defaults = {
       userId: (existing && existing.userId) || o.userId || (st().users.find((u) => u.role === 'user') || {}).id,
-      serviceId: (existing && existing.serviceId) || o.serviceId || (st().services.find((s) => s.kind === 'Sesión') || {}).id,
-      date: (existing && existing.date) || o.date || ensureUi().agendaDate || U.todayISO(),
-      time: (existing && existing.time) || o.time || '09:00',
+      serviceId: defaultServiceId,
+      date: defaultDate,
+      time: (existing && existing.time) || o.time || (firstAvailable && firstAvailable.time) || '17:30',
       status: (existing && existing.status) || 'confirmada',
       payment: (existing && existing.payment) || 'pendiente',
       notes: (existing && existing.notes) || '',
@@ -357,7 +355,7 @@
           <div class="field"><label for="as-user">Usuario *</label><select class="input" id="as-user" name="userId" required>${userOptions(defaults.userId)}</select></div>
           <div class="field"><label for="as-service">Servicio *</label><select class="input" id="as-service" name="serviceId" required>${serviceOptions(defaults.serviceId, ['Sesión', 'Asesoría'])}</select></div>
           <div class="field"><label for="as-date">Fecha *</label><input class="input" id="as-date" name="date" type="date" value="${defaults.date}" required></div>
-          <div class="field"><label for="as-time">Hora *</label><select class="input" id="as-time" name="time">${timeOptions(defaults.time)}</select></div>
+          <div class="field"><label for="as-time">Hora *</label><select class="input" id="as-time" name="time" required>${timeOptions(defaults.time, defaults.date, defaults.serviceId, existing && existing.id)}</select></div>
           <div class="field"><label for="as-status">Estado</label><select class="input" id="as-status" name="status">
             ${['confirmada', 'pendiente', 'completada', 'cancelada', 'no_asistio'].map((s) => `<option value="${s}" ${defaults.status === s ? 'selected' : ''}>${UI.SESSION_STATUS[s].label}</option>`).join('')}
           </select></div>
@@ -376,6 +374,18 @@
         <button class="btn btn-primary" type="submit" form="admin-session-form">${existing ? 'Guardar cambios' : 'Crear sesión'}</button>`,
     });
     if (!root) return;
+    const dateInput = root.querySelector('[name="date"]');
+    const serviceInput = root.querySelector('[name="serviceId"]');
+    const timeSelect = root.querySelector('[name="time"]');
+    const refreshTimes = () => {
+      const selectedTime = timeSelect.value;
+      timeSelect.innerHTML = timeOptions(selectedTime, dateInput.value, serviceInput.value, existing && existing.id);
+      if (!Array.from(timeSelect.options).some((option) => option.value === selectedTime)) {
+        timeSelect.selectedIndex = 0;
+      }
+    };
+    dateInput.addEventListener('change', refreshTimes);
+    serviceInput.addEventListener('change', refreshTimes);
     if (existing) {
       root.querySelector('[data-del-session]').addEventListener('click', async () => {
         const ok = await UI.confirm({ title: 'Eliminar sesión', message: 'La sesión se eliminará definitivamente de la agenda. Esta acción no se puede deshacer.', okText: 'Eliminar', danger: true });
@@ -392,7 +402,7 @@
 
   RS.forms['admin-session'] = (form) => {
     const values = {
-      id: form.elements.namedItem('id').value,
+      id: form.id.value,
       userId: form.userId.value,
       serviceId: form.serviceId.value,
       date: form.date.value,
@@ -401,6 +411,7 @@
       payment: form.payment.value,
       notes: form.notes.value.trim(),
     };
+
     const err = document.getElementById('session-error');
     if (err) err.classList.remove('show');
     if (!values.userId || !values.serviceId || !values.date || !values.time) {
@@ -415,6 +426,19 @@
       const cUser = RS.data.getUser(conflict.userId);
       if (err) {
         err.textContent = `Horario ocupado: ${cUser ? cUser.name : 'otro usuario'} tiene una sesión a las ${conflict.time}.`;
+        err.classList.add('show');
+      }
+      return;
+    }
+    const slot = RS.data.availableSlots(values.date, values.serviceId, {
+      ignoreRules: true,
+      ignoreSessionId: values.id || null,
+    }).find((item) => item.time === values.time);
+    if (!slot || !slot.available) {
+      if (err) {
+        err.textContent = slot && slot.reason === 'Bloqueado por administrador'
+          ? 'Ese horario fue bloqueado por el administrador.'
+          : 'Ese horario no está disponible en la jornada configurada.';
         err.classList.add('show');
       }
       return;
@@ -450,6 +474,29 @@
   };
 
   /* -------------------------------- acciones ------------------------------- */
+
+  RS.actions['admin-block-slot'] = async (el) => {
+    const { date, time } = el.dataset;
+    const ok = await UI.confirm({
+      title: 'Bloquear horario',
+      message: `El horario de las ${time} del ${U.fmtDate(date, 'long')} dejará de estar disponible para reservas.`,
+      okText: 'Bloquear',
+      danger: true,
+    });
+    if (!ok) return;
+    RS.data.blockSlot(date, time, me().name);
+    RS.data.addAudit(me().name, 'Horario bloqueado', `${date} ${time}.`);
+    UI.toast(`Horario ${time} bloqueado.`, 'success');
+    RS.App.render(true);
+  };
+
+  RS.actions['admin-unblock-slot'] = (el) => {
+    const slot = RS.data.unblockSlot(el.dataset.id);
+    if (!slot) return;
+    RS.data.addAudit(me().name, 'Horario desbloqueado', `${slot.date} ${slot.time}.`);
+    UI.toast(`Horario ${slot.time} disponible nuevamente.`, 'success');
+    RS.App.render(true);
+  };
 
   RS.actions['admin-new-session'] = (el) => {
     openSessionModal({ date: el.dataset.date || ensureUi().agendaDate, time: el.dataset.time || null, userId: el.dataset.user || null });

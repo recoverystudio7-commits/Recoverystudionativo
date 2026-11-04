@@ -11,20 +11,23 @@ La identidad visual usa azul marino (`#0A2342`), azul de apoyo (`#123F70`), nara
 
 ---
 
-## Demo
+## Inicio y horarios
 
-Al abrir la app se cargan datos de demostración relativos a la fecha actual: usuarios, sesiones, pagos pendientes, historial de seis meses de ingresos/gastos, boletas de honorarios y cotizaciones.
+La primera carga crea únicamente la cuenta administradora y el catálogo inicial: no se incluyen usuarios, reservas, pagos ni movimientos ficticios.
 
 | Rol | Correo | Contraseña | PIN |
 | --- | --- | --- | --- |
 | Administrador | `recoverystudio7@gmail.com` | `Recovery2026!` | `2468` |
-| Cliente | `valentina@demo.cl` | `demo1234` | — |
-| Cliente | `matias@demo.cl` | `demo1234` | — |
-| Cliente | `carolina@demo.cl` | `demo1234` | — |
 
-El administrador debe confirmar el acceso con su PIN. También hay accesos rápidos de demo en la pantalla de ingreso.
+La cuenta administradora solicita contraseña y PIN. Cambia ambos desde **Admin → Seguridad** antes de registrar información real.
 
-> Los datos de demostración pueden restablecerse desde **Configuración → Restablecer demo** o con `RS.DB.reset()` en la consola del navegador.
+Horario inicial, en bloques de 60 minutos:
+
+- **Lunes a jueves:** 17:30–22:30 (último inicio 21:30).
+- **Viernes:** 15:00–19:30 (último inicio 18:00).
+- **Sábado y domingo:** cerrado.
+
+El administrador puede activar o cerrar días y modificar sus horas desde **Admin → Configuración**. En **Admin → Agenda** puede bloquear o desbloquear horarios particulares, crear, editar o eliminar sesiones. Desde la ficha de cada usuario también puede quitar un plan asignado y su saldo de sesiones; el historial de pagos se conserva.
 
 ---
 
@@ -53,7 +56,7 @@ El administrador debe confirmar el acceso con su PIN. También hay accesos rápi
 - **Honorarios:** boletas emitidas, retención configurable (15,25 % por defecto), neto a recibir y resumen mensual.
 - **Cotizaciones:** pipeline de solicitudes de empresas, cambio de estado, monto final, notas y contacto por WhatsApp/correo.
 - **Reseñas:** listado de reseñas publicadas y acceso directo a la moderación en Supabase.
-- **Configuración:** horarios, días de atención, duración de bloques, anticipación, política de cambios, datos bancarios, retención, dirección y auto-bloqueo.
+- **Configuración:** horarios por día, duración de bloques, anticipación, política de cambios, datos bancarios, retención, dirección y auto-bloqueo.
 - **Seguridad:** cambio de PIN y contraseña, bloqueo manual, cierre de todas las sesiones y registro de auditoría.
 
 ### Sitio público de cotizaciones
@@ -113,7 +116,7 @@ También puede abrirse `index.html` en el navegador. La app funciona, pero el se
 │   │   ├── styles.css          # Sistema de diseño, layout y componentes base
 │   │   └── views.css           # Estilos específicos de las vistas
 │   └── js/
-│       ├── data.js             # Estado, datos demo, cálculos y utilidades
+│       ├── data.js             # Estado, catálogo inicial, cálculos y utilidades
 │       ├── ui.js               # Iconos, modales, toasts y componentes
 │       ├── auth.js             # Login, registro, PIN, bloqueo y cotizaciones públicas
 │       ├── user.js             # Vistas y acciones del cliente
@@ -137,9 +140,8 @@ No hay frameworks, bundler ni dependencias de npm. Los módulos se cargan con et
 - **Estado principal:** `localStorage` bajo la clave `recoveryStudio.state.v1` (cuentas, reservas, pagos, planes, finanzas y configuración).
 - **Sesión activa:** `sessionStorage` (se pierde al cerrar la pestaña).
 - **Reseñas:** se guardan en **Supabase** y son compartidas entre todos los navegadores. Solo se leen las que tienen `status = 'approved'`.
-- **Datos iniciales:** se generan una vez con fechas relativas a hoy y seis meses de historial financiero.
+- **Datos iniciales:** cuenta administradora, catálogo y horarios; sin usuarios ni actividad ficticia.
 - **Respaldos:** **Configuración → Descargar respaldo JSON**.
-- **Restablecer demo:** reemplaza el estado actual por los datos de demostración.
 
 Contraseñas y PIN se almacenan como hash SHA-256 cuando el navegador expone `crypto.subtle` (contexto seguro o `localhost`); en caso contrario se usa un hash de respaldo no criptográfico.
 
@@ -174,7 +176,7 @@ where status = 'pending';
 
 ## Despliegue
 
-Es un sitio estático: puede publicarse en Netlify, Vercel, GitHub Pages, Cloudflare Pages o cualquier servidor web.
+Es un sitio estático: puede publicarse en Netlify, Vercel, GitHub Pages, Cloudflare Pages o cualquier servidor web. El despliegue publica el sitio; no convierte los datos de `localStorage` en datos compartidos o sincronizados.
 
 **Publicación actual:** GitHub Pages en `https://recoverystudio7-commits.github.io/Recoverystudionativo/` (repositorio `recoverystudio7-commits/Recoverystudionativo`, rama `main`).
 
@@ -228,6 +230,7 @@ Esta versión es un **prototipo funcional del lado cliente**. Antes de usarla co
 - [ ] Cotización pública, confirmación y gestión en admin.
 - [ ] Reseña pública: envío, estado pendiente y aparición tras aprobación en Supabase.
 - [ ] Página de sauna húmedo y enlaces desde el inicio de sesión.
+- [ ] Verificación de horarios por día y bloqueo/desbloqueo de franjas.
 - [ ] Configuración de política, retención y datos bancarios.
 - [ ] Cambio de PIN, bloqueo automático, cierre de sesiones y auditoría.
 - [ ] Navegación responsive en móvil, tablet y escritorio.

@@ -7,8 +7,7 @@
 
   const RS = (window.RS = window.RS || {});
 
-  const APP_VERSION = 4;
-  const SCHEDULE_VERSION = 1;
+  const APP_VERSION = 2;
   const STORAGE_KEY = 'recoveryStudio.state.v1';
   const SESSION_KEY = 'recoveryStudio.session.v1';
 
@@ -290,7 +289,7 @@
     });
   }
 
-  /* ------------------------------- datos demo ------------------------------ */
+  /* ----------------------------- cat?logo inicial -------------------------- */
 
   const SERVICE_SEED = [
     {
@@ -386,527 +385,77 @@
     },
   ];
 
-  function demoProof(amount, name, refCode) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="900" viewBox="0 0 720 900">
-      <rect width="720" height="900" fill="#eef2f7"/>
-      <rect x="60" y="60" width="600" height="780" rx="18" fill="#ffffff"/>
-      <rect x="60" y="60" width="600" height="96" rx="18" fill="#0a2342"/>
-      <rect x="60" y="120" width="600" height="36" fill="#0a2342"/>
-      <text x="96" y="120" font-family="Arial, sans-serif" font-size="26" font-weight="bold" fill="#ffffff">Banco BCI</text>
-      <text x="96" y="146" font-family="Arial, sans-serif" font-size="14" fill="#9fb6d0">Comprobante de transferencia</text>
-      <text x="96" y="220" font-family="Arial, sans-serif" font-size="14" fill="#64748b">MONTO TRANSFERIDO</text>
-      <text x="96" y="266" font-family="Arial, sans-serif" font-size="46" font-weight="bold" fill="#0a2342">${fmtMoney(amount)}</text>
-      <line x1="96" y1="300" x2="624" y2="300" stroke="#e2e8f0" stroke-width="2"/>
-      <text x="96" y="344" font-family="Arial, sans-serif" font-size="13" fill="#64748b">DESTINATARIO</text>
-      <text x="96" y="370" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0f172a">Daniel Esteban Barrueto</text>
-      <text x="96" y="394" font-family="Arial, sans-serif" font-size="14" fill="#475569">RUT 17.375.282-2 · Banco BCI</text>
-      <text x="96" y="416" font-family="Arial, sans-serif" font-size="14" fill="#475569">Cuenta Corriente 72771619</text>
-      <text x="96" y="462" font-family="Arial, sans-serif" font-size="13" fill="#64748b">ORDENANTE</text>
-      <text x="96" y="488" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0f172a">${esc(name)}</text>
-      <text x="96" y="534" font-family="Arial, sans-serif" font-size="13" fill="#64748b">REFERENCIA</text>
-      <text x="96" y="560" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ff7a18">${esc(refCode)}</text>
-      <rect x="96" y="610" width="528" height="54" rx="10" fill="#f0fdf4"/>
-      <circle cx="122" cy="637" r="10" fill="#0e9f6e"/>
-      <path d="M118 637l3 3 6-7" stroke="#ffffff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="144" y="642" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#0e9f6e">Transferencia exitosa</text>
-      <text x="96" y="714" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">Comprobante simulado con fines de demostración.</text>
-      <text x="96" y="736" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">Recovery Studio · Santiago, Chile</text>
-    </svg>`;
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-  }
-
-  function at(now, offset, time) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
-    return { date: iso(d), time };
-  }
-
   async function buildSeed() {
-    const now = new Date();
-    const today = iso(now);
-    const thisMonth = monthKey(now);
+    const now = new Date().toISOString();
+    const adminPasswordHash = await hashPassword('Recovery2026!');
+    const adminPinHash = await hashPassword('2468');
+    const hoursByDay = {
+      0: { enabled: false, start: '17:30', end: '22:30' },
+      1: { enabled: true, start: '17:30', end: '22:30' },
+      2: { enabled: true, start: '17:30', end: '22:30' },
+      3: { enabled: true, start: '17:30', end: '22:30' },
+      4: { enabled: true, start: '17:30', end: '22:30' },
+      5: { enabled: true, start: '15:00', end: '19:30' },
+      6: { enabled: false, start: '17:30', end: '22:30' },
+    };
+    const openDays = Object.keys(hoursByDay).map(Number).filter((day) => hoursByDay[day].enabled);
 
-    const passAdmin = await hashPassword('Recovery2026!');
-    const passDemo = await hashPassword('demo1234');
-    const pin = await hashPassword('2468');
-
-    const services = SERVICE_SEED.map((s) => ({ ...s }));
-
-    const users = [
-      {
+    return {
+      version: APP_VERSION,
+      meta: { initializedAt: now, app: 'Recovery Studio' },
+      users: [{
         id: 'usr-admin',
         role: 'admin',
         name: 'Daniel Esteban Barrueto',
         email: BRAND.adminEmail,
         phone: '+56 9 6505 8439',
-        passwordHash: passAdmin,
+        passwordHash: adminPasswordHash,
         active: true,
         credits: 0,
         planLabel: 'Administrador',
         goal: '',
-        notes: 'Perfil administrador del studio.',
-        createdAt: `${thisMonth}-01T09:00:00`,
-        source: 'admin',
-      },
-      {
-        id: 'usr-valentina',
-        role: 'user',
-        name: 'Valentina Rojas',
-        email: 'valentina@demo.cl',
-        phone: '+56 9 8123 4455',
-        passwordHash: passDemo,
-        active: true,
-        credits: 5,
-        planLabel: 'Plan Performance 12',
-        goal: 'Volver a correr sin dolor y mejorar movilidad de cadera.',
-        notes: 'Prefiere horarios de mañana. Molestia previa en isquiotibial derecho.',
-        createdAt: `${addMonths(today, -2).slice(0, 7)}-12T10:30:00`,
-        source: 'demo',
-      },
-      {
-        id: 'usr-matias',
-        role: 'user',
-        name: 'Matías Fuentes',
-        email: 'matias@demo.cl',
-        phone: '+56 9 7456 2210',
-        passwordHash: passDemo,
-        active: true,
-        credits: 2,
-        planLabel: 'Plan Recovery 8',
-        goal: 'Ganar fuerza en sentadilla y cuidar zona lumbar.',
-        notes: 'Entrena 4 veces por semana. Trabaja hasta las 18:30.',
-        createdAt: `${addMonths(today, -1).slice(0, 7)}-03T16:20:00`,
-        source: 'demo',
-      },
-      {
-        id: 'usr-carolina',
-        role: 'user',
-        name: 'Carolina Soto',
-        email: 'carolina@demo.cl',
-        phone: '+56 9 6332 7788',
-        passwordHash: passDemo,
-        active: true,
-        credits: 0,
-        planLabel: 'Sin plan activo',
-        goal: 'Recuperación post competencia de CrossFit.',
-        notes: 'Llegó por recomendación. Pago pendiente de validación.',
-        createdAt: `${thisMonth}-01T12:00:00`,
-        source: 'admin',
-      },
-    ];
-
-    const sessions = [
-      // Próximas
-      { ...at(now, 2, '10:00'), id: 'ses_1001', userId: 'usr-valentina', serviceId: 'srv-recovery', status: 'confirmada', payment: 'plan', notes: 'Trabajo de descarga en isquiotibiales.', coach: 'Daniel Barrueto', createdAt: `${today}T09:12:00` },
-      { ...at(now, 2, '19:00'), id: 'ses_1002', userId: 'usr-matias', serviceId: 'srv-training', status: 'confirmada', payment: 'pendiente', notes: 'Sesión de fuerza, foco sentadilla.', coach: 'Daniel Barrueto', createdAt: `${today}T10:40:00` },
-      { ...at(now, 4, '18:00'), id: 'ses_1003', userId: 'usr-valentina', serviceId: 'srv-training', status: 'confirmada', payment: 'plan', notes: 'Progresión de fuerza.', coach: 'Daniel Barrueto', createdAt: `${today}T11:05:00` },
-      { ...at(now, 6, '09:00'), id: 'ses_1004', userId: 'usr-matias', serviceId: 'srv-recovery', status: 'confirmada', payment: 'plan', notes: 'Descarga de tren inferior.', coach: 'Daniel Barrueto', createdAt: `${today}T11:20:00` },
-      { ...at(now, 8, '12:00'), id: 'ses_1005', userId: 'usr-carolina', serviceId: 'srv-eval', status: 'pendiente', payment: 'pendiente', notes: 'Primera evaluación.', coach: 'Daniel Barrueto', createdAt: `${today}T12:10:00` },
-      { ...at(now, 11, '17:00'), id: 'ses_1006', userId: 'usr-valentina', serviceId: 'srv-online', status: 'confirmada', payment: 'plan', notes: 'Revisión de rutina.', coach: 'Daniel Barrueto', createdAt: `${today}T12:30:00` },
-      // Historial
-      { ...at(now, -2, '10:00'), id: 'ses_0901', userId: 'usr-valentina', serviceId: 'srv-recovery', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -9)}T10:00:00` },
-      { ...at(now, -3, '19:00'), id: 'ses_0902', userId: 'usr-matias', serviceId: 'srv-training', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -10)}T19:00:00` },
-      { ...at(now, -8, '11:00'), id: 'ses_0903', userId: 'usr-valentina', serviceId: 'srv-training', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -15)}T11:00:00` },
-      { ...at(now, -12, '18:00'), id: 'ses_0904', userId: 'usr-valentina', serviceId: 'srv-recovery', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -19)}T18:00:00` },
-      { ...at(now, -18, '09:00'), id: 'ses_0905', userId: 'usr-matias', serviceId: 'srv-recovery', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -25)}T09:00:00` },
-      { ...at(now, -23, '12:00'), id: 'ses_0906', userId: 'usr-valentina', serviceId: 'srv-eval', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -30)}T12:00:00` },
-      { ...at(now, -30, '10:00'), id: 'ses_0907', userId: 'usr-carolina', serviceId: 'srv-recovery', status: 'cancelada', payment: 'cortesia', notes: 'Cancelada por la clienta.', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -38)}T10:00:00` },
-    ];
-
-    // Sesión de hoy si aún hay margen horario
-    if (now.getHours() < 16) {
-      sessions.unshift({
-        id: 'ses_1000',
-        userId: 'usr-matias',
-        serviceId: 'srv-training',
-        date: today,
-        time: '18:30',
-        status: 'confirmada',
-        payment: 'plan',
-        notes: 'Sesión de hoy.',
-        coach: 'Daniel Barrueto',
-        createdAt: `${today}T08:00:00`,
-      });
-    }
-
-    /* ------------------------------ pagos demo ----------------------------- */
-    const payments = [];
-    const monthEntries = [
-      { concept: 'Plan Performance 12', category: 'Planes', amount: 300000, day: 4, name: 'Valentina Rojas', userId: 'usr-valentina', credits: 12 },
-      { concept: 'Plan Recovery 8', category: 'Planes', amount: 220000, day: 9, name: 'Matías Fuentes', userId: 'usr-matias', credits: 8 },
-      { concept: 'Sesión Recovery', category: 'Sesiones', amount: 35000, day: 12, name: 'Valentina Rojas', userId: 'usr-valentina', credits: 0 },
-      { concept: 'Entrenamiento 1:1', category: 'Sesiones', amount: 30000, day: 15, name: 'Matías Fuentes', userId: 'usr-matias', credits: 0 },
-      { concept: 'Sesión Recovery', category: 'Sesiones', amount: 35000, day: 17, name: 'Carolina Soto', userId: 'usr-carolina', credits: 1 },
-      { concept: 'Evaluación + pauta', category: 'Sesiones', amount: 40000, day: 20, name: 'Carolina Soto', userId: 'usr-carolina', credits: 0 },
-      { concept: 'Asesoría online', category: 'Asesorías', amount: 18000, day: 23, name: 'Valentina Rojas', userId: 'usr-valentina', credits: 0 },
-      { concept: 'Sesión Recovery', category: 'Sesiones', amount: 35000, day: 26, name: 'Matías Fuentes', userId: 'usr-matias', credits: 0 },
-    ];
-
-    for (let back = 5; back >= 0; back -= 1) {
-      const base = new Date(now.getFullYear(), now.getMonth() - back, 1);
-      const isCurrent = back === 0;
-      const monthFactor = [0.86, 1.04, 0.93, 1.16, 0.98, 1.06][5 - back];
-      monthEntries.forEach((entry, index) => {
-        let day = entry.day;
-        if (isCurrent) {
-          const maxDay = now.getDate();
-          day = Math.max(1, Math.min(maxDay, 1 + Math.round(index * Math.max(0.4, (maxDay - 1) / monthEntries.length))));
-        }
-        const d = new Date(base.getFullYear(), base.getMonth(), day);
-        if (d > now) d.setTime(now.getTime());
-        const date = iso(d);
-        const amount = Math.round((entry.amount * monthFactor) / 1000) * 1000;
-        const pRef = `PAG-${String(1000 + back * 20 + index)}`;
-        payments.push({
-          id: `pay_seed_${back}_${index}`,
-          ref: pRef,
-          userId: entry.userId,
-          userName: entry.name,
-          concept: entry.concept,
-          category: entry.category,
-          amount,
-          date,
-          status: 'aprobado',
-          method: 'Transferencia',
-          proof: demoProof(amount, entry.name, pRef),
-          proofName: 'comprobante-demo.svg',
-          creditsToAdd: 0,
-          creditsAdded: entry.credits,
-          note: '',
-          createdAt: `${date}T10:00:00`,
-          approvedAt: `${date}T11:00:00`,
-        });
-      });
-    }
-
-    // Pendientes de validación
-    const pendRef1 = 'PAG-2081';
-    const pendRef2 = 'PAG-2082';
-    const pendRef3 = 'PAG-2083';
-    payments.push(
-      {
-        id: 'pay_pending_1',
-        ref: pendRef1,
-        userId: 'usr-carolina',
-        userName: 'Carolina Soto',
-        concept: 'Plan Recovery 8',
-        category: 'Planes',
-        amount: 220000,
-        date: today,
-        status: 'pendiente',
-        method: 'Transferencia',
-        proof: demoProof(220000, 'Carolina Soto', pendRef1),
-        proofName: 'comprobante-carolina.svg',
-        creditsToAdd: 8,
-        creditsAdded: 0,
-        note: 'Transferencia realizada hoy.',
-        createdAt: `${today}T09:30:00`,
-        approvedAt: null,
-      },
-      {
-        id: 'pay_pending_2',
-        ref: pendRef2,
-        userId: 'usr-matias',
-        userName: 'Matías Fuentes',
-        concept: 'Entrenamiento 1:1',
-        category: 'Sesiones',
-        amount: 30000,
-        date: today,
-        status: 'pendiente',
-        method: 'Transferencia',
-        proof: demoProof(30000, 'Matías Fuentes', pendRef2),
-        proofName: 'comprobante-matias.svg',
-        creditsToAdd: 0,
-        creditsAdded: 0,
-        note: 'Pago de sesión individual.',
-        createdAt: `${today}T10:10:00`,
-        approvedAt: null,
-      },
-      {
-        id: 'pay_pending_3',
-        ref: pendRef3,
-        userId: 'usr-valentina',
-        userName: 'Valentina Rojas',
-        concept: 'Asesoría online',
-        category: 'Asesorías',
-        amount: 18000,
-        date: today,
-        status: 'pendiente',
-        method: 'Transferencia',
-        proof: demoProof(18000, 'Valentina Rojas', pendRef3),
-        proofName: 'comprobante-valentina.svg',
-        creditsToAdd: 0,
-        creditsAdded: 0,
-        note: '',
-        createdAt: `${today}T11:00:00`,
-        approvedAt: null,
-      }
-    );
-
-    /* ------------------------------ gastos demo ---------------------------- */
-    const expenses = [];
-    const expCats = [
-      { category: 'Arriendo', description: 'Arriendo studio', amount: 380000, day: 2 },
-      { category: 'Insumos', description: 'Aceites, toallas e insumos de masoterapia', amount: 65000, day: 6 },
-      { category: 'Marketing', description: 'Campaña redes sociales', amount: 75000, day: 10 },
-      { category: 'Servicios básicos', description: 'Luz, agua e internet', amount: 42000, day: 14 },
-      { category: 'Mantención', description: 'Mantención de equipamiento', amount: 38000, day: 21 },
-    ];
-    for (let back = 5; back >= 0; back -= 1) {
-      const base = new Date(now.getFullYear(), now.getMonth() - back, 1);
-      const isCurrent = back === 0;
-      expCats.forEach((e, i) => {
-        if (isCurrent && i > 2) return;
-        const day = isCurrent ? Math.min(now.getDate(), e.day) : e.day;
-        const d = new Date(base.getFullYear(), base.getMonth(), day);
-        expenses.push({
-          id: `exp_seed_${back}_${i}`,
-          date: iso(d),
-          category: e.category,
-          description: e.description,
-          amount: e.amount,
-          method: 'Transferencia',
-        });
-      });
-    }
-
-    /* ----------------------------- honorarios ------------------------------ */
-    const boletas = [];
-    for (let back = 5; back >= 0; back -= 1) {
-      const base = new Date(now.getFullYear(), now.getMonth() - back, 1);
-      const isCurrent = back === 0;
-      if (isCurrent && now.getDate() < 5) {
-        // igual dejamos una boleta del mes en curso para el demo
-      }
-      const gross = [580000, 650000, 780000, 720000, 840000, 610000][5 - back] || 650000;
-      const day = isCurrent ? Math.min(now.getDate(), 3) : 28;
-      boletas.push({
-        id: `bol_seed_${back}`,
-        number: String(241 + back * 7),
-        date: iso(new Date(base.getFullYear(), base.getMonth(), day)),
-        client: 'Recovery Studio SpA',
-        gross,
-        retentionRate: 15.25,
-        notes: 'Boleta de honorarios por servicios profesionales.',
-      });
-    }
-
-    /* ----------------------------- cotizaciones ---------------------------- */
-    const quotes = [
-      {
-        id: 'qte_seed_1',
-        ref: 'COT-4821',
-        company: 'Clínica Andes',
-        rut: '76.543.210-8',
-        contact: 'Paula Herrera',
-        email: 'paula.herrera@clinicaandes.cl',
-        phone: '+56 9 8877 2211',
-        people: 18,
-        serviceIds: ['srv-recovery', 'srv-online'],
-        date: addDays(today, 20),
-        message: 'Buscamos un programa mensual de recuperación para el equipo de kinesiología.',
-        status: 'nueva',
-        estimate: 846000,
-        finalAmount: 0,
         notes: '',
-        createdAt: `${today}T08:40:00`,
+        createdAt: now,
+        source: 'admin',
+      }],
+      services: SERVICE_SEED.map((service) => ({ ...service, features: [...service.features] })),
+      sessions: [],
+      blockedSlots: [],
+      payments: [],
+      expenses: [],
+      boletas: [],
+      quotes: [],
+      maxes: [],
+      routines: [],
+      settings: {
+        openDays,
+        hoursByDay,
+        start: '17:30',
+        end: '22:30',
+        slot: 60,
+        leadHours: 2,
+        policyHours: 12,
+        horizonDays: 45,
+        autoLockMin: 15,
+        retention: 15.25,
+        whatsapp: BRAND.whatsapp,
+        address: 'Av. Providencia 1234, oficina 502 ? Santiago',
+        bank: {
+          holder: 'DANIEL ESTEBAN BARRUETO',
+          rut: '17.375.282-2',
+          bankName: 'Banco BCI',
+          accountType: 'Cuenta Corriente',
+          account: '72771619',
+          email: BRAND.adminEmail,
+        },
       },
-      {
-        id: 'qte_seed_2',
-        ref: 'COT-4820',
-        company: 'Constructora Vertex',
-        rut: '77.112.334-5',
-        contact: 'Rodrigo Salas',
-        email: 'rsalas@vertex.cl',
-        phone: '+56 9 6655 1122',
-        people: 35,
-        serviceIds: ['srv-recovery'],
-        date: addDays(today, 12),
-        message: 'Programa de pausas activas y recuperación para obra.',
-        status: 'enviada',
-        estimate: 1008000,
-        finalAmount: 1180000,
-        notes: 'Se envió propuesta con 2 jornadas mensuales.',
-        createdAt: `${addDays(today, -3)}T15:20:00`,
-      },
-      {
-        id: 'qte_seed_3',
-        ref: 'COT-4817',
-        company: 'TechNova',
-        rut: '76.888.901-2',
-        contact: 'Fernanda Lagos',
-        email: 'flagos@technova.io',
-        phone: '+56 9 5544 3322',
-        people: 24,
-        serviceIds: ['srv-recovery', 'srv-training'],
-        date: addDays(today, 30),
-        message: 'Beneficio de bienestar para el equipo de desarrollo.',
-        status: 'aceptada',
-        estimate: 1296000,
-        finalAmount: 1250000,
-        notes: 'Aceptada. Inicio el próximo mes.',
-        createdAt: `${addDays(today, -12)}T11:10:00`,
-      },
-    ];
-
-    /* ------------------------------ maximales ------------------------------ */
-    const maxes = [
-      { id: 'mx_1', userId: 'usr-valentina', exercise: 'Sentadilla', current: 85, previous: 80, unit: 'kg', updatedAt: addDays(today, -8) },
-      { id: 'mx_2', userId: 'usr-valentina', exercise: 'Peso muerto', current: 100, previous: 95, unit: 'kg', updatedAt: addDays(today, -8) },
-      { id: 'mx_3', userId: 'usr-valentina', exercise: 'Press banca', current: 45, previous: 42.5, unit: 'kg', updatedAt: addDays(today, -15) },
-      { id: 'mx_4', userId: 'usr-valentina', exercise: 'Press militar', current: 30, previous: 27.5, unit: 'kg', updatedAt: addDays(today, -15) },
-      { id: 'mx_5', userId: 'usr-matias', exercise: 'Sentadilla', current: 130, previous: 125, unit: 'kg', updatedAt: addDays(today, -10) },
-      { id: 'mx_6', userId: 'usr-matias', exercise: 'Peso muerto', current: 160, previous: 155, unit: 'kg', updatedAt: addDays(today, -10) },
-      { id: 'mx_7', userId: 'usr-matias', exercise: 'Press banca', current: 95, previous: 92.5, unit: 'kg', updatedAt: addDays(today, -17) },
-      { id: 'mx_8', userId: 'usr-carolina', exercise: 'Sentadilla', current: 70, previous: 68, unit: 'kg', updatedAt: addDays(today, -25) },
-    ];
-
-    /* -------------------------------- rutinas ------------------------------ */
-    const routines = [
-      {
-        id: 'rt_1',
-        userId: 'usr-valentina',
-        title: 'Base sólida · Fase 2',
-        objective: 'Reconstruir capacidad de carrera y fuerza de tren inferior sin irritar el isquiotibial derecho.',
-        weeks: 6,
-        updatedAt: addDays(today, -6),
-        days: [
-          {
-            id: 'd1',
-            name: 'Día 1',
-            focus: 'Fuerza tren inferior',
-            items: [
-              { name: 'Sentadilla goblet', sets: '4', reps: '8', load: '24 kg', rest: '90 s', notes: 'Tempo 3-1-1, sin dolor.' },
-              { name: 'Peso muerto rumano', sets: '3', reps: '10', load: '40 kg', rest: '90 s', notes: 'Bisagra de cadera controlada.' },
-              { name: 'Puente de glúteo', sets: '3', reps: '12', load: 'Peso corporal', rest: '60 s', notes: 'Pausa de 2 s arriba.' },
-              { name: 'Plancha frontal', sets: '3', reps: '30 s', load: '—', rest: '45 s', notes: '' },
-            ],
-          },
-          {
-            id: 'd2',
-            name: 'Día 2',
-            focus: 'Movilidad y recuperación',
-            items: [
-              { name: 'Movilidad de cadera 90/90', sets: '3', reps: '8 por lado', load: '—', rest: '30 s', notes: 'Respirar en cada posición.' },
-              { name: 'Estiramiento isquiotibial asistido', sets: '3', reps: '40 s', load: '—', rest: '30 s', notes: 'Sin rebotes.' },
-              { name: 'Foam roller cuádriceps', sets: '2', reps: '60 s', load: '—', rest: '30 s', notes: 'Zona tolerada.' },
-              { name: 'Caminata suave', sets: '1', reps: '25 min', load: '—', rest: '—', notes: 'Ritmo conversacional.' },
-            ],
-          },
-          {
-            id: 'd3',
-            name: 'Día 3',
-            focus: 'Potencia y core',
-            items: [
-              { name: 'Hip thrust', sets: '4', reps: '8', load: '50 kg', rest: '90 s', notes: 'Empuje explosivo.' },
-              { name: 'Step-up', sets: '3', reps: '10 por lado', load: '12 kg', rest: '60 s', notes: 'Controlar bajada.' },
-              { name: 'Pallof press', sets: '3', reps: '12 por lado', load: '10 kg', rest: '45 s', notes: '' },
-              { name: 'Trote progresivo', sets: '1', reps: '15 min', load: '—', rest: '—', notes: 'Máximo 4/10 de esfuerzo.' },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'rt_2',
-        userId: 'usr-matias',
-        title: 'Fuerza · Bloque de acumulación',
-        objective: 'Aumentar fuerza en básicos cuidando la zona lumbar y mantener movilidad torácica.',
-        weeks: 8,
-        updatedAt: addDays(today, -12),
-        days: [
-          {
-            id: 'm1',
-            name: 'Día 1',
-            focus: 'Sentadilla',
-            items: [
-              { name: 'Sentadilla trasera', sets: '5', reps: '5', load: '105 kg', rest: '3 min', notes: 'Subir 2,5 kg por semana.' },
-              { name: 'Prensa 45°', sets: '3', reps: '10', load: '160 kg', rest: '2 min', notes: '' },
-              { name: 'Curl femoral', sets: '3', reps: '12', load: '35 kg', rest: '60 s', notes: '' },
-              { name: 'Plancha lateral', sets: '3', reps: '35 s por lado', load: '—', rest: '45 s', notes: '' },
-            ],
-          },
-          {
-            id: 'm2',
-            name: 'Día 2',
-            focus: 'Empuje',
-            items: [
-              { name: 'Press banca', sets: '5', reps: '5', load: '80 kg', rest: '3 min', notes: 'Escápulas retraídas.' },
-              { name: 'Press militar', sets: '3', reps: '8', load: '45 kg', rest: '2 min', notes: '' },
-              { name: 'Remo con mancuerna', sets: '3', reps: '10', load: '32 kg', rest: '90 s', notes: '' },
-              { name: 'Face pull', sets: '3', reps: '15', load: '20 kg', rest: '60 s', notes: '' },
-            ],
-          },
-          {
-            id: 'm3',
-            name: 'Día 3',
-            focus: 'Peso muerto',
-            items: [
-              { name: 'Peso muerto convencional', sets: '4', reps: '4', load: '135 kg', rest: '3 min', notes: 'Técnica antes que carga.' },
-              { name: 'Remo barra', sets: '4', reps: '8', load: '70 kg', rest: '90 s', notes: '' },
-              { name: 'Hip thrust', sets: '3', reps: '10', load: '90 kg', rest: '90 s', notes: '' },
-              { name: 'Dead bug', sets: '3', reps: '10 por lado', load: '—', rest: '45 s', notes: '' },
-            ],
-          },
-        ],
-      },
-    ];
-
-    const settings = {
-      openDays: [1, 2, 3, 4, 5],
-      start: '17:30',
-      end: '22:30',
-      slot: 60,
-      scheduleVersion: SCHEDULE_VERSION,
-      leadHours: 2,
-      policyHours: 12,
-      horizonDays: 45,
-      autoLockMin: 15,
-      retention: 15.25,
-      whatsapp: BRAND.whatsapp,
-      address: 'Gorbea, Región de la Araucania',
-      bank: {
-        holder: 'DANIEL ESTEBAN BARRUETO',
-        rut: '17.375.282-2',
-        bankName: 'Banco BCI',
-        accountType: 'Cuenta Corriente',
-        account: '72771619',
-        email: BRAND.adminEmail,
-      },
-      // Horario por día - 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
-      scheduleByDay: {
-        1: { start: '17:30', end: '22:30' }, // Lunes
-        2: { start: '17:30', end: '22:30' }, // Martes
-        3: { start: '17:30', end: '22:30' }, // Miércoles
-        4: { start: '17:30', end: '22:30' }, // Jueves
-        5: { start: '17:30', end: '22:30' }, // Viernes
-      },
-    };
-
-    const audits = [
-      { id: 'aud_seed_1', at: `${today}T08:00:00`, actor: 'Sistema', action: 'Inicio de demo', detail: 'Datos de demostración cargados correctamente.' },
-      { id: 'aud_seed_2', at: `${addDays(today, -1)}T17:42:00`, actor: 'Daniel Barrueto', action: 'Pago aprobado', detail: 'Se aprobó el pago PAG-2068 por $300.000.' },
-      { id: 'aud_seed_3', at: `${addDays(today, -2)}T11:20:00`, actor: 'Daniel Barrueto', action: 'Sesión reagendada', detail: 'Se movió una sesión de Matías Fuentes al viernes 18:00.' },
-    ];
-
-    return {
-      version: APP_VERSION,
-      meta: { seededAt: new Date().toISOString(), app: 'Recovery Studio' },
-      users,
-      services,
-      sessions,
-      payments,
-      expenses,
-      boletas,
-      quotes,
-      maxes,
-      routines,
-      settings,
-      audits,
+      audits: [],
       security: {
-        adminPinHash: pin,
+        adminPinHash,
         pinFailures: 0,
         pinLockUntil: 0,
         securityStamp: uid('stamp'),
-        lastPasswordChange: new Date().toISOString(),
+        lastPasswordChange: now,
       },
       ui: {},
     };
@@ -931,19 +480,6 @@
           if (parsed && parsed.version === APP_VERSION && Array.isArray(parsed.users)) {
             state = parsed;
             state.settings = Object.assign({}, parsed.settings || {});
-            if (state.settings.scheduleVersion !== SCHEDULE_VERSION) {
-              const openDays = Array.isArray(state.settings.openDays) ? state.settings.openDays : [1, 2, 3, 4, 5];
-              state.settings.openDays = openDays;
-              state.settings.start = '17:30';
-              state.settings.end = '22:30';
-              state.settings.slot = 60;
-              state.settings.scheduleVersion = SCHEDULE_VERSION;
-              state.settings.scheduleByDay = {};
-              openDays.forEach((day) => {
-                state.settings.scheduleByDay[day] = { start: '17:30', end: '22:30' };
-              });
-              DB.save();
-            }
             return state;
           }
         } catch (e) {
@@ -972,13 +508,6 @@
     update(fn) {
       fn(state);
       return DB.save();
-    },
-    async reset() {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(SESSION_KEY);
-      state = await buildSeed();
-      DB.save();
-      return state;
     },
     export() {
       return JSON.stringify(state, null, 2);
@@ -1037,16 +566,15 @@
   function availableSlots(date, serviceId, opts) {
     const options = opts || {};
     const settings = state.settings;
-    const day = parseISO(date).getDay();
-    if (!settings.openDays.includes(day)) return [];
-    const daySchedule = settings.scheduleByDay ? settings.scheduleByDay[day] : null;
-    if (!daySchedule) return [];
-    const startMin = timeToMin(daySchedule.start);
-    const endMin = timeToMin(daySchedule.end);
+    const dayHours = hoursForDay(date);
+    if (!dayHours.enabled) return [];
+    const startMin = timeToMin(dayHours.start);
+    const endMin = timeToMin(dayHours.end);
     const step = Number(settings.slot) || 60;
     const service = getService(serviceId);
     const duration = service ? Number(service.duration) || 60 : 60;
     const sameDay = sessionsOn(date).filter((s) => s.id !== options.ignoreSessionId);
+    const blocks = (state.blockedSlots || []).filter((block) => block.date === date);
     const now = new Date();
     const list = [];
     for (let minute = startMin; minute + duration <= endMin; minute += step) {
@@ -1055,18 +583,59 @@
         const sEnd = sessionEndMinutes(s);
         return minute < sEnd && minute + duration > sStart;
       });
+      const blocked = blocks.find((block) => {
+        const blockStart = timeToMin(block.time);
+        const blockEnd = blockStart + (Number(block.duration) || step);
+        return minute < blockEnd && minute + duration > blockStart;
+      });
       let reason = '';
       if (overlap) reason = 'Ocupado';
+      else if (blocked) reason = 'Bloqueado por administrador';
       const dt = dateTime(date, minToTime(minute));
       const lead = Number(settings.leadHours) || 0;
       if (dt.getTime() - now.getTime() < lead * 3600000) {
         reason = reason || 'Fuera de plazo';
       }
-      if (options.ignoreRules) reason = overlap ? 'Ocupado' : '';
+      if (options.ignoreRules) reason = overlap ? 'Ocupado' : blocked ? 'Bloqueado por administrador' : '';
       list.push({ time: minToTime(minute), available: !reason, reason });
     }
     return list;
   }
+
+  function hoursForDay(value) {
+    const day = typeof value === 'number' ? value : parseISO(value).getDay();
+    const configured = state.settings.hoursByDay && state.settings.hoursByDay[day];
+    if (configured) return configured;
+    return {
+      enabled: (state.settings.openDays || []).includes(day),
+      start: state.settings.start || '17:30',
+      end: state.settings.end || '22:30',
+    };
+  }
+
+  function blockSlot(date, time, actor) {
+    const existing = state.blockedSlots.find((block) => block.date === date && block.time === time);
+    if (existing) return existing;
+    const block = { id: uid('block'), date, time, duration: Number(state.settings.slot) || 60, actor: actor || '' };
+    state.blockedSlots.push(block);
+    DB.save();
+    return block;
+  }
+
+  function unblockSlot(id) {
+    const block = state.blockedSlots.find((item) => item.id === id);
+    if (!block) return null;
+    state.blockedSlots = state.blockedSlots.filter((item) => item.id !== id);
+    DB.save();
+    return block;
+  }
+
+  function blockedSlotsOn(date) {
+    return (state.blockedSlots || [])
+      .filter((block) => block.date === date)
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }
+
   function userMaxes(userId) {
     return state.maxes.filter((m) => m.userId === userId);
   }
@@ -1150,7 +719,6 @@
   }
 
   RS.APP_VERSION = APP_VERSION;
-  RS.SCHEDULE_VERSION = SCHEDULE_VERSION;
   RS.STORAGE_KEY = STORAGE_KEY;
   RS.SESSION_KEY = SESSION_KEY;
   RS.BRAND = BRAND;
@@ -1169,8 +737,8 @@
   };
   RS.data = {
     getUser, getService, serviceName, servicePrice, userSessions, upcomingSessions,
-    nextSession, sessionsOn, availableSlots, userMaxes, userRoutine, approvalsInMonth,
+    nextSession, sessionsOn, availableSlots, hoursForDay, blockSlot, unblockSlot, blockedSlotsOn, userMaxes, userRoutine, approvalsInMonth,
     expensesInMonth, boletasInMonth, financeSummary, monthsBack, addAudit, whatsappUrl,
-    bankData, demoProof,
+    bankData,
   };
 })();

@@ -69,7 +69,6 @@
                     <button class="icon-btn" title="Gestionar" aria-label="Gestionar usuario" data-action="admin-user-detail" data-id="${u.id}">${UI.icon('settings', 16)}</button>
                     <button class="icon-btn" title="Editar" aria-label="Editar usuario" data-action="admin-user-edit" data-id="${u.id}">${UI.icon('edit', 16)}</button>
                     <button class="icon-btn" title="Nueva sesión" aria-label="Agendar sesión" data-action="admin-user-assign" data-id="${u.id}">${UI.icon('calendar', 16)}</button>
-                    <button class="icon-btn danger" title="Eliminar usuario" aria-label="Eliminar usuario" data-action="admin-user-delete" data-id="${u.id}">${UI.icon('trash', 16)}</button>
                   </div></td>
                 </tr>`;
               }).join('')}
@@ -113,8 +112,9 @@
         <button class="user-action" data-action="admin-user-assign" data-id="${user.id}"><span class="tone-amber">${UI.icon('calendar', 18)}</span><strong>Agendar sesión</strong><small>Asignar horario</small></button>
         <button class="user-action" data-action="admin-reset-password" data-id="${user.id}"><span class="tone-blue">${UI.icon('key', 18)}</span><strong>Resetear clave</strong><small>Nueva clave temporal</small></button>
         <button class="user-action" data-action="admin-user-sessions" data-id="${user.id}"><span class="tone-green">${UI.icon('receipt', 18)}</span><strong>Historial</strong><small>${sessions.length} sesiones</small></button>
+        ${(user.credits > 0 || (user.planLabel && user.planLabel !== 'Sin plan activo')) ? `<button class="user-action danger-text" data-action="admin-user-clear-plan" data-id="${user.id}"><span class="tone-orange">${UI.icon('trash', 18)}</span><strong>Quitar plan</strong><small>Eliminar plan y saldo</small></button>` : ''}
       </div>`,
-      footer: `<button class="btn btn-ghost danger-text" data-action="admin-user-delete" data-id="${user.id}">${UI.icon('trash', 16)} Eliminar usuario</button><button class="btn btn-ghost" data-modal-close>Cerrar</button><button class="btn btn-primary" data-action="admin-user-edit" data-id="${user.id}">Editar usuario</button>`,
+      footer: `<button class="btn btn-ghost" data-modal-close>Cerrar</button><button class="btn btn-primary" data-action="admin-user-edit" data-id="${user.id}">Editar usuario</button>`,
     });
   }
 
@@ -178,7 +178,7 @@
   RS.forms['admin-user-update'] = (form) => {
     const err = document.getElementById('user-form-error');
     if (err) err.classList.remove('show');
-    const user = st().users.find((u) => u.id === form.elements.namedItem('id').value);
+    const user = st().users.find((u) => u.id === form.id.value);
     if (!user) return;
     const email = form.email.value.trim().toLowerCase();
     const name = form.name.value.trim();
@@ -229,7 +229,7 @@
   }
 
   RS.forms['admin-reset-password'] = async (form) => {
-    const user = st().users.find((u) => u.id === form.elements.namedItem('id').value);
+    const user = st().users.find((u) => u.id === form.id.value);
     if (!user) return;
     const err = document.getElementById('reset-error');
     if (String(form.password.value).length < 8) return showFormError(err, 'La clave debe tener al menos 8 caracteres.');
@@ -491,7 +491,7 @@
             <td><strong>${U.fmtMoney(p.price)}</strong></td>
             <td>${U.fmtMoney(Math.round(p.price / Math.max(1, p.sessions)))}</td>
             <td>${p.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td>
-            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-edit" data-id="${p.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${p.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${p.id}" title="${p.active ? 'Desactivar' : 'Activar'}">${UI.icon(p.active ? 'eye-off' : 'eye', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${p.id}" title="Eliminar">${UI.icon('trash', 16)}</button></div></td>
+            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${p.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${p.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${p.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${p.id}" title="${p.active ? 'Desactivar' : 'Activar'}">${UI.icon(p.active ? 'eye-off' : 'eye', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${p.id}" title="Eliminar">${UI.icon('trash', 16)}</button></div></td>
           </tr>`).join('')}</tbody>
         </table></div>
       </section>
@@ -507,7 +507,7 @@
             <td><strong>${U.fmtMoney(s.price)}</strong></td>
             <td>${U.fmtMoney(s.companyPrice || 0)}</td>
             <td>${s.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td>
-            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${s.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${s.id}">${UI.icon(s.active ? 'eye-off' : 'eye', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${s.id}" title="Eliminar">${UI.icon('trash', 16)}</button></div></td>
+            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${s.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${s.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${s.id}">${UI.icon(s.active ? 'eye-off' : 'eye', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${s.id}" title="Eliminar">${UI.icon('trash', 16)}</button></div></td>
           </tr>`).join('')}</tbody>
         </table></div>
       </section>
@@ -540,6 +540,7 @@
           <div class="field"><label for="sv-duration">Duración (min)</label><input class="input" id="sv-duration" name="duration" type="number" min="15" step="15" value="${s.duration || 60}"></div>
         </div>
         <div class="field"><label for="sv-desc">Descripción</label><textarea class="input" id="sv-desc" name="description" rows="2">${U.esc(s.description || '')}</textarea></div>
+        <div class="field"><label for="sv-mp">Link de pago MercadoPago</label><input class="input" id="sv-mp" name="mpLink" type="url" placeholder="https://mpago.la/..." value="${U.esc(s.mpLink || '')}"><span class="field-hint">Opcional. Se usa en “Cobrar” para enviar el link de pago al cliente.</span></div>
         <div class="field"><label for="sv-features">Beneficios (uno por línea)</label><textarea class="input" id="sv-features" name="features" rows="4">${U.esc((s.features || []).join('\n'))}</textarea></div>
         <div class="grid grid-2 gap-sm">
           <label class="check check-boxed"><input type="checkbox" name="active" ${s.active ? 'checked' : ''}><span>Activo / visible</span></label>
@@ -550,6 +551,130 @@
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" type="submit" form="service-form">${isEdit ? 'Guardar cambios' : 'Crear'}</button>`,
     });
   }
+
+  /* --------------------------------- cobrar -------------------------------- */
+
+  function chargeRef() {
+    const d = new Date();
+    const yy = String(d.getFullYear()).slice(-2);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `RS-${yy}${mm}${dd}-${String(Math.floor(100 + Math.random() * 900))}`;
+  }
+
+  function chargeMessage(service, client, amount, ref, mpLink) {
+    const lines = [];
+    lines.push(`Hola${client ? ` ${client}` : ''}, te comparto el cobro de Recovery Studio:`);
+    lines.push('');
+    lines.push(`• Servicio: ${service.name}`);
+    lines.push(`• Monto: ${U.fmtMoney(amount)}`);
+    lines.push(`• Referencia: ${ref}`);
+    lines.push('');
+    if (mpLink) {
+      lines.push('Puedes pagar con tarjeta o los medios disponibles en este link:');
+      lines.push(mpLink);
+    } else {
+      const b = RS.data.bankData();
+      lines.push('Puedes transferir a:');
+      lines.push(`Titular: ${b.holder}`);
+      lines.push(`RUT: ${b.rut}`);
+      lines.push(`Banco: ${b.bankName}`);
+      lines.push(`Tipo: ${b.accountType}`);
+      lines.push(`Cuenta: ${b.account}`);
+      lines.push(`Email: ${b.email}`);
+    }
+    lines.push('');
+    lines.push('Cuando lo hagas, envíame el comprobante por este mismo chat para confirmar tu reserva. ¡Gracias!');
+    return lines.join('\n');
+  }
+
+  function chargeValues() {
+    const form = document.getElementById('charge-form');
+    if (!form) return null;
+    return {
+      serviceId: form.serviceId.value,
+      client: form.client.value.trim(),
+      amount: Math.max(0, Number(form.amount.value) || 0),
+      ref: form.ref.value.trim(),
+      mpLink: form.mpLink.value.trim(),
+    };
+  }
+
+  function refreshChargeMessage() {
+    const v = chargeValues();
+    if (!v) return;
+    const service = RS.data.getService(v.serviceId);
+    const preview = document.getElementById('charge-message');
+    if (!service || !preview) return;
+    preview.value = chargeMessage(service, v.client, v.amount, v.ref, v.mpLink);
+  }
+
+  function openChargeModal(service) {
+    if (!service) return;
+    const ref = chargeRef();
+    const amount = service.price || service.companyPrice || 0;
+    const message = chargeMessage(service, '', amount, ref, service.mpLink || '');
+    UI.modal({
+      title: `Cobrar · ${service.name}`,
+      subtitle: 'Copia el mensaje y envíalo por WhatsApp. Si agregas un link de MercadoPago, se incluye automáticamente.',
+      size: 'md',
+      body: `<form data-form="catalog-charge" id="charge-form">
+        <input type="hidden" name="serviceId" value="${service.id}">
+        <div class="grid grid-2 gap-sm">
+          <div class="field"><label for="ch-client">Cliente</label><input class="input" id="ch-client" name="client" placeholder="Nombre (opcional)" data-input="charge-refresh"></div>
+          <div class="field"><label for="ch-amount">Monto *</label><input class="input" id="ch-amount" name="amount" type="number" min="0" step="500" value="${amount}" required data-input="charge-refresh"></div>
+        </div>
+        <div class="grid grid-2 gap-sm">
+          <div class="field"><label for="ch-ref">Referencia</label><input class="input" id="ch-ref" name="ref" value="${ref}" readonly></div>
+          <div class="field"><label for="ch-mp">Link MercadoPago</label><input class="input" id="ch-mp" name="mpLink" type="url" placeholder="https://mpago.la/..." value="${U.esc(service.mpLink || '')}" data-input="charge-refresh"></div>
+        </div>
+        <div class="field"><label for="charge-message">Mensaje para enviar</label><textarea class="input" id="charge-message" name="message" rows="9" readonly>${U.esc(message)}</textarea><span class="field-hint">Se actualiza al cambiar cliente, monto o link. Si no hay link, incluye los datos de transferencia.</span></div>
+      </form>`,
+      footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button>
+        <button class="btn btn-outline" data-action="charge-copy">${UI.icon('copy', 16)} Copiar mensaje</button>
+        <button class="btn btn-accent" data-action="charge-wa">${UI.icon('send', 16)} Enviar por WhatsApp</button>`,
+    });
+  }
+
+  function saveChargeLink(v, service) {
+    if (!service) return;
+    if (v.mpLink === (service.mpLink || '')) return;
+    service.mpLink = v.mpLink;
+    RS.DB.save();
+  }
+
+  RS.inputs['charge-refresh'] = () => refreshChargeMessage();
+
+  RS.actions['catalog-charge'] = (el) => {
+    const service = RS.data.getService(el.dataset.id);
+    if (service) openChargeModal(service);
+  };
+
+  RS.actions['charge-copy'] = () => {
+    const v = chargeValues();
+    if (!v) return;
+    const service = RS.data.getService(v.serviceId);
+    if (!service) return;
+    saveChargeLink(v, service);
+    const preview = document.getElementById('charge-message');
+    const text = preview ? preview.value : chargeMessage(service, v.client, v.amount, v.ref, v.mpLink);
+    U.copyToClipboard(text).then(() => UI.toast('Mensaje copiado. Pégalo en WhatsApp.', 'success'));
+  };
+
+  RS.actions['charge-wa'] = () => {
+    const v = chargeValues();
+    if (!v) return;
+    const service = RS.data.getService(v.serviceId);
+    if (!service) return;
+    saveChargeLink(v, service);
+    const preview = document.getElementById('charge-message');
+    const text = preview ? preview.value : chargeMessage(service, v.client, v.amount, v.ref, v.mpLink);
+    window.open(RS.data.whatsappUrl(text), '_blank', 'noopener');
+  };
+
+  RS.forms['catalog-charge'] = () => {
+    RS.actions['charge-copy']();
+  };
 
   RS.forms['admin-service'] = (form) => {
     const err = document.getElementById('service-error');
@@ -565,13 +690,13 @@
       sessions: Math.max(0, Number(form.sessions.value) || 0),
       duration: Math.max(15, Number(form.duration.value) || 60),
       description: form.description.value.trim(),
+      mpLink: form.mpLink.value.trim(),
       features: form.features.value.split('\n').map((f) => f.trim()).filter(Boolean),
       active: form.active.checked,
       popular: form.popular.checked,
     };
-    const id = form.elements.namedItem('id').value;
-    if (id) {
-      const service = st().services.find((s) => s.id === id);
+    if (form.id.value) {
+      const service = st().services.find((s) => s.id === form.id.value);
       if (!service) return;
       Object.assign(service, data);
       RS.data.addAudit(me().name, 'Catálogo actualizado', `${service.name} · ${U.fmtMoney(service.price)}.`);
@@ -601,30 +726,28 @@
     if (user) openUserForm(user);
   };
 
-  RS.actions['admin-user-new'] = () => openUserForm(null);
-
-  RS.actions['admin-user-delete'] = async (el) => {
-    const user = RS.data.getUser(el.dataset.id);
-    if (!user || user.role !== 'user') return;
-    const sessions = st().sessions.filter((s) => s.userId === user.id).length;
-    const routines = st().routines.filter((r) => r.userId === user.id).length;
-    const maxes = st().maxes.filter((m) => m.userId === user.id).length;
+  RS.actions['admin-user-clear-plan'] = async (el) => {
+    const user = st().users.find((item) => item.id === el.dataset.id && item.role === 'user');
+    if (!user) return;
     const ok = await UI.confirm({
-      title: 'Eliminar usuario',
-      message: `Se eliminará permanentemente la cuenta de ${user.name}, junto con ${sessions} sesiones, ${routines} rutinas y ${maxes} registros de máximos. Los pagos históricos se conservarán para los reportes financieros. Esta acción no se puede deshacer.`,
-      okText: 'Eliminar usuario',
+      title: 'Quitar plan asignado',
+      message: `Se quitará el plan de ${user.name} y su saldo de ${user.credits} sesiones. El historial de pagos no se modificará.`,
+      okText: 'Quitar plan',
       danger: true,
     });
     if (!ok) return;
-    st().users = st().users.filter((u) => u.id !== user.id);
-    st().sessions = st().sessions.filter((s) => s.userId !== user.id);
-    st().routines = st().routines.filter((r) => r.userId !== user.id);
-    st().maxes = st().maxes.filter((m) => m.userId !== user.id);
-    RS.data.addAudit(me().name, 'Usuario eliminado', `${user.name} (${user.email}); pagos históricos conservados.`);
+    const previousPlan = user.planLabel || 'Sin plan activo';
+    const previousCredits = user.credits;
+    user.planLabel = 'Sin plan activo';
+    user.credits = 0;
+    RS.DB.save();
+    RS.data.addAudit(me().name, 'Plan quitado', `${user.name} · ${previousPlan} · ${previousCredits} sesiones.`);
     UI.closeModal();
-    UI.toast('Usuario y datos asociados eliminados. Los pagos históricos se conservaron.', 'info');
+    UI.toast('Plan y saldo eliminados.', 'success');
     RS.App.render(true);
   };
+
+  RS.actions['admin-user-new'] = () => openUserForm(null);
 
   RS.actions['admin-user-assign'] = (el) => {
     const user = RS.data.getUser(el.dataset.id);

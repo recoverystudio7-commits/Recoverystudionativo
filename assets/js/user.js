@@ -301,12 +301,10 @@
   /* ------------------------------- agendar -------------------------------- */
 
   function openDates(count) {
-    const settings = st().settings;
     const list = [];
     let cursor = U.todayISO();
     for (let i = 0; i < count; i += 1) {
-      const day = U.parseISO(cursor).getDay();
-      list.push({ date: cursor, open: settings.openDays.includes(day) });
+      list.push({ date: cursor, open: RS.data.hoursForDay(cursor).enabled });
       cursor = U.addDays(cursor, 1);
     }
     return list;

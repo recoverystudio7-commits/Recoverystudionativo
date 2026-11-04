@@ -119,7 +119,11 @@
     return `<header class="public-nav">
       <a class="brand-link" href="#/${home}" aria-label="Recovery Studio">${UI.logoLockup({ size: 40 })}</a>
       <nav class="public-nav-links" aria-label="Secciones">
-        <a href="#/sauna" class="${active === 'sauna' ? 'is-active' : ''}">Sauna húmedo</a>
+        <a href="kinesiologia.html">Kinesiología</a>
+        <a href="masajes.html">Masajes</a>
+        <a href="sauna.html">Sauna</a>
+        <a href="asesorias.html">Asesorías</a>
+        <a href="precios.html">Precios</a>
         <a href="#/resenas" class="${active === 'resenas' ? 'is-active' : ''}">Reseñas</a>
         <a href="#/cotizar">Empresas</a>
       </nav>
@@ -133,6 +137,13 @@
   function publicFoot() {
     return `<footer class="public-foot">
       <span>© ${new Date().getFullYear()} Recovery Studio · Santiago, Chile</span>
+      <span class="public-foot-links">
+        <a href="kinesiologia.html">Kinesiología</a>
+        <a href="masajes.html">Masajes</a>
+        <a href="sauna.html">Sauna</a>
+        <a href="asesorias.html">Asesorías</a>
+        <a href="precios.html">Precios</a>
+      </span>
       <span>${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</span>
     </footer>`;
   }

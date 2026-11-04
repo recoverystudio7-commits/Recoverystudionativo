@@ -1,12 +1,15 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v3';
+const CACHE = 'recovery-studio-v5';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './sitemap.xml',
+  './robots.txt',
   './assets/icon.svg',
   './assets/css/styles.css',
   './assets/css/views.css',
+  './assets/css/landing.css',
   './assets/js/data.js',
   './assets/js/ui.js',
   './assets/js/auth.js',
@@ -17,6 +20,11 @@ const ASSETS = [
   './assets/js/admin-system.js',
   './assets/js/reviews.js',
   './assets/js/app.js',
+  './kinesiologia.html',
+  './masajes.html',
+  './sauna.html',
+  './asesorias.html',
+  './precios.html',
 ];
 
 self.addEventListener('install', (event) => {

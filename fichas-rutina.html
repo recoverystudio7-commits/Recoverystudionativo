@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#080C12">
+  <meta name="description" content="Creador profesional de fichas de rutinas de ejercicios. Diseña, guarda e imprime rutinas listas para tus clientes.">
+  <title>Recovery Studio · Fichas de rutina</title>
+
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Utilidades Tailwind compiladas para esta página + estilos propios -->
+  <link rel="stylesheet" href="assets/css/tailwind-fichas.css">
+  <link rel="stylesheet" href="assets/css/fichas-rutina.css">
+</head>
+
+<body>
+  <!-- Sprite de iconos: se reutiliza con <use href="#icono"> -->
+  <svg xmlns="http://www.w3.org/2000/svg" class="absolute h-0 w-0 overflow-hidden" aria-hidden="true">
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+    <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-notes" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l7-7M14 21l7-7M6 18l-4 4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="m9 13 2 2 4-4"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.3 6.4L3 16M3 21v-5h5"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8L4 10.7l5.9 1.9L12 18.5l2.1-5.9 5.9-1.9-5.9-1.9L12 3Z"/></symbol>
+  </svg>
+
+  <div class="ambient-bg" aria-hidden="true"></div>
+
+  <!-- BARRA SUPERIOR -->
+  <header class="app-header screen-only">
+    <div class="mx-auto flex h-full max-w-[1480px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <a href="fichas-rutina.html" class="brand group" aria-label="Recovery Studio, fichas de rutina">
+        <span class="brand-mark">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M8 22V10h6.2c3.3 0 5.4 1.8 5.4 4.7 0 2.2-1.2 3.8-3.2 4.5l4.7 2.8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="23.5" cy="9.5" r="2.5" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="min-w-0">
+          <span class="brand-eyebrow">Recovery Studio</span>
+          <span class="brand-title">Fichas de rutina</span>
+        </span>
+      </a>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span id="saveStatus" class="save-status" role="status" aria-live="polite">
+          <span class="save-dot"></span>
+          <span class="save-label">Guardado local</span>
+        </span>
+        <button type="button" id="resetBtn" class="btn btn-ghost btn-icon-mobile" title="Crear una ficha nueva" aria-label="Crear una ficha nueva">
+          <svg class="icon"><use href="#i-refresh"/></svg>
+          <span class="desktop-only-label">Nueva ficha</span>
+        </button>
+        <button type="button" id="exportBtn" class="btn btn-primary" aria-label="Exportar ficha en PDF">
+          <svg class="icon"><use href="#i-printer"/></svg>
+          <span class="export-label-full">Exportar PDF</span>
+          <span class="export-label-short">PDF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="relative z-10 mx-auto max-w-[1480px] px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pb-16 lg:pt-8">
+    <div class="workspace">
+
+      <!-- ============================================================
+           COLUMNA EDITOR
+      ============================================================= -->
+      <section class="editor-column screen-only" aria-label="Editor de la ficha">
+        <div class="mb-6 lg:mb-8">
+          <div class="eyebrow-badge">
+            <svg class="icon icon-sm"><use href="#i-spark"/></svg>
+            Constructor de rutinas
+          </div>
+          <h1 class="mt-4 font-display text-[2rem] font-semibold leading-[1.05] tracking-[-0.04em] text-white sm:text-[2.55rem]">
+            Tu rutina, lista<br class="hero-break">
+            para <span class="text-volt">ejecutar.</span>
+          </h1>
+          <p class="mt-3 max-w-md text-sm leading-6 text-slate-400">
+            Completa la ficha, agrega cada movimiento y exporta un PDF impecable para tu cliente.
+          </p>
+        </div>
+
+        <!-- Datos generales -->
+        <div class="panel mb-5">
+          <div class="panel-heading">
+            <div class="panel-icon">
+              <svg class="icon"><use href="#i-notes"/></svg>
+            </div>
+            <div>
+              <h2 class="panel-title">Datos de la ficha</h2>
+              <p class="panel-subtitle">La información que verá tu cliente.</p>
+            </div>
+          </div>
+
+          <div class="mt-5 grid gap-4 sm:grid-cols-2">
+            <label class="field sm:col-span-2">
+              <span class="field-label">Nombre del cliente</span>
+              <input id="clientName" class="input" type="text" autocomplete="off" placeholder="Ej. Valentina Rojas" aria-label="Nombre del cliente">
+            </label>
+
+            <label class="field">
+              <span class="field-label">Objetivo de la rutina</span>
+              <input id="goal" class="input" type="text" list="goalSuggestions" autocomplete="off" placeholder="Ej. Hipertrofia" aria-label="Objetivo de la rutina">
+              <datalist id="goalSuggestions">
+                <option value="Fuerza"></option>
+                <option value="Hipertrofia"></option>
+                <option value="Pérdida de grasa"></option>
+                <option value="Rendimiento deportivo"></option>
+                <option value="Movilidad y control"></option>
+                <option value="Rehabilitación"></option>
+              </datalist>
+            </label>
+
+            <label class="field">
+              <span class="field-label">Fecha</span>
+              <input id="routineDate" class="input input-date" type="date" aria-label="Fecha de la rutina">
+            </label>
+
+            <label class="field sm:col-span-2">
+              <span class="field-label">Notas generales del entrenador</span>
+              <textarea id="coachNotes" class="input textarea" rows="3" placeholder="Indicaciones de técnica, progresión, calentamiento o consideraciones especiales…" aria-label="Notas generales del entrenador"></textarea>
+              <span class="field-hint">Se incluirán como indicaciones generales en la ficha.</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Creador de ejercicios -->
+        <div class="panel" id="exerciseFormCard">
+          <div class="panel-heading">
+            <div class="panel-icon panel-icon-volt">
+              <svg class="icon"><use href="#i-dumbbell"/></svg>
+            </div>
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="panel-title" id="exerciseFormTitle">Agregar ejercicio</h2>
+                <span id="formModeBadge" class="mode-badge hidden">Editando</span>
+              </div>
+              <p class="panel-subtitle">Cada ejercicio se convierte en una tarjeta de la ficha.</p>
+            </div>
+          </div>
+
+          <form id="exerciseForm" class="mt-5 space-y-5" novalidate>
+            <label class="field">
+              <span class="field-label">Nombre del ejercicio <span class="required">*</span></span>
+              <input id="exerciseName" class="input" type="text" autocomplete="off" placeholder="Ej. Sentadilla goblet" required aria-label="Nombre del ejercicio">
+              <span class="field-error hidden" id="exerciseNameError">Escribe un nombre para el ejercicio.</span>
+            </label>
+
+            <!-- Imágenes: archivo local o URL -->
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div class="media-control" data-media="start">
+                <div class="mb-2 flex items-center justify-between gap-3">
+                  <span class="field-label mb-0">Imagen inicial</span>
+                  <span class="media-tag">Inicio</span>
+                </div>
+
+                <div class="media-dropzone" data-dropzone tabindex="0" role="button" aria-label="Subir imagen inicial">
+                  <img data-preview alt="Vista previa de la postura inicial" class="hidden">
+                  <div data-placeholder class="media-placeholder">
+                    <svg class="icon icon-lg"><use href="#i-image"/></svg>
+                    <span>Arrastra o sube una imagen</span>
+                  </div>
+                  <button type="button" class="media-clear hidden" data-clear aria-label="Quitar imagen inicial">
+                    <svg class="icon icon-sm"><use href="#i-x"/></svg>
+                  </button>
+                </div>
+
+                <div class="mt-2 flex items-center gap-2">
+                  <label class="upload-btn">
+                    <svg class="icon icon-sm"><use href="#i-upload"/></svg>
+                    <span>Subir</span>
+                    <input type="file" accept="image/*" data-file aria-label="Subir imagen inicial" hidden>
+                  </label>
+                  <div class="url-input-wrap">
+                    <svg class="icon icon-sm"><use href="#i-link"/></svg>
+                    <input type="url" data-url class="url-input" placeholder="o pega una URL / GIF" inputmode="url" aria-label="URL de la imagen inicial">
+                  </div>
+                </div>
+                <p class="media-status" data-status>Sin imagen</p>
+              </div>
+
+              <div class="media-control" data-media="end">
+                <div class="mb-2 flex items-center justify-between gap-3">
+                  <span class="field-label mb-0">Imagen final</span>
+                  <span class="media-tag">Final</span>
+                </div>
+
+                <div class="media-dropzone" data-dropzone tabindex="0" role="button" aria-label="Subir imagen final">
+                  <img data-preview alt="Vista previa de la postura final" class="hidden">
+                  <div data-placeholder class="media-placeholder">
+                    <svg class="icon icon-lg"><use href="#i-image"/></svg>
+                    <span>Arrastra o sube una imagen</span>
+                  </div>
+                  <button type="button" class="media-clear hidden" data-clear aria-label="Quitar imagen final">
+                    <svg class="icon icon-sm"><use href="#i-x"/></svg>
+                  </button>
+                </div>
+
+                <div class="mt-2 flex items-center gap-2">
+                  <label class="upload-btn">
+                    <svg class="icon icon-sm"><use href="#i-upload"/></svg>
+                    <span>Subir</span>
+                    <input type="file" accept="image/*" data-file aria-label="Subir imagen final" hidden>
+                  </label>
+                  <div class="url-input-wrap">
+                    <svg class="icon icon-sm"><use href="#i-link"/></svg>
+                    <input type="url" data-url class="url-input" placeholder="o pega una URL / GIF" inputmode="url" aria-label="URL de la imagen final">
+                  </div>
+                </div>
+                <p class="media-status" data-status>Sin imagen</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+              <label class="field">
+                <span class="field-label">Series</span>
+                <input id="series" class="input" type="text" inputmode="numeric" placeholder="4" aria-label="Series">
+              </label>
+              <label class="field">
+                <span class="field-label">Reps. / tiempo</span>
+                <input id="reps" class="input" type="text" placeholder="12 / 40 s" aria-label="Repeticiones o tiempo">
+              </label>
+              <label class="field">
+                <span class="field-label">Descanso</span>
+                <input id="rest" class="input" type="text" placeholder="60 s" aria-label="Tiempo de descanso">
+              </label>
+            </div>
+
+            <label class="field">
+              <span class="field-label">Comentarios y variantes</span>
+              <textarea id="exerciseComments" class="input textarea" rows="3" placeholder="Ej. Torso erguido, rodillas alineadas con los pies. Variante: pausa de 2 s abajo." aria-label="Comentarios y variantes del ejercicio"></textarea>
+            </label>
+
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <button type="submit" class="btn btn-primary flex-1" id="submitExerciseBtn">
+                <svg class="icon"><use href="#i-plus"/></svg>
+                <span id="submitExerciseLabel">Agregar ejercicio a la rutina</span>
+              </button>
+              <button type="button" class="btn btn-ghost hidden" id="cancelEditBtn">Cancelar</button>
+            </div>
+            <p class="form-footnote">
+              <svg class="icon icon-sm"><use href="#i-cloud"/></svg>
+              Los cambios se guardan automáticamente en este dispositivo.
+            </p>
+          </form>
+        </div>
+
+        <div class="mt-5">
+          <button type="button" class="btn btn-primary btn-export-wide" data-export aria-label="Exportar ficha en PDF o imprimir">
+            <svg class="icon"><use href="#i-printer"/></svg>
+            Exportar ficha (PDF / Imprimir)
+          </button>
+          <p class="mt-2 text-center text-xs text-slate-500">Se abrirá la impresión del navegador. Elige “Guardar como PDF”.</p>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           COLUMNA VISTA PREVIA
+      ============================================================= -->
+      <section class="preview-column" aria-label="Vista previa de la ficha">
+        <div class="preview-toolbar screen-only">
+          <div class="flex items-center gap-2">
+            <span class="live-dot"></span>
+            <span class="text-sm font-medium text-slate-200">Vista previa en vivo</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="toolbarCount" class="count-badge">0 ejercicios</span>
+            <button type="button" class="btn btn-ghost btn-small" data-export aria-label="Exportar ficha en PDF">
+              <svg class="icon icon-sm"><use href="#i-printer"/></svg>
+              PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="sheet-scroll" id="sheetScroll">
+          <!-- Documento imprimible -->
+          <article class="routine-sheet" id="routineSheet">
+            <div class="sheet-accent" aria-hidden="true"></div>
+
+            <header class="sheet-header">
+              <div class="sheet-brand">
+                <span class="sheet-logo">
+                  <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path d="M8 22V10h6.2c3.3 0 5.4 1.8 5.4 4.7 0 2.2-1.2 3.8-3.2 4.5l4.7 2.8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="23.5" cy="9.5" r="2.5" fill="currentColor"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="sheet-brand-name">Recovery Studio</p>
+                  <p class="sheet-brand-sub">Performance &amp; Recovery</p>
+                </div>
+              </div>
+              <div class="sheet-doc-type">
+                <span>Ficha de entrenamiento</span>
+                <strong id="sheetDateTop">—</strong>
+              </div>
+            </header>
+
+            <section class="sheet-hero">
+              <p class="sheet-kicker">Plan de rutina</p>
+              <h2 class="sheet-client" id="previewClient">Nombre del cliente</h2>
+              <p class="sheet-goal" id="previewGoal">Objetivo de la rutina</p>
+            </section>
+
+            <div class="sheet-meta">
+              <div class="sheet-meta-item">
+                <span>Fecha</span>
+                <strong id="previewDate">—</strong>
+              </div>
+              <div class="sheet-meta-item">
+                <span>Ejercicios</span>
+                <strong id="previewCount">0</strong>
+              </div>
+              <div class="sheet-meta-item">
+                <span>Series totales</span>
+                <strong id="previewSets">—</strong>
+              </div>
+            </div>
+
+            <section class="sheet-note" id="previewNotesWrap">
+              <div class="sheet-note-label">
+                <svg class="icon icon-sm"><use href="#i-notes"/></svg>
+                Indicaciones del entrenador
+              </div>
+              <p id="previewNotes">Sin indicaciones adicionales.</p>
+            </section>
+
+            <section class="sheet-routine" aria-labelledby="routineHeading">
+              <div class="sheet-section-heading">
+                <h3 id="routineHeading">Programa de ejercicios</h3>
+                <span>Postura inicial <svg class="icon icon-sm"><use href="#i-arrow-right"/></svg> postura final</span>
+              </div>
+              <div id="previewExercises" class="preview-exercises"></div>
+            </section>
+
+            <footer class="sheet-footer">
+              <div class="sheet-footer-brand">
+                <svg class="icon icon-sm"><use href="#i-dumbbell"/></svg>
+                <span>Recovery Studio</span>
+              </div>
+              <span class="sheet-footer-copy">Ficha generada para uso del cliente</span>
+            </footer>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toastRoot" class="toast-root screen-only" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="assets/js/fichas-rutina.js"></script>
+</body>
+</html>

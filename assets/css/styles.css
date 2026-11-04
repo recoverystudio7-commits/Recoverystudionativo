@@ -1234,7 +1234,7 @@ select.input {
   gap: 4px;
 }
 
-.demo-chip {
+.local-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -2154,7 +2154,7 @@ select.input {
     font-size: 12.5px;
   }
 
-  .demo-chip {
+  .local-chip {
     display: none;
   }
 

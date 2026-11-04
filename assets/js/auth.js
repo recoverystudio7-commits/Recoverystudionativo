@@ -172,7 +172,7 @@
         <label class="pin-label" for="admin-pin">PIN de 4 dígitos</label>
         <input id="admin-pin" class="pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="••••" aria-label="PIN de administrador">
         <p class="pin-error" id="pin-error" role="alert"></p>
-        <p class="pin-hint">${o.hint === false ? '' : 'PIN demo: <strong>2468</strong> · cámbialo en Seguridad.'}</p>
+        <p class="pin-hint">${o.hint === false ? '' : 'Ingresa tu PIN de administrador.'}</p>
       </div>`,
       footer: `${o.dismissible === false ? '<button class="btn btn-ghost" data-action="force-logout">Cerrar sesión</button>' : '<button class="btn btn-ghost" data-modal-close>Cancelar</button>'}
         <button class="btn btn-primary" data-pin-submit>${o.buttonLabel || 'Verificar PIN'}</button>`,
@@ -392,7 +392,7 @@
           <a class="brand-link" href="#/login" aria-label="Recovery Studio">${UI.logoLockup({ light: true, size: 44 })}</a>
           <div class="hero-copy">
             <span class="hero-eyebrow">${UI.icon('sparkles', 14)} Agenda · Recuperación · Performance</span>
-            <h1>Restaura tu movilidad<br><em>de forma segura.</em></h1>
+            <h1>Recupera mejor.<br><em>Vuelve más fuerte.</em></h1>
             <p class="hero-lead">Reserva tus sesiones, sigue tu plan de entrenamiento y revisa tus maximales en un solo lugar. Recuperación profesional, sin fricción.</p>
             <ul class="hero-list">
               <li>${UI.icon('check-circle', 18)} Agenda online y reagenda con 12 h de anticipación.</li>
@@ -447,7 +447,12 @@
             <span><strong>¿Representas una empresa?</strong><span>Cotiza programas de bienestar para tu equipo</span></span>
             ${UI.icon('arrow-right', 18)}
           </a>
-          <a class="company-cta sauna-cta" href="#/sauna">
+          <a class="company-cta services-cta" href="precios.html">
+            <span class="company-cta-icon">${UI.icon('layers', 20)}</span>
+            <span><strong>Servicios y precios</strong><span>Kinesiología, masajes, sauna y planes</span></span>
+            ${UI.icon('arrow-right', 18)}
+          </a>
+          <a class="company-cta sauna-cta" href="sauna.html">
             <span class="company-cta-icon">${UI.icon('droplet', 20)}</span>
             <span><strong>Beneficios del sauna húmedo</strong><span>Calor, movilidad y recuperación profunda</span></span>
             ${UI.icon('arrow-right', 18)}
@@ -457,8 +462,6 @@
             <button class="link-btn" data-action="show-terms">Términos</button>
             <span>·</span>
             <button class="link-btn" data-action="show-privacy">Privacidad</button>
-            <span>·</span>
-            <button class="link-btn" data-action="reset-demo">Restablecer demo</button>
           </p>
           <p class="auth-copy">© ${new Date().getFullYear()} Recovery Studio. Todos los derechos reservados.</p>
         </div>
@@ -495,18 +498,6 @@
         </div>
         <button class="btn btn-primary btn-block btn-lg" type="submit" data-login-submit>Ingresar a mi cuenta ${UI.icon('arrow-right', 18)}</button>
       </form>
-      <div class="auth-divider"><span>o explora la demo</span></div>
-      <div class="demo-grid">
-        <button class="demo-btn" type="button" data-action="demo-login" data-role="user">
-          <span class="demo-avatar">${UI.avatar('Valentina Rojas', 36)}</span>
-          <span class="demo-text"><strong>Usuario demo</strong><span>valentina@demo.cl · demo1234</span></span>
-        </button>
-        <button class="demo-btn" type="button" data-action="demo-login" data-role="admin">
-          <span class="demo-avatar admin">${UI.avatar('Daniel Barrueto', 36)}</span>
-          <span class="demo-text"><strong>Admin demo</strong><span>recoverystudio7@gmail.com · PIN 2468</span></span>
-        </button>
-      </div>
-      <p class="auth-tip">${UI.icon('info', 14)} Demo funcional: tu cuenta y reservas se guardan en este navegador. Las reseñas sí son compartidas.</p>
     </div>`;
   }
 
@@ -729,26 +720,6 @@
     el.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
   };
 
-  RS.actions['demo-login'] = async (el) => {
-    const role = el.dataset.role;
-    const identifier = role === 'admin' ? RS.BRAND.adminEmail : 'valentina@demo.cl';
-    const password = role === 'admin' ? 'Recovery2026!' : 'demo1234';
-    el.disabled = true;
-    const result = await attemptLogin(identifier, password);
-    el.disabled = false;
-    if (!result.ok) {
-      loginError(result.error);
-      return;
-    }
-    if (result.needsPin) {
-      openAdminPin(result.user);
-      return;
-    }
-    initActivity();
-    UI.toast(`Hola ${result.user.name.split(' ')[0]}, qué bueno verte.`, 'success');
-    RS.App.go('inicio');
-  };
-
   RS.actions['forgot-password'] = () => {
     UI.modal({
       title: 'Restablecer contraseña',
@@ -781,28 +752,11 @@
       title: 'Privacidad y datos',
       size: 'md',
       body: `<div class="prose">
-        <p>Esta versión de demostración guarda la información en el almacenamiento local de tu navegador. No se envía a servidores externos.</p>
-        <p>En una implementación productiva, los datos de salud, pagos y entrenamiento deben protegerse con cifrado en tránsito y en reposo, control de acceso por roles y una política de retención.</p>
-        <p>Puedes borrar todos los datos locales usando “Restablecer demo” en la pantalla de ingreso.</p>
+        <p>La información de esta cuenta se guarda en el almacenamiento local de este navegador. No se sincroniza con otros dispositivos.</p>
+        <p>Los datos de salud, pagos y entrenamiento deben protegerse con cifrado en tránsito y en reposo, control de acceso por roles y una política de retención.</p>
       </div>`,
       footer: '<button class="btn btn-primary" data-modal-close>Entendido</button>',
     });
-  };
-
-  RS.actions['reset-demo'] = async () => {
-    const ok = await UI.confirm({
-      title: 'Restablecer datos demo',
-      message: 'Se borrarán todos los cambios guardados en este navegador y se restaurarán los datos de ejemplo. Esta acción no se puede deshacer.',
-      okText: 'Restablecer demo',
-      danger: true,
-    });
-    if (!ok) return;
-    await RS.DB.reset();
-    clearSession();
-    RS.ui = { authTab: 'login' };
-    UI.toast('Datos demo restablecidos.', 'success');
-    RS.App.go('login');
-    RS.App.render(true);
   };
 
   RS.forms.login = async (form, submitter) => {
