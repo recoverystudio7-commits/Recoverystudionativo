@@ -142,6 +142,11 @@
     s.start = start;
     s.end = end;
     s.slot = Number(form.slot.value);
+    s.scheduleVersion = RS.SCHEDULE_VERSION;
+    s.scheduleByDay = {};
+    openDays.forEach((day) => {
+      s.scheduleByDay[day] = { start, end };
+    });
     s.horizonDays = Math.max(1, Number(form.horizonDays.value) || 45);
     s.leadHours = Math.max(0, Number(form.leadHours.value) || 0);
     s.policyHours = Math.max(1, Number(form.policyHours.value) || 12);

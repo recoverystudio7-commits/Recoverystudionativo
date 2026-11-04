@@ -8,6 +8,7 @@
   const RS = (window.RS = window.RS || {});
 
   const APP_VERSION = 4;
+  const SCHEDULE_VERSION = 1;
   const STORAGE_KEY = 'recoveryStudio.state.v1';
   const SESSION_KEY = 'recoveryStudio.session.v1';
 
@@ -849,35 +850,36 @@
       },
     ];
 
-     const settings = {
-    openDays: [1, 2, 3, 4, 5],
-    start: '18:30',
-    end: '22:30',
-    slot: 60,
-    leadHours: 2,
-    policyHours: 12,
-    horizonDays: 45,
-    autoLockMin: 15,
-    retention: 15.25,
-    whatsapp: BRAND.whatsapp,
-    address: 'Gorbea, Región de la Araucania',
-    bank: {
+    const settings = {
+      openDays: [1, 2, 3, 4, 5],
+      start: '17:30',
+      end: '22:30',
+      slot: 60,
+      scheduleVersion: SCHEDULE_VERSION,
+      leadHours: 2,
+      policyHours: 12,
+      horizonDays: 45,
+      autoLockMin: 15,
+      retention: 15.25,
+      whatsapp: BRAND.whatsapp,
+      address: 'Gorbea, Región de la Araucania',
+      bank: {
         holder: 'DANIEL ESTEBAN BARRUETO',
         rut: '17.375.282-2',
         bankName: 'Banco BCI',
         accountType: 'Cuenta Corriente',
         account: '72771619',
         email: BRAND.adminEmail,
+      },
+      // Horario por día - 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
+      scheduleByDay: {
+        1: { start: '17:30', end: '22:30' }, // Lunes
+        2: { start: '17:30', end: '22:30' }, // Martes
+        3: { start: '17:30', end: '22:30' }, // Miércoles
+        4: { start: '17:30', end: '22:30' }, // Jueves
+        5: { start: '17:30', end: '22:30' }, // Viernes
+      },
     },
-    // Horario por día - 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
-    scheduleByDay: {
-        1: { start: '18:30', end: '22:30' }, // Lunes
-        2: { start: '18:30', end: '22:30' }, // Martes
-        3: { start: '17:30', end: '19:30' }, // Miércoles
-        4: { start: '18:30', end: '22:30' }, // Jueves
-        5: { start: '15:00', end: '19:30' }, // Viernes
-    },
-};
 
     const audits = [
       { id: 'aud_seed_1', at: `${today}T08:00:00`, actor: 'Sistema', action: 'Inicio de demo', detail: 'Datos de demostración cargados correctamente.' },
@@ -929,6 +931,19 @@
           if (parsed && parsed.version === APP_VERSION && Array.isArray(parsed.users)) {
             state = parsed;
             state.settings = Object.assign({}, parsed.settings || {});
+            if (state.settings.scheduleVersion !== SCHEDULE_VERSION) {
+              const openDays = Array.isArray(state.settings.openDays) ? state.settings.openDays : [1, 2, 3, 4, 5];
+              state.settings.openDays = openDays;
+              state.settings.start = '17:30';
+              state.settings.end = '22:30';
+              state.settings.slot = 60;
+              state.settings.scheduleVersion = SCHEDULE_VERSION;
+              state.settings.scheduleByDay = {};
+              openDays.forEach((day) => {
+                state.settings.scheduleByDay[day] = { start: '17:30', end: '22:30' };
+              });
+              DB.save();
+            }
             return state;
           }
         } catch (e) {
@@ -1034,7 +1049,7 @@
     const sameDay = sessionsOn(date).filter((s) => s.id !== options.ignoreSessionId);
     const now = new Date();
     const list = [];
-    for (let minute = startMin; minute + Math.min(duration, step) <= endMin; minute += step) {
+    for (let minute = startMin; minute + duration <= endMin; minute += step) {
       const overlap = sameDay.some((s) => {
         const sStart = timeToMin(s.time);
         const sEnd = sessionEndMinutes(s);
@@ -1135,6 +1150,7 @@
   }
 
   RS.APP_VERSION = APP_VERSION;
+  RS.SCHEDULE_VERSION = SCHEDULE_VERSION;
   RS.STORAGE_KEY = STORAGE_KEY;
   RS.SESSION_KEY = SESSION_KEY;
   RS.BRAND = BRAND;

@@ -392,7 +392,7 @@
           <a class="brand-link" href="#/login" aria-label="Recovery Studio">${UI.logoLockup({ light: true, size: 44 })}</a>
           <div class="hero-copy">
             <span class="hero-eyebrow">${UI.icon('sparkles', 14)} Agenda · Recuperación · Performance</span>
-            <h1>Recupera mejor.<br><em>Vuelve más fuerte.</em></h1>
+            <h1>Restaura tu movilidad<br><em>de forma segura.</em></h1>
             <p class="hero-lead">Reserva tus sesiones, sigue tu plan de entrenamiento y revisa tus maximales en un solo lugar. Recuperación profesional, sin fricción.</p>
             <ul class="hero-list">
               <li>${UI.icon('check-circle', 18)} Agenda online y reagenda con 12 h de anticipación.</li>

@@ -62,9 +62,14 @@
     const end = U.timeToMin(s.end);
     const step = Number(s.slot) || 60;
     const opts = [];
-    for (let m = start; m + 30 <= end; m += step) {
+    const times = [];
+    for (let m = start; m + step <= end; m += step) {
       const t = U.minToTime(m);
+      times.push(t);
       opts.push(`<option value="${t}" ${t === selected ? 'selected' : ''}>${t} h</option>`);
+    }
+    if (selected && !times.includes(selected)) {
+      opts.push(`<option value="${U.esc(selected)}" selected>${U.esc(selected)} h</option>`);
     }
     return opts.join('');
   }
@@ -387,7 +392,7 @@
 
   RS.forms['admin-session'] = (form) => {
     const values = {
-      id: form.id.value,
+      id: form.elements.namedItem('id').value,
       userId: form.userId.value,
       serviceId: form.serviceId.value,
       date: form.date.value,

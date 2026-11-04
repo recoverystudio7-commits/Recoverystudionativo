@@ -69,6 +69,7 @@
                     <button class="icon-btn" title="Gestionar" aria-label="Gestionar usuario" data-action="admin-user-detail" data-id="${u.id}">${UI.icon('settings', 16)}</button>
                     <button class="icon-btn" title="Editar" aria-label="Editar usuario" data-action="admin-user-edit" data-id="${u.id}">${UI.icon('edit', 16)}</button>
                     <button class="icon-btn" title="Nueva sesión" aria-label="Agendar sesión" data-action="admin-user-assign" data-id="${u.id}">${UI.icon('calendar', 16)}</button>
+                    <button class="icon-btn danger" title="Eliminar usuario" aria-label="Eliminar usuario" data-action="admin-user-delete" data-id="${u.id}">${UI.icon('trash', 16)}</button>
                   </div></td>
                 </tr>`;
               }).join('')}
@@ -113,7 +114,7 @@
         <button class="user-action" data-action="admin-reset-password" data-id="${user.id}"><span class="tone-blue">${UI.icon('key', 18)}</span><strong>Resetear clave</strong><small>Nueva clave temporal</small></button>
         <button class="user-action" data-action="admin-user-sessions" data-id="${user.id}"><span class="tone-green">${UI.icon('receipt', 18)}</span><strong>Historial</strong><small>${sessions.length} sesiones</small></button>
       </div>`,
-      footer: `<button class="btn btn-ghost" data-modal-close>Cerrar</button><button class="btn btn-primary" data-action="admin-user-edit" data-id="${user.id}">Editar usuario</button>`,
+      footer: `<button class="btn btn-ghost danger-text" data-action="admin-user-delete" data-id="${user.id}">${UI.icon('trash', 16)} Eliminar usuario</button><button class="btn btn-ghost" data-modal-close>Cerrar</button><button class="btn btn-primary" data-action="admin-user-edit" data-id="${user.id}">Editar usuario</button>`,
     });
   }
 
@@ -177,7 +178,7 @@
   RS.forms['admin-user-update'] = (form) => {
     const err = document.getElementById('user-form-error');
     if (err) err.classList.remove('show');
-    const user = st().users.find((u) => u.id === form.id.value);
+    const user = st().users.find((u) => u.id === form.elements.namedItem('id').value);
     if (!user) return;
     const email = form.email.value.trim().toLowerCase();
     const name = form.name.value.trim();
@@ -228,7 +229,7 @@
   }
 
   RS.forms['admin-reset-password'] = async (form) => {
-    const user = st().users.find((u) => u.id === form.id.value);
+    const user = st().users.find((u) => u.id === form.elements.namedItem('id').value);
     if (!user) return;
     const err = document.getElementById('reset-error');
     if (String(form.password.value).length < 8) return showFormError(err, 'La clave debe tener al menos 8 caracteres.');
@@ -568,8 +569,9 @@
       active: form.active.checked,
       popular: form.popular.checked,
     };
-    if (form.id.value) {
-      const service = st().services.find((s) => s.id === form.id.value);
+    const id = form.elements.namedItem('id').value;
+    if (id) {
+      const service = st().services.find((s) => s.id === id);
       if (!service) return;
       Object.assign(service, data);
       RS.data.addAudit(me().name, 'Catálogo actualizado', `${service.name} · ${U.fmtMoney(service.price)}.`);
@@ -600,6 +602,29 @@
   };
 
   RS.actions['admin-user-new'] = () => openUserForm(null);
+
+  RS.actions['admin-user-delete'] = async (el) => {
+    const user = RS.data.getUser(el.dataset.id);
+    if (!user || user.role !== 'user') return;
+    const sessions = st().sessions.filter((s) => s.userId === user.id).length;
+    const routines = st().routines.filter((r) => r.userId === user.id).length;
+    const maxes = st().maxes.filter((m) => m.userId === user.id).length;
+    const ok = await UI.confirm({
+      title: 'Eliminar usuario',
+      message: `Se eliminará permanentemente la cuenta de ${user.name}, junto con ${sessions} sesiones, ${routines} rutinas y ${maxes} registros de máximos. Los pagos históricos se conservarán para los reportes financieros. Esta acción no se puede deshacer.`,
+      okText: 'Eliminar usuario',
+      danger: true,
+    });
+    if (!ok) return;
+    st().users = st().users.filter((u) => u.id !== user.id);
+    st().sessions = st().sessions.filter((s) => s.userId !== user.id);
+    st().routines = st().routines.filter((r) => r.userId !== user.id);
+    st().maxes = st().maxes.filter((m) => m.userId !== user.id);
+    RS.data.addAudit(me().name, 'Usuario eliminado', `${user.name} (${user.email}); pagos históricos conservados.`);
+    UI.closeModal();
+    UI.toast('Usuario y datos asociados eliminados. Los pagos históricos se conservaron.', 'info');
+    RS.App.render(true);
+  };
 
   RS.actions['admin-user-assign'] = (el) => {
     const user = RS.data.getUser(el.dataset.id);
