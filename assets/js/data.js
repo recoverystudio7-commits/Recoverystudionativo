@@ -879,7 +879,7 @@
         4: { start: '17:30', end: '22:30' }, // Jueves
         5: { start: '17:30', end: '22:30' }, // Viernes
       },
-    },
+    };
 
     const audits = [
       { id: 'aud_seed_1', at: `${today}T08:00:00`, actor: 'Sistema', action: 'Inicio de demo', detail: 'Datos de demostración cargados correctamente.' },
