@@ -7,7 +7,7 @@
 
   const RS = (window.RS = window.RS || {});
 
-  const APP_VERSION = 1;
+  const APP_VERSION = 2;
   const STORAGE_KEY = 'recoveryStudio.state.v1';
   const SESSION_KEY = 'recoveryStudio.session.v1';
 
@@ -1024,7 +1024,7 @@
     const settings = state.settings;
     const day = parseISO(date).getDay();
     if (!settings.openDays.includes(day)) return [];
-   function availableSlots(date, serviceId, opts) {
+  function availableSlots(date, serviceId, opts) {
     const options = opts || {};
     const settings = state.settings;
     const day = parseISO(date).getDay();
@@ -1057,7 +1057,6 @@
     }
     return list;
   }
-
   function userMaxes(userId) {
     return state.maxes.filter((m) => m.userId === userId);
   }
