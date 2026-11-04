@@ -1024,11 +1024,6 @@
     const settings = state.settings;
     const day = parseISO(date).getDay();
     if (!settings.openDays.includes(day)) return [];
-  function availableSlots(date, serviceId, opts) {
-    const options = opts || {};
-    const settings = state.settings;
-    const day = parseISO(date).getDay();
-    if (!settings.openDays.includes(day)) return [];
     const daySchedule = settings.scheduleByDay ? settings.scheduleByDay[day] : null;
     if (!daySchedule) return [];
     const startMin = timeToMin(daySchedule.start);
