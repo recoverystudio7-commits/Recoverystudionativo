@@ -69,6 +69,7 @@
                     <button class="icon-btn" title="Gestionar" aria-label="Gestionar usuario" data-action="admin-user-detail" data-id="${u.id}">${UI.icon('settings', 16)}</button>
                     <button class="icon-btn" title="Editar" aria-label="Editar usuario" data-action="admin-user-edit" data-id="${u.id}">${UI.icon('edit', 16)}</button>
                     <button class="icon-btn" title="Nueva sesión" aria-label="Agendar sesión" data-action="admin-user-assign" data-id="${u.id}">${UI.icon('calendar', 16)}</button>
+                    <button class="icon-btn danger" title="Eliminar usuario" aria-label="Eliminar usuario" data-action="admin-user-delete" data-id="${u.id}">${UI.icon('trash', 16)}</button>
                   </div></td>
                 </tr>`;
               }).join('')}
