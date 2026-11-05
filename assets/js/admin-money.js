@@ -32,9 +32,13 @@
     if (payment.creditsToAdd > 0) {
       const user = RS.data.getUser(payment.userId);
       if (user) {
+        const previousLabel = user.planLabel;
         user.credits += Number(payment.creditsToAdd);
         user.planLabel = payment.concept;
         payment.creditsAdded = Number(payment.creditsToAdd);
+        if (payment.category === 'Planes' || RS.data.isPlanLabel(payment.concept)) {
+          RS.data.startPlan(user, payment.concept, { extend: previousLabel === payment.concept });
+        }
       }
     }
     if (payment.sessionId) {
@@ -227,8 +231,12 @@
       approvedBy: me().name,
     };
     if (credits) {
+      const previousLabel = user.planLabel;
       user.credits += credits;
-      if (payment.concept && form.category.value === 'Planes') user.planLabel = payment.concept;
+      if (payment.concept && form.category.value === 'Planes') {
+        user.planLabel = payment.concept;
+        RS.data.startPlan(user, payment.concept, { extend: previousLabel === payment.concept });
+      }
     }
     st().payments.unshift(payment);
     RS.DB.save();

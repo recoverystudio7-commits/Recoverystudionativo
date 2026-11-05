@@ -86,6 +86,7 @@
     const next = RS.data.nextSession(user.id);
     const paid = U.sum(st().payments.filter((p) => p.userId === user.id && p.status === 'aprobado'), (p) => p.amount);
     const loyalty = RS.data.loyaltyProgress(user.id);
+    const plan = RS.data.planStatus(user);
     UI.modal({
       title: 'Ficha del usuario',
       subtitle: user.email,
@@ -99,8 +100,10 @@
         <div><strong>${user.credits}</strong><span>Saldo plan</span></div>
         <div><strong>${U.fmtMoney(paid)}</strong><span>Total pagado</span></div>
       </div>
+      ${plan.needsAttention ? `<div class="callout callout-orange">${UI.icon('bell', 17)}<span>${plan.status === 'expired' ? `El plan venció el ${U.fmtDate(plan.expires, 'long')}.` : plan.status === 'no-sessions' ? 'El plan no tiene sesiones disponibles.' : `El plan vence en ${plan.daysLeft} día(s) y quedan ${plan.credits} sesión(es).`}</span></div>` : ''}
       <div class="detail-list">
         ${UI.detailRow('Plan actual', user.planLabel || 'Sin plan activo')}
+        ${UI.detailRow('Vigencia del plan', plan.hasPlan ? (plan.expires ? `Hasta ${U.fmtDate(plan.expires, 'long')}${plan.daysLeft == null ? '' : plan.daysLeft < 0 ? ' · vencido' : ` · ${plan.daysLeft} día(s)`}` : 'Sin fecha registrada') : '—')}
         ${UI.detailRow('Objetivo', user.goal || 'No definido')}
         ${UI.detailRow('Próxima sesión', next ? `${U.fmtDate(next.date, 'long')} · ${next.time} h` : 'Sin agendar')}
         ${UI.detailRow('Club Recovery', `${loyalty.stamps} sellos · ${loyalty.earnedRewards ? `${loyalty.earnedRewards} premio(s) disponible(s)` : `a ${loyalty.stampsToNextReward} sello(s) de la meta`}`)}
@@ -113,6 +116,7 @@
         <button class="user-action" data-action="admin-routine-edit" data-id="${user.id}"><span class="tone-green">${UI.icon('clipboard', 18)}</span><strong>Rutina</strong><small>${RS.data.userRoutine(user.id) ? 'Editar pauta' : 'Asignar pauta'}</small></button>
         <button class="user-action" data-action="admin-user-assign" data-id="${user.id}"><span class="tone-amber">${UI.icon('calendar', 18)}</span><strong>Agendar sesión</strong><small>Asignar horario</small></button>
         <button class="user-action" data-action="admin-club-open" data-id="${user.id}"><span class="tone-amber">${UI.icon('award', 18)}</span><strong>Club Recovery</strong><small>${loyalty.stamps} sellos · ${loyalty.earnedRewards ? 'Premio disponible' : `A ${loyalty.stampsToNextReward}`}</small></button>
+        ${plan.needsAttention && user.phone ? `<a class="user-action" href="${RS.data.contactWhatsappUrl(user, RS.data.planNoticeMessage(user, plan))}" target="_blank" rel="noopener" data-action="plan-alert-send" data-id="${user.id}" data-channel="whatsapp" data-status="${plan.status}"><span class="tone-green">${UI.icon('whatsapp', 18)}</span><strong>Avisar plan</strong><small>WhatsApp al cliente</small></a>` : ''}
         <button class="user-action" data-action="admin-reset-password" data-id="${user.id}"><span class="tone-blue">${UI.icon('key', 18)}</span><strong>Resetear clave</strong><small>Nueva clave temporal</small></button>
         <button class="user-action" data-action="admin-user-sessions" data-id="${user.id}"><span class="tone-green">${UI.icon('receipt', 18)}</span><strong>Historial</strong><small>${sessions.length} sesiones</small></button>
         ${(user.credits > 0 || (user.planLabel && user.planLabel !== 'Sin plan activo')) ? `<button class="user-action danger-text" data-action="admin-user-clear-plan" data-id="${user.id}"><span class="tone-orange">${UI.icon('trash', 18)}</span><strong>Quitar plan</strong><small>Eliminar plan y saldo</small></button>` : ''}
@@ -138,12 +142,14 @@
           <div class="field"><label for="uf-phone">WhatsApp</label><input class="input" id="uf-phone" name="phone" type="tel" value="${U.esc(isEdit ? user.phone || '' : '')}" placeholder="+56 9 …"></div>
           <div class="field"><label for="uf-plan">Plan o servicio asignado</label><select class="input" id="uf-plan" name="planLabel">
             <option value="" ${!currentPlan || currentPlan === 'Sin plan activo' ? 'selected' : ''}>Sin plan activo</option>
-            ${isEdit && currentPlan && currentPlan !== 'Sin plan activo' && !hasCurrentPlan ? `<option value="legacy" data-label="${U.esc(currentPlan)}" data-sessions="${Number(user.credits) || 0}" selected>${U.esc(currentPlan)} (actual)</option>` : ''}
+            ${isEdit && currentPlan && currentPlan !== 'Sin plan activo' && !hasCurrentPlan ? `<option value="legacy" data-label="${U.esc(currentPlan)}" data-sessions="${Number(user.credits) || 0}" data-validity="30" selected>${U.esc(currentPlan)} (actual)</option>` : ''}
             ${selectableServices.length
-              ? selectableServices.map((service) => `<option value="${U.esc(service.id)}" data-label="${U.esc(service.name)}" data-sessions="${Math.max(0, Number(service.sessions) || 0)}" ${currentPlan === service.name ? 'selected' : ''}>${U.esc(service.name)} · ${U.esc(service.kind)} · ${U.fmtMoney(service.price)}</option>`).join('')
+              ? selectableServices.map((service) => `<option value="${U.esc(service.id)}" data-label="${U.esc(service.name)}" data-sessions="${Math.max(0, Number(service.sessions) || 0)}" data-validity="${Math.max(1, Number(service.validityDays) || 30)}" ${currentPlan === service.name ? 'selected' : ''}>${U.esc(service.name)} · ${U.esc(service.kind)} · ${U.fmtMoney(service.price)}</option>`).join('')
               : '<option disabled>No hay planes o servicios activos en el catálogo</option>'}
           </select><span class="field-hint">Las sesiones se completan según el plan seleccionado.</span></div>
           <div class="field"><label for="uf-credits">Sesiones disponibles</label><input class="input" id="uf-credits" name="credits" type="number" min="0" step="1" value="${isEdit ? user.credits : 0}"></div>
+          <div class="field"><label for="uf-plan-start">Inicio del plan</label><input class="input" id="uf-plan-start" name="planStart" type="date" value="${isEdit ? user.planStart || '' : ''}"></div>
+          <div class="field"><label for="uf-plan-expires">Vence el</label><input class="input" id="uf-plan-expires" name="planExpires" type="date" value="${isEdit ? user.planExpires || '' : ''}"><span class="field-hint">Si lo dejas vacío, se calcula con la vigencia del plan.</span></div>
           ${isEdit ? `<div class="field"><label>Estado</label><label class="check check-boxed"><input type="checkbox" name="active" ${user.active ? 'checked' : ''}><span>Cuenta activa</span></label></div>` : `<div class="field"><label for="uf-pass">Clave temporal *</label><input class="input" id="uf-pass" name="password" type="text" value="Recovery2026!" minlength="8" required><span class="field-hint">Compártela por WhatsApp. El usuario puede cambiarla luego.</span></div>`}
         </div>
         <div class="field"><label for="uf-goal">Objetivo del usuario</label><input class="input" id="uf-goal" name="goal" value="${U.esc(isEdit ? user.goal || '' : '')}" placeholder="Ej: recuperación post lesión"></div>
@@ -155,7 +161,19 @@
     if (!root) return;
     root.querySelector('[name="planLabel"]').addEventListener('change', (event) => {
       const option = event.target.selectedOptions[0];
-      root.querySelector('[name="credits"]').value = option.value ? option.dataset.sessions || '0' : '0';
+      const isPlan = !!option.value;
+      const startInput = root.querySelector('[name="planStart"]');
+      const expiresInput = root.querySelector('[name="planExpires"]');
+      root.querySelector('[name="credits"]').value = isPlan ? option.dataset.sessions || '0' : '0';
+      if (isPlan) {
+        const start = U.todayISO();
+        const days = Math.max(1, Number(option.dataset.validity) || 30);
+        startInput.value = start;
+        expiresInput.value = U.addDays(start, days);
+      } else {
+        startInput.value = '';
+        expiresInput.value = '';
+      }
     });
   }
 
@@ -169,6 +187,12 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFormError(err, 'Ingresa un correo válido.');
     if (st().users.some((u) => U.normalize(u.email) === U.normalize(email))) return showFormError(err, 'Ya existe un usuario con ese correo.');
     if (String(password).length < 8) return showFormError(err, 'La clave temporal debe tener al menos 8 caracteres.');
+    const planLabel = form.planLabel.selectedOptions[0].dataset.label || 'Sin plan activo';
+    const credits = Math.max(0, Number(form.credits.value) || 0);
+    const planStart = planLabel !== 'Sin plan activo' ? (form.planStart.value || U.todayISO()) : null;
+    const planExpires = planLabel !== 'Sin plan activo'
+      ? (form.planExpires.value || U.addDays(planStart, RS.data.planValidityDays(planLabel)))
+      : null;
     const user = {
       id: U.uid('usr'),
       role: 'user',
@@ -177,8 +201,10 @@
       phone: form.phone.value.trim(),
       passwordHash: await U.hashPassword(password),
       active: true,
-      credits: Math.max(0, Number(form.credits.value) || 0),
-      planLabel: form.planLabel.selectedOptions[0].dataset.label || 'Sin plan activo',
+      credits,
+      planLabel,
+      planStart,
+      planExpires,
       goal: form.goal.value.trim(),
       notes: form.notes.value.trim(),
       createdAt: new Date().toISOString(),
@@ -203,11 +229,24 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFormError(err, 'Ingresa un correo válido.');
     if (st().users.some((u) => u.id !== user.id && U.normalize(u.email) === U.normalize(email))) return showFormError(err, 'Ese correo ya está en uso.');
     const beforeCredits = user.credits;
+    const previousPlan = user.planLabel || 'Sin plan activo';
+    const planLabel = form.planLabel.selectedOptions[0].dataset.label || 'Sin plan activo';
+    const planChanged = planLabel !== previousPlan;
     user.name = name;
     user.email = email;
     user.phone = form.phone.value.trim();
-    user.planLabel = form.planLabel.selectedOptions[0].dataset.label || 'Sin plan activo';
+    user.planLabel = planLabel;
     user.credits = Math.max(0, Number(form.credits.value) || 0);
+    if (planLabel === 'Sin plan activo') {
+      RS.data.clearPlanDates(user);
+    } else {
+      const start = form.planStart.value || (planChanged ? U.todayISO() : user.planStart) || U.todayISO();
+      const expires = form.planExpires.value
+        || (planChanged ? U.addDays(start, RS.data.planValidityDays(planLabel)) : user.planExpires)
+        || U.addDays(start, RS.data.planValidityDays(planLabel));
+      user.planStart = start;
+      user.planExpires = expires;
+    }
     user.goal = form.goal.value.trim();
     user.notes = form.notes.value.trim();
     user.active = form.active ? form.active.checked : true;
@@ -825,6 +864,7 @@
     const previousCredits = user.credits;
     user.planLabel = 'Sin plan activo';
     user.credits = 0;
+    RS.data.clearPlanDates(user);
     RS.DB.save();
     RS.data.addAudit(me().name, 'Plan quitado', `${user.name} · ${previousPlan} · ${previousCredits} sesiones.`);
     UI.closeModal();

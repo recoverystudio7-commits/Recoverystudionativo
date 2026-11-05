@@ -338,6 +338,7 @@
       price: 220000,
       duration: 60,
       sessions: 8,
+      validityDays: 30,
       companyPrice: 0,
       description: 'Ocho sesiones de recuperación para sostener tu carga de entrenamiento durante el mes.',
       features: ['8 sesiones Recovery', 'Vigencia 30 días', 'Seguimiento de progreso', 'Prioridad de agenda'],
@@ -351,6 +352,7 @@
       price: 300000,
       duration: 60,
       sessions: 12,
+      validityDays: 30,
       companyPrice: 0,
       description: 'El plan completo: recuperación, entrenamiento y pauta personalizada para rendir al máximo.',
       features: ['12 sesiones combinadas', 'Rutina actualizada', 'Control de maximales', 'Asesoría por WhatsApp'],
@@ -469,6 +471,46 @@
   let state = null;
   let quotaWarned = false;
 
+  function normalizePlanData() {
+    let changed = false;
+    (state.services || []).forEach((service) => {
+      if (service.kind === 'Plan' && !Number(service.validityDays)) {
+        service.validityDays = 30;
+        changed = true;
+      }
+    });
+    (state.users || []).forEach((user) => {
+      if (user.role !== 'user') return;
+      const label = String(user.planLabel || '').trim();
+      const hasPlan = !!label && label !== 'Sin plan activo';
+      if (!hasPlan) {
+        if (user.planStart || user.planExpires) {
+          user.planStart = null;
+          user.planExpires = null;
+          changed = true;
+        }
+        return;
+      }
+      if (user.planStart && user.planExpires) return;
+      const credits = Math.max(0, Number(user.credits) || 0);
+      if (credits <= 0) return;
+      const payment = (state.payments || [])
+        .filter((p) => p.userId === user.id && p.status === 'aprobado' && (Number(p.creditsToAdd) > 0 || isPlanLabel(p.concept)))
+        .sort((a, b) => {
+          const da = new Date(a.approvedAt || a.date || a.createdAt || 0).getTime();
+          const db = new Date(b.approvedAt || b.date || b.createdAt || 0).getTime();
+          return db - da;
+        })[0];
+      const base = payment
+        ? iso(new Date(payment.approvedAt || payment.date || payment.createdAt || Date.now()))
+        : todayISO();
+      user.planStart = base;
+      user.planExpires = addDays(base, planValidityDays(label));
+      changed = true;
+    });
+    return changed;
+  }
+
   const DB = {
     async init() {
       let raw = null;
@@ -486,6 +528,7 @@
             state.settings.discountCodes = Array.isArray(state.settings.discountCodes) ? state.settings.discountCodes : [];
             state.settings.clubRecoveryReward = String(state.settings.clubRecoveryReward || 'Sesión de sauna');
             state.videoCapsules = Array.isArray(parsed.videoCapsules) ? parsed.videoCapsules : [];
+            if (normalizePlanData()) DB.save();
             return state;
           }
         } catch (e) {
@@ -493,6 +536,7 @@
         }
       }
       state = await buildSeed();
+      normalizePlanData();
       DB.save();
       return state;
     },
@@ -572,6 +616,183 @@
       nextRewardProgress,
       reward: (state && state.settings && state.settings.clubRecoveryReward) || 'Sesión de sauna',
     };
+  }
+
+  /* ------------------------------ planes ---------------------------------- */
+
+  function planService(label) {
+    if (!label) return null;
+    const target = normalize(label);
+    return state.services.find((service) => service.kind === 'Plan' && normalize(service.name) === target) || null;
+  }
+
+  function isPlanLabel(label) {
+    return !!planService(label);
+  }
+
+  function planValidityDays(label) {
+    const service = planService(label);
+    return Math.max(1, Number(service && service.validityDays) || 30);
+  }
+
+  function planStatus(user) {
+    const credits = Math.max(0, Number(user && user.credits) || 0);
+    const label = String((user && user.planLabel) || '').trim();
+    const ignored = !label || label === 'Sin plan activo' || label === 'Administrador';
+    const hasPlan = credits > 0 || !ignored;
+    const expires = /^\d{4}-\d{2}-\d{2}$/.test(String((user && user.planExpires) || '')) ? user.planExpires : null;
+    const start = /^\d{4}-\d{2}-\d{2}$/.test(String((user && user.planStart) || '')) ? user.planStart : null;
+    const daysLeft = expires ? daysBetween(todayISO(), expires) : null;
+    const expired = daysLeft !== null && daysLeft < 0;
+    const expiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 7;
+    const noSessions = credits <= 0;
+    let status = 'active';
+    if (expired) status = 'expired';
+    else if (noSessions) status = 'no-sessions';
+    else if (expiringSoon) status = 'expiring';
+    else if (credits === 1) status = 'low';
+    return {
+      hasPlan,
+      label: label || 'Sin plan activo',
+      start,
+      expires,
+      daysLeft,
+      expired,
+      expiringSoon,
+      noSessions,
+      status,
+      credits,
+      validityDays: planValidityDays(label),
+      needsAttention: hasPlan && (expired || noSessions || expiringSoon || credits === 1),
+      urgent: hasPlan && (expired || noSessions || (daysLeft !== null && daysLeft <= 3)),
+    };
+  }
+
+  function planAlerts() {
+    const rank = { expired: 0, 'no-sessions': 1, expiring: 2, low: 3 };
+    return state.users
+      .filter((user) => user.role === 'user')
+      .map((user) => ({ user, plan: planStatus(user) }))
+      .filter(({ plan }) => plan.needsAttention)
+      .sort((a, b) => {
+        const ra = rank[a.plan.status] == null ? 9 : rank[a.plan.status];
+        const rb = rank[b.plan.status] == null ? 9 : rank[b.plan.status];
+        if (ra !== rb) return ra - rb;
+        const da = a.plan.daysLeft == null ? 9999 : a.plan.daysLeft;
+        const db = b.plan.daysLeft == null ? 9999 : b.plan.daysLeft;
+        return da - db;
+      });
+  }
+
+  function planAlertCounts() {
+    const alerts = planAlerts();
+    const count = (status) => alerts.filter(({ plan }) => plan.status === status).length;
+    return {
+      total: alerts.length,
+      expired: count('expired'),
+      noSessions: count('no-sessions'),
+      expiring: count('expiring'),
+      low: count('low'),
+      urgent: alerts.filter(({ plan }) => plan.urgent).length,
+    };
+  }
+
+  function startPlan(user, label, options) {
+    if (!user) return null;
+    const opts = options || {};
+    const planLabel = label || user.planLabel;
+    if (!planLabel || planLabel === 'Sin plan activo') return null;
+    const today = opts.date || todayISO();
+    const days = Math.max(1, Number(opts.validityDays) || planValidityDays(planLabel));
+    const currentExpiry = /^\d{4}-\d{2}-\d{2}$/.test(String(user.planExpires || '')) ? user.planExpires : null;
+    const samePlan = normalize(user.planLabel || '') === normalize(planLabel);
+    const canExtend = opts.extend !== false && samePlan && currentExpiry && daysBetween(today, currentExpiry) >= 0;
+    const base = canExtend ? currentExpiry : today;
+    user.planLabel = planLabel;
+    user.planStart = base;
+    user.planExpires = addDays(base, days);
+    delete user.lastPlanNoticeAt;
+    delete user.lastPlanNoticeChannel;
+    delete user.lastPlanNoticeStatus;
+    return { start: user.planStart, expires: user.planExpires };
+  }
+
+  function clearPlanDates(user) {
+    if (!user) return;
+    user.planStart = null;
+    user.planExpires = null;
+    delete user.lastPlanNoticeAt;
+    delete user.lastPlanNoticeChannel;
+    delete user.lastPlanNoticeStatus;
+  }
+
+  function normalizePhone(phone) {
+    let digits = String(phone || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('56')) return digits;
+    if (digits.length === 9 && digits.startsWith('9')) return `56${digits}`;
+    if (digits.length === 8) return `569${digits}`;
+    return digits;
+  }
+
+  function whatsappUrlTo(phone, message) {
+    const number = normalizePhone(phone);
+    if (!number) return '';
+    return `https://wa.me/${number}?text=${encodeURIComponent(message || '')}`;
+  }
+
+  function contactWhatsappUrl(user, message) {
+    return whatsappUrlTo(user && user.phone, message) || whatsappUrl(message);
+  }
+
+  function planNoticeMessage(user, plan) {
+    const name = String((user && user.name) || 'hola').split(' ')[0];
+    const p = plan || planStatus(user);
+    const expires = p.expires ? fmtDate(p.expires, 'long') : '';
+    const credits = p.credits;
+    if (p.status === 'expired') {
+      return `Hola ${name}, tu ${p.label} venció el ${expires}. ${credits > 0 ? `Aún te quedan ${credits} sesión(es), pero necesitamos renovar la vigencia para que no las pierdas.` : 'Ya no tiene sesiones disponibles.'} ¿Te ayudo a reactivarlo? — Recovery Studio`;
+    }
+    if (p.status === 'no-sessions') {
+      return `Hola ${name}, ya usaste las sesiones de tu ${p.label}. ¿Te preparo la renovación para seguir con tu proceso? — Recovery Studio`;
+    }
+    if (p.status === 'expiring') {
+      return `Hola ${name}, tu ${p.label} vence en ${p.daysLeft} día(s) (${expires}) y te quedan ${credits} sesión(es). ¿Agendamos tus próximas sesiones antes de que venza? — Recovery Studio`;
+    }
+    if (p.status === 'low') {
+      return `Hola ${name}, te queda 1 sesión en tu ${p.label}. ¿Te preparo la renovación para no cortar tu proceso? — Recovery Studio`;
+    }
+    return `Hola ${name}, revisemos la vigencia de tu ${p.label}. — Recovery Studio`;
+  }
+
+  function planNoticeEmail(user, plan) {
+    const p = plan || planStatus(user);
+    const name = String((user && user.name) || '').split(' ')[0] || 'Hola';
+    const subjects = {
+      expired: `Tu ${p.label} venció — Recovery Studio`,
+      'no-sessions': `Renueva tu ${p.label} — Recovery Studio`,
+      expiring: `Tu ${p.label} está por vencer — Recovery Studio`,
+      low: `Te queda 1 sesión en tu ${p.label} — Recovery Studio`,
+    };
+    const subject = subjects[p.status] || 'Tu plan en Recovery Studio';
+    const body = [
+      `Hola ${name},`,
+      '',
+      planNoticeMessage(user, p),
+      '',
+      'Puedes reservar o renovar en https://www.recoverystudio.cl',
+      'Si prefieres, respóndenos por WhatsApp y lo coordinamos.',
+    ].join('\n');
+    return { subject, body };
+  }
+
+  function markPlanNotice(userId, channel, status) {
+    const user = getUser(userId);
+    if (!user) return;
+    user.lastPlanNoticeAt = new Date().toISOString();
+    user.lastPlanNoticeChannel = channel;
+    user.lastPlanNoticeStatus = status || planStatus(user).status;
+    DB.save();
   }
 
   function upcomingSessions(userId) {
@@ -772,6 +993,9 @@
     getUser, getService, serviceName, servicePrice, userSessions, upcomingSessions,
     nextSession, sessionsOn, availableSlots, hoursForDay, blockSlot, unblockSlot, blockedSlotsOn, userMaxes, userRoutine, approvalsInMonth,
     loyaltyProgress,
+    planService, isPlanLabel, planValidityDays, planStatus, planAlerts, planAlertCounts,
+    startPlan, clearPlanDates, normalizePhone, whatsappUrlTo, contactWhatsappUrl,
+    planNoticeMessage, planNoticeEmail, markPlanNotice,
     expensesInMonth, boletasInMonth, financeSummary, monthsBack, addAudit, whatsappUrl,
     bankData,
   };

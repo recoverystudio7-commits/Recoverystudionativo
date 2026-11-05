@@ -384,6 +384,24 @@
     UI.closeModal();
   }
 
+  async function attemptLocalLogin(identifier, password) {
+    const users = state().users;
+    const normalized = U.normalize(identifier || '');
+    const user = users.find((u) => u.role === 'user' && u.active
+      && u.passwordHash
+      && (U.normalize(u.email || '') === normalized || U.normalize(u.name || '') === normalized));
+    if (!user || !user.passwordHash) {
+      return { ok: false, error: 'Cuenta no encontrada o sin clave asignada.', userFound: false };
+    }
+    const hash = await U.hashPassword(password);
+    if (hash !== user.passwordHash) {
+      return { ok: false, error: 'La contraseña no es correcta.', userFound: true };
+    }
+    startSession(user);
+    RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso con cuenta local creada por el administrador.');
+    return { ok: true, needsPin: false, user };
+  }
+
   async function attemptLogin(identifier, password) {
     const email = String(identifier || '').trim().toLowerCase();
     if (!email.includes('@')) {
@@ -860,10 +878,19 @@
       return;
     }
     setLoading(submitter, true, 'Ingresando…');
-    const result = await attemptLogin(identifier, password);
+    let result = await attemptLocalLogin(identifier, password);
+    let supabaseError = null;
+    if (!result.ok && !result.userFound) {
+      const supabaseResult = await attemptLogin(identifier, password);
+      if (supabaseResult.ok) {
+        result = supabaseResult;
+      } else {
+        supabaseError = supabaseResult.error;
+      }
+    }
     setLoading(submitter, false);
     if (!result.ok) {
-      loginError(result.error);
+      loginError(supabaseError || result.error || 'No se pudo iniciar sesión.');
       const pass = form.password;
       pass.classList.add('shake');
       setTimeout(() => pass.classList.remove('shake'), 400);

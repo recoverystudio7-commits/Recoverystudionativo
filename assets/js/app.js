@@ -10,7 +10,7 @@
 
   const USER_ROUTES = ['inicio', 'agendar', 'reservas', 'planes', 'pagos', 'entrenamiento', 'perfil'];
   const ADMIN_ROUTES = [
-    'admin', 'admin/agenda', 'admin/usuarios', 'admin/club', 'admin/planes', 'admin/pagos',
+    'admin', 'admin/agenda', 'admin/usuarios', 'admin/club', 'admin/alertas', 'admin/planes', 'admin/pagos',
     'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/resenas',
     'admin/configuracion', 'admin/seguridad', 'admin/contenido',
   ];
@@ -34,6 +34,7 @@
     'admin/agenda': 'Agenda',
     'admin/usuarios': 'Usuarios',
     'admin/club': 'Club Recovery',
+    'admin/alertas': 'Alertas de planes',
     'admin/planes': 'Planes y servicios',
     'admin/pagos': 'Pagos',
     'admin/finanzas': 'Finanzas',
@@ -60,12 +61,14 @@
     if (role === 'admin') {
       const pending = st.payments.filter((p) => p.status === 'pendiente').length;
       const quotes = st.quotes.filter((q) => q.status === 'nueva').length;
+      const planAlerts = RS.data.planAlertCounts ? RS.data.planAlertCounts().urgent : 0;
       return [
         { label: 'Gestión', items: [
           { route: 'admin', icon: 'grid', label: 'Resumen' },
           { route: 'admin/agenda', icon: 'calendar', label: 'Agenda' },
           { route: 'admin/usuarios', icon: 'users', label: 'Usuarios' },
           { route: 'admin/club', icon: 'award', label: 'Club Recovery' },
+          { route: 'admin/alertas', icon: 'bell', label: 'Alertas de planes', badge: planAlerts },
         ] },
         { label: 'Negocio', items: [
           { route: 'admin/planes', icon: 'layers', label: 'Planes y servicios' },
@@ -203,6 +206,12 @@
           throw new Error('No se cargó el módulo Club Recovery (admin-club.js). Cierra la app y vuelve a abrirla.');
         }
         return RS.Admin.renderClub();
+      },
+      'admin/alertas': () => {
+        if (typeof RS.Admin.renderPlanAlerts !== 'function') {
+          throw new Error('No se cargó el módulo de alertas de planes (admin-alerts.js). Cierra la app y vuelve a abrirla.');
+        }
+        return RS.Admin.renderPlanAlerts();
       },
       'admin/planes': () => RS.Admin.renderCatalog(),
       'admin/pagos': () => RS.Admin.renderPayments(),

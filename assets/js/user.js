@@ -181,6 +181,7 @@
     const past = completed + missed + cancelled;
     const attendance = past ? Math.round((completed / past) * 100) : null;
     const pending = st().payments.filter((p) => p.userId === user.id && p.status === 'pendiente');
+    const plan = RS.data.planStatus(user);
     const maxes = RS.data.userMaxes(user.id);
     const routine = RS.data.userRoutine(user.id);
     const totalPlan = planTotalSessions(user);
@@ -201,6 +202,12 @@
         <span class="banner-icon">${UI.icon('clock', 20)}</span>
         <div><strong>Tienes ${U.pluralize(pending.length, 'pago', 'pagos')} en revisión</strong><span>${pending[0].proof ? 'El equipo está validando tu comprobante.' : 'Adjunta el comprobante para activar tu pago.'}</span></div>
         <a class="btn btn-ghost btn-sm" href="#/pagos">Ver pagos ${UI.icon('arrow-right', 15)}</a>
+      </div>` : ''}
+
+      ${plan.needsAttention ? `<div class="banner">
+        <span class="banner-icon">${UI.icon('alert-triangle', 20)}</span>
+        <div><strong>${plan.status === 'expired' ? 'Tu plan venció' : plan.status === 'no-sessions' ? 'Ya no te quedan sesiones' : plan.status === 'expiring' ? `Tu plan vence en ${plan.daysLeft} día${plan.daysLeft === 1 ? '' : 's'}` : 'Te queda 1 sesión'}</strong><span>${plan.status === 'expired' ? `${U.fmtDate(plan.expires, 'long')}. ${plan.credits > 0 ? `Aún tienes ${plan.credits} sesión${plan.credits === 1 ? '' : 'es'} disponibles.` : 'Renueva para seguir agendando.'}` : plan.status === 'no-sessions' ? 'Usaste todas las sesiones de tu plan. Renueva para seguir con tu proceso.' : plan.status === 'expiring' ? `Vence el ${U.fmtDate(plan.expires, 'long')} y te quedan ${plan.credits} sesión${plan.credits === 1 ? '' : 'es'}. Agenda antes de que expire.` : 'Renueva cuando quieras para no cortar tu proceso.'}</span></div>
+        <a class="btn btn-ghost btn-sm" href="#/planes">${plan.status === 'expiring' ? 'Agendar o renovar' : 'Renovar plan'} ${UI.icon('arrow-right', 15)}</a>
       </div>` : ''}
 
       <div class="dash-grid">
@@ -245,6 +252,7 @@
             <div><span class="eyebrow">Mi plan</span><h3>${U.esc(user.planLabel || 'Sin plan activo')}</h3></div>
           </div>
           <div class="plan-widget-num"><strong>${user.credits}</strong><span>sesiones disponibles</span></div>
+          ${plan.expires ? `<p class="muted small">${plan.daysLeft != null && plan.daysLeft < 0 ? 'Venció el' : 'Vigente hasta'} ${U.fmtDate(plan.expires, 'long')}</p>` : ''}
           ${totalPlan ? `<div class="plan-widget-bar">${UI.progress(user.credits, totalPlan)}<div class="progress-meta"><span>Saldo de sesiones</span><span>${user.credits} de ${totalPlan}</span></div></div>` : `<p class="muted small">Activa un plan para tener sesiones disponibles y prioridad de agenda.</p>`}
           <div class="plan-widget-foot">
             <a class="btn btn-outline btn-sm" href="#/planes">${user.credits ? 'Comprar más sesiones' : 'Ver planes'} ${UI.icon('arrow-right', 14)}</a>

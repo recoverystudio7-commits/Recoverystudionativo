@@ -165,7 +165,7 @@
                   <td><strong>${loyalty.stamps}</strong>${loyalty.consistencyStamps ? `<br><span class="muted small">+${loyalty.consistencyStamps} constancia</span>` : ''}</td>
                   <td>${UI.pill(status.label, status.tone)}</td>
                   <td><div class="table-actions">
-                    <a class="icon-btn" title="Enviar WhatsApp" aria-label="Enviar WhatsApp a ${U.esc(user.name)}" href="${RS.data.whatsappUrl(whatsappMessage(entry))}" target="_blank" rel="noopener">${UI.icon('whatsapp', 16)}</a>
+                    <a class="icon-btn" title="Enviar WhatsApp" aria-label="Enviar WhatsApp a ${U.esc(user.name)}" href="${RS.data.contactWhatsappUrl(user, whatsappMessage(entry))}" target="_blank" rel="noopener">${UI.icon('whatsapp', 16)}</a>
                     <button class="icon-btn" title="Ver ficha" aria-label="Ver ficha de ${U.esc(user.name)}" data-action="admin-user-detail" data-id="${user.id}">${UI.icon('settings', 16)}</button>
                   </div></td>
                 </tr>`;

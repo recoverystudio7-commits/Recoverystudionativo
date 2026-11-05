@@ -164,6 +164,7 @@
     const monthTrend = prev.income ? Math.round(((fin.income - prev.income) / prev.income) * 100) : null;
     const months = RS.data.monthsBack(6);
     const quotePipeline = U.sum(st().quotes.filter((q) => q.status === 'nueva' || q.status === 'enviada'), (q) => q.finalAmount || q.estimate);
+    const planCounts = RS.data.planAlertCounts ? RS.data.planAlertCounts() : { total: 0, expired: 0, noSessions: 0, expiring: 0, urgent: 0 };
 
     return `<div class="view">
       <div class="page-head">
@@ -178,6 +179,12 @@
         <span class="banner-icon">${UI.icon('bell', 20)}</span>
         <div><strong>Tienes ${U.pluralize(pending.length, 'pago', 'pagos')} por validar y ${U.pluralize(newQuotes.length, 'cotización nueva', 'cotizaciones nuevas')}</strong><span>${U.fmtMoney(pendingAmount)} en pagos esperando revisión.</span></div>
         <a class="btn btn-ghost btn-sm" href="#/admin/pagos">Revisar ahora ${UI.icon('arrow-right', 15)}</a>
+      </div>` : ''}
+
+      ${planCounts.total ? `<div class="banner">
+        <span class="banner-icon">${UI.icon('alert-triangle', 20)}</span>
+        <div><strong>${U.pluralize(planCounts.total, 'plan requiere', 'planes requieren')} atención</strong><span>${planCounts.expired} vencidos · ${planCounts.noSessions} sin sesiones · ${planCounts.expiring} por vencer en 7 días.</span></div>
+        <a class="btn btn-ghost btn-sm" href="#/admin/alertas">Enviar avisos ${UI.icon('arrow-right', 15)}</a>
       </div>` : ''}
 
       <div class="stats-grid">
@@ -234,6 +241,7 @@
               <a class="admin-quick" href="#/admin/cotizaciones"><span class="tone-blue">${UI.icon('briefcase', 19)}</span><strong>Cotizaciones</strong><small>${U.fmtMoney(quotePipeline)} en pipeline</small></a>
               <a class="admin-quick" href="#/admin/usuarios"><span class="tone-orange">${UI.icon('users', 19)}</span><strong>Usuarios</strong><small>${activeUsers.length} activos</small></a>
               <a class="admin-quick" href="#/admin/club"><span class="tone-amber">${UI.icon('award', 19)}</span><strong>Club Recovery</strong><small>${clubReady} premios · ${clubOneAway} a 1 sello</small></a>
+              <a class="admin-quick" href="#/admin/alertas"><span class="tone-red">${UI.icon('bell', 19)}</span><strong>Alertas de planes</strong><small>${planCounts.expired} vencidos · ${planCounts.noSessions} sin sesiones</small></a>
             </div>
           </div>
         </section>
