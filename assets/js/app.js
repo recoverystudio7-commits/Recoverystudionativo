@@ -198,7 +198,12 @@
       admin: () => RS.Admin.renderOverview(),
       'admin/agenda': () => RS.Admin.renderAgenda(),
       'admin/usuarios': () => RS.Admin.renderUsers(),
-      'admin/club': () => RS.Admin.renderClub(),
+      'admin/club': () => {
+        if (typeof RS.Admin.renderClub !== 'function') {
+          throw new Error('No se cargó el módulo Club Recovery (admin-club.js). Cierra la app y vuelve a abrirla.');
+        }
+        return RS.Admin.renderClub();
+      },
       'admin/planes': () => RS.Admin.renderCatalog(),
       'admin/pagos': () => RS.Admin.renderPayments(),
       'admin/finanzas': () => RS.Admin.renderFinance(),
@@ -210,6 +215,42 @@
       'admin/contenido': () => RS.VideoContent.renderAdmin(),
     };
     return map[route];
+  }
+
+  function renderViewError(route, err, session) {
+    const message = err && err.message ? err.message : 'Error desconocido';
+    const title = TITLES[route] || 'esta sección';
+    const home = session ? roleHome(session.role) : 'login';
+    return `<div class="view">
+      <section class="card">
+        <div class="card-body">
+          <span class="eyebrow">Problema al cargar</span>
+          <h1 class="page-title">No pudimos abrir ${U.esc(title)}</h1>
+          <p class="page-sub">Esto suele pasar cuando la app guardó una versión antigua de un archivo. Recarga sin caché para traer la versión nueva.</p>
+          <div class="callout callout-orange"><strong>Detalle técnico:</strong> ${U.esc(message)}</div>
+          <div class="page-actions">
+            <button class="btn btn-primary" type="button" onclick="RS.App.hardReload()">${UI.icon('refresh', 17)} Recargar app</button>
+            <a class="btn btn-outline" href="#/${home}">Volver al inicio</a>
+          </div>
+        </div>
+      </section>
+    </div>`;
+  }
+
+  async function hardReload() {
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((reg) => reg.unregister()));
+      }
+      if (window.caches) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      }
+    } catch (err) {
+      console.warn('No se pudo limpiar la caché', err);
+    }
+    location.reload();
   }
 
   function render(forceScroll) {
@@ -268,10 +309,18 @@
       return;
     }
 
+    let content;
+    try {
+      content = view();
+    } catch (err) {
+      console.error('Error al renderizar', route, err);
+      content = renderViewError(route, err, session);
+    }
+
     if (PUBLIC_ROUTES.includes(route)) {
-      app.innerHTML = view();
+      app.innerHTML = content;
     } else {
-      app.innerHTML = renderShell(session.role, view());
+      app.innerHTML = renderShell(session.role, content);
     }
     try {
       if (RS.Reviews && RS.Reviews.mount) RS.Reviews.mount(route);
@@ -422,6 +471,7 @@
     go,
     currentRoute,
     boot,
+    hardReload,
   };
 
   if (document.readyState === 'loading') {
