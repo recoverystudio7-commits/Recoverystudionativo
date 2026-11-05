@@ -12,7 +12,7 @@ const ASSETS = [
   './assets/css/landing.css',
   './assets/js/data.js?v=7',
   './assets/js/ui.js?v=2',
-  './assets/js/auth.js?v=5',
+  './assets/js/auth.js?v=6',
   './assets/js/user.js?v=9',
   './assets/js/admin-base.js?v=5',
   './assets/js/admin-people.js?v=8',

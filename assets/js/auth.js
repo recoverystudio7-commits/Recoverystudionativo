@@ -97,22 +97,58 @@
       throw new Error('La sesión de Supabase expiró. Ingresa nuevamente.');
     }
     const token = supabaseSession.access_token;
-    const rows = await RS.Supabase.request(
+
+    /* ── Perfil: leer o crear si no existe (registro nuevo) ── */
+    let rows = await RS.Supabase.request(
       `/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=id,email,full_name,phone,goal,role,active`,
       { method: 'GET' },
       token
     );
-    const profile = Array.isArray(rows) ? rows[0] : null;
+    let profile = Array.isArray(rows) ? rows[0] : null;
+    if (!profile) {
+      const metaName = authUser.user_meta_data && authUser.user_meta_data.full_name ? authUser.user_meta_data.full_name : '';
+      const metaPhone = authUser.user_meta_data && authUser.user_meta_data.phone ? authUser.user_meta_data.phone : '';
+      const created = await RS.Supabase.request('/rest/v1/profiles', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({
+          id: authUser.id,
+          email: authUser.email || '',
+          full_name: metaName || '',
+          phone: metaPhone || '',
+          goal: '',
+          role: 'user',
+          active: true,
+        }),
+      }, token);
+      profile = Array.isArray(created) ? created[0] : created;
+    }
     if (!profile || !profile.active) {
       throw new Error('No encontramos un perfil activo asociado a esta cuenta. Contacta al administrador.');
     }
 
+    /* ── Cuenta de cliente: leer o crear con saldo 0 ── */
     const accounts = await RS.Supabase.request(
       `/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(authUser.id)}&select=credits,plan_label`,
       { method: 'GET' },
       token
     );
-    const account = Array.isArray(accounts) ? accounts[0] : null;
+    let account = Array.isArray(accounts) ? accounts[0] : null;
+    if (!account) {
+      const createdAcct = await RS.Supabase.request('/rest/v1/client_accounts', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({
+          user_id: authUser.id,
+          credits: 0,
+          plan_label: null,
+          plan_start: null,
+          plan_expires: null,
+        }),
+      }, token);
+      account = Array.isArray(createdAcct) ? createdAcct[0] : createdAcct;
+    }
+
     let user = RS.data.getUser(authUser.id);
     if (!user) {
       user = { id: authUser.id, createdAt: authUser.created_at || new Date().toISOString(), notes: '' };
