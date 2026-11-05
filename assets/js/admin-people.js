@@ -85,6 +85,7 @@
     const completed = sessions.filter((s) => s.status === 'completada').length;
     const next = RS.data.nextSession(user.id);
     const paid = U.sum(st().payments.filter((p) => p.userId === user.id && p.status === 'aprobado'), (p) => p.amount);
+    const loyalty = RS.data.loyaltyProgress(user.id);
     UI.modal({
       title: 'Ficha del usuario',
       subtitle: user.email,
@@ -102,6 +103,7 @@
         ${UI.detailRow('Plan actual', user.planLabel || 'Sin plan activo')}
         ${UI.detailRow('Objetivo', user.goal || 'No definido')}
         ${UI.detailRow('Próxima sesión', next ? `${U.fmtDate(next.date, 'long')} · ${next.time} h` : 'Sin agendar')}
+        ${UI.detailRow('Club Recovery', `${loyalty.stamps} sellos · ${loyalty.earnedRewards ? `${loyalty.earnedRewards} premio(s) disponible(s)` : `a ${loyalty.stampsToNextReward} sello(s) de la meta`}`)}
         ${UI.detailRow('Inscrito', user.createdAt ? U.fmtDate(user.createdAt.slice(0, 10), 'long') : '—')}
         ${UI.detailRow('Notas internas', user.notes || '—')}
       </div>
@@ -110,6 +112,7 @@
         <button class="user-action" data-action="admin-max-edit" data-id="${user.id}"><span class="tone-orange">${UI.icon('activity', 18)}</span><strong>Maximales</strong><small>${RS.data.userMaxes(user.id).length} registros</small></button>
         <button class="user-action" data-action="admin-routine-edit" data-id="${user.id}"><span class="tone-green">${UI.icon('clipboard', 18)}</span><strong>Rutina</strong><small>${RS.data.userRoutine(user.id) ? 'Editar pauta' : 'Asignar pauta'}</small></button>
         <button class="user-action" data-action="admin-user-assign" data-id="${user.id}"><span class="tone-amber">${UI.icon('calendar', 18)}</span><strong>Agendar sesión</strong><small>Asignar horario</small></button>
+        <button class="user-action" data-action="admin-club-open" data-id="${user.id}"><span class="tone-amber">${UI.icon('award', 18)}</span><strong>Club Recovery</strong><small>${loyalty.stamps} sellos · ${loyalty.earnedRewards ? 'Premio disponible' : `A ${loyalty.stampsToNextReward}`}</small></button>
         <button class="user-action" data-action="admin-reset-password" data-id="${user.id}"><span class="tone-blue">${UI.icon('key', 18)}</span><strong>Resetear clave</strong><small>Nueva clave temporal</small></button>
         <button class="user-action" data-action="admin-user-sessions" data-id="${user.id}"><span class="tone-green">${UI.icon('receipt', 18)}</span><strong>Historial</strong><small>${sessions.length} sesiones</small></button>
         ${(user.credits > 0 || (user.planLabel && user.planLabel !== 'Sin plan activo')) ? `<button class="user-action danger-text" data-action="admin-user-clear-plan" data-id="${user.id}"><span class="tone-orange">${UI.icon('trash', 18)}</span><strong>Quitar plan</strong><small>Eliminar plan y saldo</small></button>` : ''}
@@ -834,7 +837,11 @@
   RS.actions['admin-user-assign'] = (el) => {
     const user = RS.data.getUser(el.dataset.id);
     UI.closeModal();
-    Admin.openSessionModal({ userId: user ? user.id : null, date: ensureUi().agendaDate });
+    Admin.openSessionModal({
+      userId: user ? user.id : null,
+      date: ensureUi().agendaDate,
+      payment: user && Number(user.credits) > 0 ? 'plan' : 'pendiente',
+    });
   };
 
   RS.actions['admin-max-edit'] = (el) => {

@@ -7777,3 +7777,35 @@
     padding: 16px;
   }
 }
+
+/* ----------------------------- Club Recovery (admin) ----------------------------- */
+.club-stamps {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+}
+
+.club-stamp {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.club-stamp.on {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+@media (max-width: 640px) {
+  .club-stamps {
+    gap: 3px;
+  }
+
+  .club-stamp {
+    width: 9px;
+    height: 9px;
+  }
+}

@@ -10,7 +10,7 @@
 
   const USER_ROUTES = ['inicio', 'agendar', 'reservas', 'planes', 'pagos', 'entrenamiento', 'perfil'];
   const ADMIN_ROUTES = [
-    'admin', 'admin/agenda', 'admin/usuarios', 'admin/planes', 'admin/pagos',
+    'admin', 'admin/agenda', 'admin/usuarios', 'admin/club', 'admin/planes', 'admin/pagos',
     'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/resenas',
     'admin/configuracion', 'admin/seguridad', 'admin/contenido',
   ];
@@ -33,6 +33,7 @@
     admin: 'Resumen',
     'admin/agenda': 'Agenda',
     'admin/usuarios': 'Usuarios',
+    'admin/club': 'Club Recovery',
     'admin/planes': 'Planes y servicios',
     'admin/pagos': 'Pagos',
     'admin/finanzas': 'Finanzas',
@@ -64,6 +65,7 @@
           { route: 'admin', icon: 'grid', label: 'Resumen' },
           { route: 'admin/agenda', icon: 'calendar', label: 'Agenda' },
           { route: 'admin/usuarios', icon: 'users', label: 'Usuarios' },
+          { route: 'admin/club', icon: 'award', label: 'Club Recovery' },
         ] },
         { label: 'Negocio', items: [
           { route: 'admin/planes', icon: 'layers', label: 'Planes y servicios' },
@@ -196,6 +198,7 @@
       admin: () => RS.Admin.renderOverview(),
       'admin/agenda': () => RS.Admin.renderAgenda(),
       'admin/usuarios': () => RS.Admin.renderUsers(),
+      'admin/club': () => RS.Admin.renderClub(),
       'admin/planes': () => RS.Admin.renderCatalog(),
       'admin/pagos': () => RS.Admin.renderPayments(),
       'admin/finanzas': () => RS.Admin.renderFinance(),

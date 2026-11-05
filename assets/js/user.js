@@ -51,31 +51,6 @@
     return d === 1 ? 'Mañana' : `En ${d} días`;
   }
 
-  function loyaltyProgress(sessions) {
-    const completed = sessions.filter((session) => session.status === 'completada');
-    const activeMonths = new Set(completed
-      .filter((session) => /^\d{4}-\d{2}-\d{2}$/.test(String(session.date || '')))
-      .map((session) => U.monthKey(session.date)));
-    const month = new Date();
-    month.setDate(1);
-    let activeMonthStreak = 0;
-    while (activeMonths.has(U.monthKey(month))) {
-      activeMonthStreak += 1;
-      month.setMonth(month.getMonth() - 1);
-    }
-    const consistencyStamps = Math.floor(activeMonthStreak / 3);
-    const stamps = completed.length + consistencyStamps;
-    return {
-      completedSessions: completed.length,
-      activeMonthStreak,
-      consistencyStamps,
-      stamps,
-      earnedRewards: Math.floor(stamps / 5),
-      stampsToNextReward: 5 - (stamps % 5),
-      nextRewardProgress: stamps % 5,
-    };
-  }
-
   function bookingCategory(service) {
     return categoryFor(service);
   }
@@ -197,7 +172,7 @@
     const next = RS.data.nextSession(user.id);
     const sessions = RS.data.userSessions(user.id);
     const thisMonth = U.monthKey(new Date());
-    const loyalty = loyaltyProgress(sessions);
+    const loyalty = RS.data.loyaltyProgress(user.id);
     const loyaltyReward = st().settings.clubRecoveryReward || 'Sesión de sauna';
     const monthSessions = sessions.filter((s) => U.monthKey(s.date) === thisMonth && s.status !== 'cancelada');
     const completed = sessions.filter((s) => s.status === 'completada').length;
@@ -1481,6 +1456,5 @@
     },
     downloadIcs,
     openPaymentModal,
-    loyaltyProgress,
   };
 })();

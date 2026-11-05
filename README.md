@@ -21,7 +21,7 @@ Horario inicial, en bloques de 60 minutos:
 - **Viernes:** 15:00–19:30 (último inicio 18:00).
 - **Sábado y domingo:** cerrado.
 
-El administrador puede activar o cerrar días y modificar sus horas desde **Admin → Configuración**. En **Admin → Agenda** puede bloquear o desbloquear horarios particulares, crear, editar o eliminar sesiones. Desde la ficha de cada usuario también puede quitar un plan asignado y su saldo de sesiones; el historial de pagos se conserva.
+El administrador puede activar o cerrar días y modificar sus horas desde **Admin → Configuración**. En **Admin → Agenda** puede bloquear o desbloquear horarios particulares, crear, editar o eliminar sesiones. Al agendar con **Plan del cliente**, se descuenta automáticamente una sesión de su saldo; si la sesión se cancela, se elimina o se cambia el método de pago, la sesión se devuelve al plan. Desde la ficha de cada usuario también puede quitar un plan asignado y su saldo de sesiones; el historial de pagos se conserva.
 
 ---
 
@@ -32,7 +32,7 @@ El administrador puede activar o cerrar días y modificar sus horas desde **Admi
 - **Inicio:** próxima sesión, saldo del plan, asistencia, pagos pendientes y accesos rápidos.
 - **Agendar sesión:** selección de servicio, fecha y horario según disponibilidad, pago con sesión del plan, transferencia o pago en recepción.
 - **Mis reservas:** historial y próximas sesiones, con detalle, reagendamiento y cancelación.
-- **Club Recovery:** un sello por sesión completada y un sello de constancia por cada tres meses consecutivos con actividad. El administrador configura el premio de los cinco sellos en **Configuración → Premio Club Recovery** (por defecto, una sesión de sauna); el equipo valida y coordina el canje por WhatsApp.
+- **Club Recovery:** un sello por sesión completada y un sello de constancia por cada tres meses consecutivos con actividad. El administrador configura el premio de los cinco sellos y revisa el progreso de todos los clientes en **Admin → Club Recovery** (también disponible en Configuración); ahí ve quiénes están a un sello y puede escribirles por WhatsApp. El equipo valida y coordina el canje.
 - **Planes:** catálogo de planes y servicios, compra de plan/sesión y creación de la orden de pago.
 - **Descuentos:** aplicación de códigos vigentes al comprar planes.
 - **Mis pagos:** estado de pagos, instrucciones de transferencia y envío de comprobante por WhatsApp.
@@ -45,8 +45,9 @@ El administrador puede activar o cerrar días y modificar sus horas desde **Admi
 ### Panel administrativo
 
 - **Resumen:** KPIs del mes, pagos por validar, próximas sesiones, actividad reciente y accesos rápidos.
-- **Agenda:** vista de sesiones por día, creación/edición/reagendamiento y cambio de estado.
+- **Agenda:** vista de sesiones por día, creación/edición/reagendamiento y cambio de estado; las sesiones agendadas con el plan descuentan el saldo del cliente.
 - **Usuarios:** registro y edición de clientes; el selector usa los planes y servicios activos del catálogo y completa las sesiones incluidas.
+- **Club Recovery:** premio configurable, sellos por cliente, filtros por progreso y contacto directo por WhatsApp.
 - **Planes y servicios:** creación y edición de planes, servicios, precios y créditos.
 - **Pagos:** aprobación/rechazo de transferencias con comprobante, activación de créditos y registro de ingresos manuales.
 - **Finanzas:** ingresos, gastos, utilidad, margen, comparativo de seis meses y exportación CSV.
@@ -121,6 +122,7 @@ También puede abrirse `index.html` en el navegador. La app funciona, pero el se
 │       ├── user.js             # Vistas y acciones del cliente
 │       ├── admin-base.js       # Resumen, agenda y sesiones
 │       ├── admin-people.js     # Usuarios, catálogo, maximales y rutinas
+│       ├── admin-club.js       # Club Recovery: premios, sellos y progreso
 │       ├── routine-sync.js     # Sincronización privada de rutinas con Supabase
 │       ├── admin-money.js      # Pagos, finanzas, honorarios y cotizaciones
 │       ├── admin-system.js     # Configuración y seguridad

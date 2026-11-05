@@ -56,6 +56,31 @@
       .join('');
   }
 
+  function planInfoHtml(user, payment, extraCredit, status) {
+    if (!user) return '';
+    const credits = Math.max(0, Number(user.credits) || 0);
+    const available = credits + Math.max(0, Number(extraCredit) || 0);
+    const plan = user.planLabel && user.planLabel !== 'Sin plan activo' ? user.planLabel : 'Sin plan activo';
+    const cancelled = status === 'cancelada';
+    const usesPlan = payment === 'plan' && !cancelled;
+    const willRefund = cancelled && Number(extraCredit) > 0;
+    const canUse = available > 0;
+    let detail;
+    if (usesPlan) {
+      detail = canUse
+        ? `Saldo actual: <strong>${credits}</strong>. Se descontará <strong>1 sesión</strong> al guardar y quedarán <strong>${available - 1}</strong>.`
+        : `Saldo actual: <strong>${credits}</strong>. No tiene saldo disponible. Carga o renueva el plan desde <strong>Usuarios</strong> o elige otro método de pago.`;
+    } else if (willRefund) {
+      detail = 'La sesión se cancelará y se devolverá <strong>1 sesión</strong> al plan del cliente.';
+    } else if (cancelled && payment === 'plan') {
+      detail = 'La sesión está cancelada: no consume saldo del plan.';
+    } else {
+      detail = `Saldo actual: <strong>${credits}</strong> ${credits === 1 ? 'sesión' : 'sesiones'}. Elige “Plan del cliente” para descontar una sesión automáticamente.`;
+    }
+    const tone = usesPlan ? (canUse ? 'callout-green' : 'callout-orange') : willRefund ? 'callout-orange' : 'callout-blue';
+    return `<div class="callout ${tone}">${UI.icon('layers', 17)}<span><strong>${U.esc(plan)}</strong> · ${detail}</span></div>`;
+  }
+
   function timeOptions(selected, date, serviceId, ignoreSessionId) {
     const slots = RS.data.availableSlots(date, serviceId, { ignoreRules: true, ignoreSessionId });
     const times = slots.filter((slot) => slot.available || slot.time === selected).map((slot) => slot.time);
@@ -130,6 +155,12 @@
     const newQuotes = st().quotes.filter((q) => q.status === 'nueva');
     const upcoming = RS.data.upcomingSessions(null).slice(0, 5);
     const activeUsers = st().users.filter((u) => u.role === 'user' && u.active);
+    const clubUsers = st().users.filter((u) => u.role === 'user');
+    const clubReady = U.sum(clubUsers, (u) => RS.data.loyaltyProgress(u.id).earnedRewards);
+    const clubOneAway = clubUsers.filter((u) => {
+      const loyalty = RS.data.loyaltyProgress(u.id);
+      return loyalty.earnedRewards === 0 && loyalty.stamps > 0 && loyalty.stampsToNextReward === 1;
+    }).length;
     const monthTrend = prev.income ? Math.round(((fin.income - prev.income) / prev.income) * 100) : null;
     const months = RS.data.monthsBack(6);
     const quotePipeline = U.sum(st().quotes.filter((q) => q.status === 'nueva' || q.status === 'enviada'), (q) => q.finalAmount || q.estimate);
@@ -202,6 +233,7 @@
               <a class="admin-quick" href="#/admin/finanzas"><span class="tone-amber">${UI.icon('bar-chart', 19)}</span><strong>Finanzas</strong><small>Ingresos y gastos</small></a>
               <a class="admin-quick" href="#/admin/cotizaciones"><span class="tone-blue">${UI.icon('briefcase', 19)}</span><strong>Cotizaciones</strong><small>${U.fmtMoney(quotePipeline)} en pipeline</small></a>
               <a class="admin-quick" href="#/admin/usuarios"><span class="tone-orange">${UI.icon('users', 19)}</span><strong>Usuarios</strong><small>${activeUsers.length} activos</small></a>
+              <a class="admin-quick" href="#/admin/club"><span class="tone-amber">${UI.icon('award', 19)}</span><strong>Club Recovery</strong><small>${clubReady} premios · ${clubOneAway} a 1 sello</small></a>
             </div>
           </div>
         </section>
@@ -232,7 +264,7 @@
             <div class="agenda-name"><strong>${U.esc(user ? user.name : 'Usuario')}</strong>${UI.statusPill(session.status)}</div>
             <p>${U.esc(service ? service.name : 'Sesión')} · ${U.esc(session.coach || 'Daniel Barrueto')}</p>
             ${session.notes ? `<span class="agenda-note">${UI.icon('info', 13)} ${U.esc(session.notes)}</span>` : ''}
-            <span class="agenda-pay">${UI.icon('credit-card', 13)} ${session.payment === 'plan' ? 'Plan / crédito' : session.payment === 'pagado' ? 'Pagada' : session.payment === 'cortesia' ? 'Cortesía' : 'Pago pendiente'}</span>
+            <span class="agenda-pay">${UI.icon('credit-card', 13)} ${session.payment === 'plan' ? 'Sesión del plan' : session.payment === 'pagado' ? 'Pagada' : session.payment === 'cortesia' ? 'Cortesía' : 'Pago pendiente'}</span>
           </div>
         </div>
         <div class="agenda-actions">
@@ -340,11 +372,10 @@
       date: defaultDate,
       time: (existing && existing.time) || o.time || (firstAvailable && firstAvailable.time) || '17:30',
       status: (existing && existing.status) || 'confirmada',
-      payment: (existing && existing.payment) || 'pendiente',
+      payment: (existing && existing.payment) || o.payment || 'pendiente',
       notes: (existing && existing.notes) || '',
       coach: (existing && existing.coach) || 'Daniel Barrueto',
     };
-    const user = RS.data.getUser(defaults.userId);
     const root = UI.modal({
       title: existing ? 'Editar sesión' : 'Nueva sesión',
       subtitle: existing ? 'Modifica el horario, el usuario o el estado de la reserva.' : 'Asigna una sesión a un usuario inscrito.',
@@ -361,13 +392,14 @@
           </select></div>
           <div class="field"><label for="as-payment">Pago</label><select class="input" id="as-payment" name="payment">
             <option value="pendiente" ${defaults.payment === 'pendiente' ? 'selected' : ''}>Pago pendiente</option>
-            <option value="plan" ${defaults.payment === 'plan' ? 'selected' : ''}>Plan / crédito</option>
+            <option value="plan" ${defaults.payment === 'plan' ? 'selected' : ''}>Plan del cliente (descontar sesión)</option>
             <option value="pagado" ${defaults.payment === 'pagado' ? 'selected' : ''}>Pagada</option>
             <option value="cortesia" ${defaults.payment === 'cortesia' ? 'selected' : ''}>Cortesía</option>
           </select></div>
         </div>
+        <div id="as-plan-info"></div>
         <div class="field"><label for="as-notes">Notas internas</label><textarea class="input" id="as-notes" name="notes" rows="2" placeholder="Indicaciones para la sesión…">${U.esc(defaults.notes)}</textarea></div>
-        <p class="form-hint">${UI.icon('layers', 14)} Saldo actual de ${U.esc(user ? user.name : 'usuario')}: <strong>${user ? user.credits : 0}</strong> sesiones. El saldo se ajusta desde Usuarios.</p>
+        <p class="form-hint">${UI.icon('info', 14)} Al agendar con el plan se descuenta 1 sesión del saldo del cliente. También puedes ajustar el saldo desde Usuarios.</p>
         <p class="form-error" id="session-error" role="alert"></p>
       </form>`,
       footer: `${existing ? `<button class="btn btn-ghost danger-text" data-del-session>${UI.icon('trash', 16)} Eliminar</button>` : '<button class="btn btn-ghost" data-modal-close>Cancelar</button>'}
@@ -386,13 +418,30 @@
     };
     dateInput.addEventListener('change', refreshTimes);
     serviceInput.addEventListener('change', refreshTimes);
+    const userSelect = root.querySelector('[name="userId"]');
+    const paymentSelect = root.querySelector('[name="payment"]');
+    const statusSelect = root.querySelector('[name="status"]');
+    const planInfo = root.querySelector('#as-plan-info');
+    const refreshPlan = () => {
+      const selectedUser = RS.data.getUser(userSelect.value);
+      const extra = existing && existing.payment === 'plan' && existing.status !== 'cancelada' && existing.userId === userSelect.value ? 1 : 0;
+      planInfo.innerHTML = planInfoHtml(selectedUser, paymentSelect.value, extra, statusSelect.value);
+    };
+    userSelect.addEventListener('change', refreshPlan);
+    paymentSelect.addEventListener('change', refreshPlan);
+    statusSelect.addEventListener('change', refreshPlan);
+    refreshPlan();
     if (existing) {
       root.querySelector('[data-del-session]').addEventListener('click', async () => {
-        const ok = await UI.confirm({ title: 'Eliminar sesión', message: 'La sesión se eliminará definitivamente de la agenda. Esta acción no se puede deshacer.', okText: 'Eliminar', danger: true });
+        const ok = await UI.confirm({ title: 'Eliminar sesión', message: `La sesión se eliminará definitivamente de la agenda. Esta acción no se puede deshacer.${existing.payment === 'plan' ? ' Se devolverá 1 sesión al plan del cliente.' : ''}`, okText: 'Eliminar', danger: true });
         if (!ok) return;
+        if (existing.payment === 'plan') {
+          const planUser = RS.data.getUser(existing.userId);
+          if (planUser) planUser.credits = Math.max(0, Number(planUser.credits) || 0) + 1;
+        }
         st().sessions = st().sessions.filter((s) => s.id !== existing.id);
         RS.DB.save();
-        RS.data.addAudit(me().name, 'Sesión eliminada', `${RS.data.serviceName(existing.serviceId)} del ${existing.date} ${existing.time}.`);
+        RS.data.addAudit(me().name, 'Sesión eliminada', `${RS.data.serviceName(existing.serviceId)} del ${existing.date} ${existing.time}${existing.payment === 'plan' ? ' · sesión devuelta al plan' : ''}.`);
         UI.closeModal();
         UI.toast('Sesión eliminada.', 'info');
         RS.App.render(true);
@@ -444,13 +493,44 @@
       return;
     }
     const user = RS.data.getUser(values.userId);
+    if (!user) {
+      if (err) {
+        err.textContent = 'Selecciona un usuario válido.';
+        err.classList.add('show');
+      }
+      return;
+    }
     if (values.id) {
       const session = st().sessions.find((s) => s.id === values.id);
       if (!session) return;
+      const sameUser = session.userId === values.userId;
+      const previousPlan = session.payment === 'plan' && session.status !== 'cancelada';
+      const usesPlan = values.payment === 'plan' && values.status !== 'cancelada';
+      const available = Math.max(0, Number(user.credits) || 0) + (previousPlan && sameUser ? 1 : 0);
+      if (usesPlan && available < 1) {
+        if (err) {
+          err.textContent = `${user.name} no tiene sesiones disponibles en su plan. Ajusta el saldo desde Usuarios o elige otro método de pago.`;
+          err.classList.add('show');
+        }
+        return;
+      }
+      if (previousPlan) {
+        const previousUser = RS.data.getUser(session.userId);
+        if (previousUser) previousUser.credits = Math.max(0, Number(previousUser.credits) || 0) + 1;
+      }
       Object.assign(session, values, { coach: 'Daniel Barrueto' });
-      RS.data.addAudit(me().name, 'Sesión modificada', `${RS.data.serviceName(values.serviceId)} de ${user ? user.name : 'usuario'} · ${values.date} ${values.time}.`);
+      if (usesPlan) user.credits = Math.max(0, Number(user.credits) || 0) - 1;
+      RS.data.addAudit(me().name, 'Sesión modificada', `${RS.data.serviceName(values.serviceId)} de ${user.name} · ${values.date} ${values.time}${usesPlan ? ` · saldo del plan: ${user.credits}` : ''}.`);
       UI.toast('Sesión actualizada.', 'success');
     } else {
+      const usesPlan = values.payment === 'plan' && values.status !== 'cancelada';
+      if (usesPlan && (Number(user.credits) || 0) < 1) {
+        if (err) {
+          err.textContent = `${user.name} no tiene sesiones disponibles en su plan. Ajusta el saldo desde Usuarios o elige otro método de pago.`;
+          err.classList.add('show');
+        }
+        return;
+      }
       st().sessions.push({
         id: U.uid('ses'),
         userId: values.userId,
@@ -464,8 +544,9 @@
         createdAt: new Date().toISOString(),
         createdBy: 'admin',
       });
-      RS.data.addAudit(me().name, 'Sesión creada', `${RS.data.serviceName(values.serviceId)} para ${user ? user.name : 'usuario'} · ${values.date} ${values.time}.`);
-      UI.toast('Sesión creada correctamente.', 'success');
+      if (usesPlan) user.credits = Math.max(0, Number(user.credits) || 0) - 1;
+      RS.data.addAudit(me().name, 'Sesión creada', `${RS.data.serviceName(values.serviceId)} para ${user.name} · ${values.date} ${values.time}${usesPlan ? ` · 1 sesión del plan (saldo ${user.credits})` : ''}.`);
+      UI.toast(usesPlan ? 'Sesión creada y descontada del plan.' : 'Sesión creada correctamente.', 'success');
     }
     RS.DB.save();
     UI.closeModal();
@@ -540,16 +621,21 @@
   RS.actions['admin-cancel-session'] = (el) => {
     const session = st().sessions.find((s) => s.id === el.dataset.id);
     if (!session) return;
+    const refundsPlan = session.payment === 'plan';
     UI.confirm({
       title: 'Cancelar sesión',
-      message: `Se cancelará la sesión de ${U.fmtDate(session.date, 'long')} a las ${session.time} h. El cupo quedará disponible.`,
+      message: `Se cancelará la sesión de ${U.fmtDate(session.date, 'long')} a las ${session.time} h. El cupo quedará disponible.${refundsPlan ? ' Se devolverá 1 sesión al plan del cliente.' : ''}`,
       okText: 'Cancelar sesión',
       danger: true,
     }).then((ok) => {
       if (!ok) return;
       session.status = 'cancelada';
+      if (refundsPlan) {
+        const planUser = RS.data.getUser(session.userId);
+        if (planUser) planUser.credits = Math.max(0, Number(planUser.credits) || 0) + 1;
+      }
       RS.DB.save();
-      RS.data.addAudit(me().name, 'Sesión cancelada (admin)', `${RS.data.serviceName(session.serviceId)} · ${session.date} ${session.time}.`);
+      RS.data.addAudit(me().name, 'Sesión cancelada (admin)', `${RS.data.serviceName(session.serviceId)} · ${session.date} ${session.time}${refundsPlan ? ' · sesión devuelta al plan' : ''}.`);
       UI.toast('Sesión cancelada.', 'info');
       RS.App.render();
     });

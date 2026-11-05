@@ -547,6 +547,33 @@
     return state.sessions.filter((s) => s.userId === userId);
   }
 
+  function loyaltyProgress(userId) {
+    const completed = userSessions(userId).filter((session) => session.status === 'completada');
+    const activeMonths = new Set(completed
+      .filter((session) => /^\d{4}-\d{2}-\d{2}$/.test(String(session.date || '')))
+      .map((session) => monthKey(session.date)));
+    const month = new Date();
+    month.setDate(1);
+    let activeMonthStreak = 0;
+    while (activeMonths.has(monthKey(month))) {
+      activeMonthStreak += 1;
+      month.setMonth(month.getMonth() - 1);
+    }
+    const consistencyStamps = Math.floor(activeMonthStreak / 3);
+    const stamps = completed.length + consistencyStamps;
+    const nextRewardProgress = stamps % 5;
+    return {
+      completedSessions: completed.length,
+      activeMonthStreak,
+      consistencyStamps,
+      stamps,
+      earnedRewards: Math.floor(stamps / 5),
+      stampsToNextReward: 5 - nextRewardProgress,
+      nextRewardProgress,
+      reward: (state && state.settings && state.settings.clubRecoveryReward) || 'Sesión de sauna',
+    };
+  }
+
   function upcomingSessions(userId) {
     const now = new Date();
     return state.sessions
@@ -744,6 +771,7 @@
   RS.data = {
     getUser, getService, serviceName, servicePrice, userSessions, upcomingSessions,
     nextSession, sessionsOn, availableSlots, hoursForDay, blockSlot, unblockSlot, blockedSlotsOn, userMaxes, userRoutine, approvalsInMonth,
+    loyaltyProgress,
     expensesInMonth, boletasInMonth, financeSummary, monthsBack, addAudit, whatsappUrl,
     bankData,
   };
