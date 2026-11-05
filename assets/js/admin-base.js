@@ -622,6 +622,7 @@
     if (session.payment === 'pendiente') session.payment = 'pagado';
     RS.DB.save();
     RS.data.addAudit(me().name, 'Sesión completada', `${RS.data.serviceName(session.serviceId)} · ${session.date} ${session.time}.`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     UI.toast('Sesión marcada como completada.', 'success');
     RS.App.render();
   };
@@ -644,6 +645,7 @@
       }
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión cancelada (admin)', `${RS.data.serviceName(session.serviceId)} · ${session.date} ${session.time}${refundsPlan ? ' · sesión devuelta al plan' : ''}.`);
+      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
       UI.toast('Sesión cancelada.', 'info');
       RS.App.render();
     });

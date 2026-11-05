@@ -54,6 +54,7 @@
       'Pago aprobado',
       `${payment.ref} · ${payment.userName} · ${U.fmtMoney(payment.amount)}${payment.creditsAdded ? ` · +${payment.creditsAdded} sesiones` : ''}.`
     );
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
   }
 
   function rejectPayment(payment, reason) {
@@ -69,6 +70,7 @@
     }
     RS.DB.save();
     RS.data.addAudit(me().name, 'Pago rechazado', `${payment.ref} · ${payment.userName} · ${reason || 'Sin motivo especificado'}.`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
   }
 
   function renderPayments() {
@@ -241,6 +243,7 @@
     st().payments.unshift(payment);
     RS.DB.save();
     RS.data.addAudit(me().name, 'Ingreso manual registrado', `${payment.ref} · ${user.name} · ${U.fmtMoney(amount)}${credits ? ` · +${credits} sesiones` : ''}.`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     UI.closeModal();
     UI.toast('Ingreso registrado correctamente.', 'success');
     RS.App.render(true);

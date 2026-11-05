@@ -23,6 +23,7 @@ const ASSETS = [
   './assets/js/content.js?v=3',
   './assets/js/reviews.js?v=3',
   './assets/js/supabase-client.js?v=1',
+  './assets/js/supabase-sync.js?v=1',
   './assets/js/routine-sync.js?v=1',
   './assets/js/app.js?v=8',
   './kinesiologia.html',

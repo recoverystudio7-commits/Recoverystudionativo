@@ -127,6 +127,9 @@
       active: profile.active,
       credits: account ? Number(account.credits) || 0 : 0,
       planLabel: (account && account.plan_label) || 'Sin plan activo',
+      planStart: (account && account.plan_start) || null,
+      planExpires: (account && account.plan_expires) || null,
+      supabaseUserId: authUser.id,
       source: 'supabase',
     });
     return user;
@@ -417,6 +420,11 @@
       const user = await loadRemoteProfile(authUser);
       startSession(user, supabaseSession);
       RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso autenticado por Supabase.');
+      try {
+        await RS.SupabaseSync.pull();
+      } catch (e) {
+        /* La sincronización inicial no bloquea el ingreso. */
+      }
       return { ok: true, needsPin: user.role === 'admin', user };
     } catch (error) {
       supabaseSession = null;

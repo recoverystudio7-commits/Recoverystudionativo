@@ -7,6 +7,15 @@
 
   const RS = (window.RS = window.RS || {});
 
+  // Stub por defecto para sincronización con Supabase. Si supabase-sync.js
+  // se carga, sobrescribe esta implementación con la versión real.
+  RS.SupabaseSync = RS.SupabaseSync || {
+    configured: () => false,
+    pull: () => Promise.resolve({ ok: false, reason: 'no-module' }),
+    push: () => Promise.resolve({ ok: false, reason: 'no-module' }),
+    supabaseUserId: () => null,
+  };
+
   const APP_VERSION = 2;
   const STORAGE_KEY = 'recoveryStudio.state.v1';
   const SESSION_KEY = 'recoveryStudio.session.v1';

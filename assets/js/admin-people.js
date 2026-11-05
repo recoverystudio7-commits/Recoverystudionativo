@@ -213,6 +213,7 @@
     st().users.push(user);
     RS.DB.save();
     RS.data.addAudit(me().name, 'Usuario inscrito', `${user.name} (${user.email}) · ${user.credits} sesiones iniciales.`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     UI.closeModal();
     UI.toast('Usuario inscrito correctamente.', 'success');
     RS.App.render(true);
@@ -252,6 +253,7 @@
     user.active = form.active ? form.active.checked : true;
     RS.DB.save();
     RS.data.addAudit(me().name, 'Usuario actualizado', `${user.name} · saldo ${beforeCredits} → ${user.credits} sesiones.`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     UI.closeModal();
     UI.toast('Usuario actualizado.', 'success');
     RS.App.render(true);
@@ -867,6 +869,7 @@
     RS.data.clearPlanDates(user);
     RS.DB.save();
     RS.data.addAudit(me().name, 'Plan quitado', `${user.name} · ${previousPlan} · ${previousCredits} sesiones.`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     UI.closeModal();
     UI.toast('Plan y saldo eliminados.', 'success');
     RS.App.render(true);
