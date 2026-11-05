@@ -11,6 +11,7 @@
   const SUPABASE_URL = 'https://bkvjlpdkyjrfvvokqjsx.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdmpscGRreWpyZnZ2b2txanN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MDk4MTcsImV4cCI6MjEwOTI4NTgxN30.wo4oeEBtBckp1niB06cMBP5iOuUprg4vlrAC7uiXXrE';
   const REVIEWS_ENDPOINT = `${SUPABASE_URL}/rest/v1/reviews`;
+  RS.SupabaseConfig = Object.freeze({ url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY });
   const ADMIN_TABLE_URL = 'https://supabase.com/dashboard/project/bkvjlpdkyjrfvvokqjsx/editor';
   const CACHE_MS = 60 * 1000;
   const REVIEW_COOLDOWN_MS = 6 * 60 * 60 * 1000;

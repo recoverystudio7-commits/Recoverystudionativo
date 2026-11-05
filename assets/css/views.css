@@ -1035,6 +1035,86 @@
   align-items: stretch;
 }
 
+.loyalty-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.9fr);
+  gap: 24px;
+  align-items: center;
+  margin: 18px 0;
+  padding: 20px 24px;
+  border-color: #f3d9b8;
+  background:
+    radial-gradient(440px 180px at 100% 0%, rgba(255, 122, 24, 0.1), transparent 70%),
+    #fff;
+}
+
+.loyalty-copy .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #a95510;
+}
+
+.loyalty-copy h2 {
+  margin-top: 5px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.loyalty-copy p {
+  max-width: 580px;
+  margin-top: 5px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.loyalty-progress-label,
+.loyalty-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.loyalty-progress-label strong {
+  font-size: 13px;
+  color: var(--navy);
+}
+
+.loyalty-progress-label span,
+.loyalty-foot > span {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.loyalty-meter {
+  height: 9px;
+  margin: 9px 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f3eee7;
+}
+
+.loyalty-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff9a42, #ff7a18);
+  transition: width 0.25s ease;
+}
+
+.loyalty-foot .btn {
+  flex: 0 0 auto;
+}
+
+.loyalty-note {
+  margin-top: 7px;
+  font-size: 9px;
+  color: var(--muted-2);
+}
+
 .next-card {
   position: relative;
   overflow: hidden;
@@ -3528,6 +3608,56 @@
   max-width: 520px;
 }
 
+.routine-progress-photos {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.6fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.routine-progress-heading h3 {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.routine-progress-heading p {
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.routine-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.routine-progress-photo {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.routine-progress-photo img {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: #f3f6fa;
+}
+
+.routine-progress-photo figcaption {
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+}
+
 .routine-meta {
   display: flex;
   gap: 22px;
@@ -4705,6 +4835,69 @@
 
 .routine-editor-meta .field {
   margin-bottom: 8px;
+}
+
+.routine-photo-editor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 4px 0 12px;
+}
+
+.routine-photo-card {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.routine-photo-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.routine-photo-copy strong {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.routine-photo-copy span {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.routine-photo-preview {
+  display: grid;
+  min-height: 110px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted-2);
+  font-size: 10px;
+}
+
+.routine-photo-preview img {
+  display: block;
+  width: 100%;
+  max-height: 190px;
+  object-fit: contain;
+}
+
+.routine-photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.routine-photo-actions .btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .routine-editor {
@@ -5961,6 +6154,12 @@
 }
 
 @media (max-width: 760px) {
+  .loyalty-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 17px;
+  }
+
   .auth-hero-inner {
     padding: 24px 20px 22px;
   }
@@ -6143,6 +6342,11 @@
 
   .routine-head h2 {
     font-size: 17px;
+  }
+
+  .routine-progress-photos {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
   }
 
   .routine-meta {

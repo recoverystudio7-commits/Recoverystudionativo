@@ -51,6 +51,31 @@
     return d === 1 ? 'Mañana' : `En ${d} días`;
   }
 
+  function loyaltyProgress(sessions) {
+    const completed = sessions.filter((session) => session.status === 'completada');
+    const activeMonths = new Set(completed
+      .filter((session) => /^\d{4}-\d{2}-\d{2}$/.test(String(session.date || '')))
+      .map((session) => U.monthKey(session.date)));
+    const month = new Date();
+    month.setDate(1);
+    let activeMonthStreak = 0;
+    while (activeMonths.has(U.monthKey(month))) {
+      activeMonthStreak += 1;
+      month.setMonth(month.getMonth() - 1);
+    }
+    const consistencyStamps = Math.floor(activeMonthStreak / 3);
+    const stamps = completed.length + consistencyStamps;
+    return {
+      completedSessions: completed.length,
+      activeMonthStreak,
+      consistencyStamps,
+      stamps,
+      earnedRewards: Math.floor(stamps / 5),
+      stampsToNextReward: 5 - (stamps % 5),
+      nextRewardProgress: stamps % 5,
+    };
+  }
+
   function bookingCategory(service) {
     return categoryFor(service);
   }
@@ -154,6 +179,7 @@
           <a class="btn btn-ghost btn-sm" href="${RS.data.whatsappUrl(`Hola Recovery Studio, sobre mi pago ${payment.ref} (${payment.concept}) por ${U.fmtMoney(payment.amount)}.`)}" target="_blank" rel="noopener">${UI.icon('whatsapp', 15)} Enviar por WhatsApp</a>
           <button class="btn btn-ghost btn-sm" data-action="payment-detail" data-id="${payment.id}">Ver detalle</button>
         </div>
+        ${payment.discountAmount ? `<p class="payment-note">${UI.icon('tag', 13)} Código ${U.esc(payment.promoCode)}: ahorraste ${U.fmtMoney(payment.discountAmount)}.</p>` : ''}
       </div>
     </article>`;
   }
@@ -171,6 +197,8 @@
     const next = RS.data.nextSession(user.id);
     const sessions = RS.data.userSessions(user.id);
     const thisMonth = U.monthKey(new Date());
+    const loyalty = loyaltyProgress(sessions);
+    const loyaltyReward = st().settings.clubRecoveryReward || 'Sesión de sauna';
     const monthSessions = sessions.filter((s) => U.monthKey(s.date) === thisMonth && s.status !== 'cancelada');
     const completed = sessions.filter((s) => s.status === 'completada').length;
     const missed = sessions.filter((s) => s.status === 'no_asistio').length;
@@ -256,6 +284,22 @@
         ${UI.kpi({ label: 'Asistencia', value: attendance == null ? '—' : `${attendance}%`, icon: 'target', tone: 'green', helper: past ? `${completed} sesiones completadas` : 'Tu historial empieza pronto' })}
         ${UI.kpi({ label: 'Pagos pendientes', value: String(pending.length), icon: 'credit-card', tone: pending.length ? 'amber' : 'green', helper: pending.length ? 'Por validar' : 'Todo al día' })}
       </div>
+
+      <section class="loyalty-card card" aria-labelledby="loyalty-title">
+        <div class="loyalty-copy">
+          <span class="eyebrow">${UI.icon('award', 15)} Club Recovery</span>
+          <h2 id="loyalty-title">Tu constancia tiene premio</h2>
+          <p>Cada sesión completada suma un sello. Por cada 3 meses seguidos con sesiones completadas, ganas un sello extra. Al alcanzar 5 sellos, recibirás: <strong>${U.esc(loyaltyReward)}</strong>.</p>
+        </div>
+        <div class="loyalty-progress">
+          <div class="loyalty-progress-label"><strong>${loyalty.stamps} ${loyalty.stamps === 1 ? 'sello' : 'sellos'}</strong><span>${loyalty.stampsToNextReward} para tu próxima recompensa</span></div>
+          <div class="loyalty-meter" role="progressbar" aria-label="Progreso a la próxima recompensa" aria-valuemin="0" aria-valuemax="5" aria-valuenow="${loyalty.nextRewardProgress}"><span style="width:${loyalty.nextRewardProgress * 20}%"></span></div>
+          <div class="loyalty-foot"><span>${loyalty.completedSessions} ${loyalty.completedSessions === 1 ? 'sesión completada' : 'sesiones completadas'} · ${loyalty.activeMonthStreak} ${loyalty.activeMonthStreak === 1 ? 'mes consecutivo' : 'meses consecutivos'} con actividad</span>
+            ${loyalty.earnedRewards ? `<a class="btn btn-accent btn-sm" href="${RS.data.whatsappUrl(`Hola, quiero consultar el canje de mis ${loyalty.earnedRewards} premio(s) del Club Recovery: ${loyaltyReward}. Mi cuenta: ${user.name} (${user.email}).`)}" target="_blank" rel="noopener">${UI.icon('award', 15)} Consultar mi ${loyalty.earnedRewards === 1 ? 'premio' : 'premios'}</a>` : ''}
+          </div>
+          ${loyalty.earnedRewards ? '<p class="loyalty-note">El equipo confirmará tus sesiones y coordinará el canje. Los premios no se agregan automáticamente al saldo.</p>' : ''}
+        </div>
+      </section>
 
       <div class="dash-columns">
         <section class="card">
@@ -504,6 +548,9 @@
       concept: o.concept,
       category: o.category || 'Otros',
       amount: Number(o.amount) || 0,
+      originalAmount: Number(o.originalAmount == null ? o.amount : o.originalAmount) || 0,
+      discountAmount: Number(o.discountAmount) || 0,
+      promoCode: o.promoCode || '',
       date: U.todayISO(),
       status: 'pendiente',
       method: o.method || 'Transferencia',
@@ -535,6 +582,7 @@
         <div><span>${U.esc(payment.concept)}</span><small>${U.esc(payment.ref)}</small></div>
         <strong>${U.fmtMoney(payment.amount)}</strong>
       </div>
+      ${payment.discountAmount ? `<div class="checkout-summary"><div><span>Precio de lista</span><strong>${U.fmtMoney(payment.originalAmount)}</strong></div><div class="summary-credit"><span>Código ${U.esc(payment.promoCode)}</span><strong>− ${U.fmtMoney(payment.discountAmount)}</strong></div></div>` : ''}
       ${UI.bankCard({ compact: true })}
       <div class="uploader-wrap">
         ${UI.uploader(payment.id, { title: 'Adjuntar comprobante de transferencia', hint: 'JPG o PNG · puedes hacerlo ahora o después' })}
@@ -825,33 +873,51 @@
     </div>`;
   }
 
-  function openCheckout(opts) {
+  function renderCheckoutModal() {
     const user = me();
-    const o = opts || {};
-    const items = o.items || [];
-    const isCustom = !!o.custom;
+    const checkout = RS.ui.checkout;
+    if (!checkout) return;
+    const items = checkout.items || [];
+    const discount = Number(checkout.discountAmount) || 0;
     UI.modal({
-      title: isCustom ? 'Confirmar plan personalizado' : 'Confirmar compra de plan',
+      title: checkout.custom ? 'Confirmar plan personalizado' : 'Confirmar compra de plan',
       subtitle: 'Revisa el detalle antes de generar tu orden de pago.',
       size: 'sm',
       body: `<div class="checkout-lines">
         ${items.map((i) => `<div class="checkout-line"><span>${U.esc(i.name)} ${i.qty > 1 ? `× ${i.qty}` : ''}</span><strong>${U.fmtMoney(i.price * i.qty)}</strong></div>`).join('')}
       </div>
       <div class="checkout-summary">
-        <div><span>Total a transferir</span><strong>${U.fmtMoney(o.amount)}</strong></div>
-        <div><span>Sesiones a activar</span><strong>${o.credits} sesiones</strong></div>
+        <div><span>Precio de lista</span><strong>${U.fmtMoney(checkout.originalAmount)}</strong></div>
+        ${discount ? `<div class="summary-credit"><span>Descuento ${U.esc(checkout.promoCode)}</span><strong>− ${U.fmtMoney(discount)}</strong></div>` : ''}
+        <div><span>Total a transferir</span><strong>${U.fmtMoney(checkout.amount)}</strong></div>
+        <div><span>Sesiones a activar</span><strong>${checkout.credits} sesiones</strong></div>
       </div>
+      <form data-form="discount-apply" class="field">
+        <label for="checkout-discount">¿Tienes un código de descuento?</label>
+        <div class="form-row"><input class="input" id="checkout-discount" name="code" maxlength="30" value="${U.esc(checkout.promoCode || '')}" placeholder="Escribe tu código"><button class="btn btn-outline" type="submit">Aplicar</button></div>
+        ${RS.ui.discountFeedback ? `<span class="field-hint">${U.esc(RS.ui.discountFeedback)}</span>` : ''}
+      </form>
       <div class="callout callout-blue">${UI.icon('info', 17)}<span>Las sesiones se suman a tu saldo cuando el equipo valida el comprobante de pago. Tu saldo actual es de <strong>${user.credits}</strong> sesiones.</span></div>
       <p class="form-hint">${UI.icon('lock', 14)} Pago por transferencia bancaria. No se solicitan datos de tarjeta.</p>`,
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-accent" data-action="checkout-create">Generar orden de pago ${UI.icon('arrow-right', 16)}</button>`,
     });
+  }
+
+  function openCheckout(opts) {
+    const o = opts || {};
+    RS.ui.discountFeedback = '';
     RS.ui.checkout = {
-      concept: isCustom ? 'Plan personalizado Recovery Studio' : o.concept,
-      amount: o.amount,
-      credits: o.credits,
-      items,
+      concept: o.custom ? 'Plan personalizado Recovery Studio' : o.concept,
+      amount: Number(o.amount) || 0,
+      originalAmount: Number(o.amount) || 0,
+      discountAmount: 0,
+      promoCode: '',
+      credits: Number(o.credits) || 0,
+      items: o.items || [],
       category: 'Planes',
+      custom: !!o.custom,
     };
+    renderCheckoutModal();
   }
 
   /* -------------------------------- pagos --------------------------------- */
@@ -936,6 +1002,10 @@
     const ui = ensureUi();
     const maxes = RS.data.userMaxes(user.id).sort((a, b) => (b.current || 0) - (a.current || 0));
     const routine = RS.data.userRoutine(user.id);
+    const progressPhotos = routine ? [
+      { label: 'Inicio', image: routine.startImage },
+      { label: 'Final', image: routine.endImage },
+    ].filter((photo) => /^data:image\/jpeg;base64,/i.test(photo.image || '')) : [];
     const best = maxes.reduce((acc, m) => Math.max(acc, Number(m.current) || 0), 0);
     return `<div class="view">
       <div class="page-head no-print">
@@ -980,6 +1050,13 @@
               <div><span>Actualizada</span><strong>${U.fmtDate(routine.updatedAt, 'compact')}</strong></div>
             </div>
           </div>
+          ${progressPhotos.length ? `<section class="routine-progress-photos" aria-label="Fotos de progreso">
+            <div class="routine-progress-heading"><h3>Tu progreso</h3><p>Imágenes de referencia compartidas por tu coach.</p></div>
+            <div class="routine-progress-grid">${progressPhotos.map((photo) => `<figure class="routine-progress-photo">
+              <img src="${U.esc(photo.image)}" alt="Foto de progreso: ${photo.label.toLowerCase()}" loading="lazy">
+              <figcaption>${photo.label}</figcaption>
+            </figure>`).join('')}</div>
+          </section>` : ''}
           <div class="routine-days">
             ${routine.days.map((d, idx) => `<details class="routine-day" ${idx === 0 ? 'open' : ''}>
               <summary>
@@ -1266,6 +1343,9 @@
       creditsToAdd: checkout.credits,
       items: checkout.items,
       method: 'Transferencia',
+      originalAmount: checkout.originalAmount,
+      discountAmount: checkout.discountAmount,
+      promoCode: checkout.promoCode,
       note: checkout.credits ? `${checkout.credits} sesiones al aprobar el pago.` : '',
     });
     RS.data.addAudit(user.name, 'Orden de pago creada', `${checkout.concept} · ${U.fmtMoney(checkout.amount)} · ${payment.ref}.`);
@@ -1300,7 +1380,7 @@
     });
   };
 
-  RS.forms['profile-info'] = (form) => {
+  RS.forms['profile-info'] = async (form) => {
     const user = me();
     const name = form.name.value.trim();
     const phone = form.phone.value.trim();
@@ -1313,18 +1393,30 @@
       }
       return;
     }
-    user.name = name;
-    user.phone = phone;
-    user.goal = goal;
-    const session = RS.Auth.getSession();
-    if (session) {
-      session.name = name;
-      sessionStorage.setItem(RS.SESSION_KEY, JSON.stringify(session));
+    try {
+      const auth = RS.Supabase.readSession();
+      const updated = await RS.Supabase.request('/rest/v1/rpc/update_own_profile', {
+        method: 'POST',
+        body: JSON.stringify({ p_full_name: name, p_phone: phone, p_goal: goal }),
+      }, auth && auth.access_token);
+      user.name = updated.full_name;
+      user.phone = updated.phone;
+      user.goal = updated.goal;
+      const session = RS.Auth.getSession();
+      if (session) {
+        session.name = updated.full_name;
+        sessionStorage.setItem(RS.SESSION_KEY, JSON.stringify(session));
+      }
+      RS.DB.save();
+      RS.data.addAudit(name, 'Perfil actualizado', 'El usuario actualizó sus datos personales.');
+      UI.toast('Datos actualizados correctamente.', 'success');
+      RS.App.render();
+    } catch (error) {
+      if (err) {
+        err.textContent = error.message || 'No pudimos actualizar tus datos.';
+        err.classList.add('show');
+      }
     }
-    RS.DB.save();
-    RS.data.addAudit(name, 'Perfil actualizado', 'El usuario actualizó sus datos personales.');
-    UI.toast('Datos actualizados correctamente.', 'success');
-    RS.App.render();
   };
 
   RS.forms['profile-password'] = async (form) => {
@@ -1358,6 +1450,11 @@
     renderPayments,
     renderTraining,
     renderProfile,
+    refreshCheckout: () => {
+      RS.ui.discountFeedback = RS.ui.discountFeedback || '';
+      UI.closeModal();
+      renderCheckoutModal();
+    },
     handleProofUpload: async (input) => {
       const id = input.dataset.proof;
       const payment = st().payments.find((p) => p.id === id);
@@ -1384,5 +1481,6 @@
     },
     downloadIcs,
     openPaymentModal,
+    loyaltyProgress,
   };
 })();

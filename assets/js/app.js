@@ -12,9 +12,9 @@
   const ADMIN_ROUTES = [
     'admin', 'admin/agenda', 'admin/usuarios', 'admin/planes', 'admin/pagos',
     'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/resenas',
-    'admin/configuracion', 'admin/seguridad',
+    'admin/configuracion', 'admin/seguridad', 'admin/contenido',
   ];
-  const PUBLIC_ROUTES = ['login', 'cotizar', 'cotizar-gracias', 'resenas', 'sauna'];
+  const PUBLIC_ROUTES = ['login', 'cotizar', 'cotizar-gracias', 'resenas', 'sauna', 'capsulas'];
 
   const TITLES = {
     login: 'Ingresar',
@@ -22,6 +22,7 @@
     'cotizar-gracias': 'Solicitud recibida',
     resenas: 'Reseñas de clientes',
     sauna: 'Beneficios del sauna húmedo',
+    capsulas: 'Cápsulas de recuperación',
     inicio: 'Inicio',
     agendar: 'Agendar sesión',
     reservas: 'Mis reservas',
@@ -40,6 +41,7 @@
     'admin/resenas': 'Reseñas',
     'admin/configuracion': 'Configuración',
     'admin/seguridad': 'Seguridad',
+    'admin/contenido': 'Promociones y cápsulas',
   };
 
   function currentRoute() {
@@ -70,6 +72,7 @@
           { route: 'admin/honorarios', icon: 'receipt', label: 'Honorarios' },
           { route: 'admin/cotizaciones', icon: 'briefcase', label: 'Cotizaciones', badge: quotes },
           { route: 'admin/resenas', icon: 'message-square', label: 'Reseñas' },
+          { route: 'admin/contenido', icon: 'play', label: 'Promociones y cápsulas' },
         ] },
         { label: 'Sistema', items: [
           { route: 'admin/configuracion', icon: 'settings', label: 'Configuración' },
@@ -84,6 +87,7 @@
         { route: 'agendar', icon: 'calendar', label: 'Agendar sesión' },
         { route: 'reservas', icon: 'calendar-check', label: 'Mis reservas' },
         { route: 'sauna', icon: 'droplet', label: 'Sauna húmedo' },
+        { route: 'capsulas', icon: 'play', label: 'Cápsulas' },
       ] },
       { label: 'Mi cuenta', items: [
         { route: 'planes', icon: 'layers', label: 'Planes' },
@@ -181,6 +185,7 @@
       'cotizar-gracias': () => RS.Auth.renderQuoteThanks(),
       resenas: () => RS.Reviews.renderReviewsPage(),
       sauna: () => RS.Reviews.renderSaunaPage(),
+      capsulas: () => RS.VideoContent.renderPublic(),
       inicio: () => RS.User.renderHome(),
       agendar: () => RS.User.renderBooking(),
       reservas: () => RS.User.renderAppointments(),
@@ -199,6 +204,7 @@
       'admin/resenas': () => RS.Reviews.renderAdminPage(),
       'admin/configuracion': () => RS.Admin.renderSettings(),
       'admin/seguridad': () => RS.Admin.renderSecurity(),
+      'admin/contenido': () => RS.VideoContent.renderAdmin(),
     };
     return map[route];
   }
@@ -381,7 +387,10 @@
   async function boot() {
     try {
       await RS.DB.init();
+      await RS.Auth.restoreSession();
       RS.ui = RS.ui || {};
+      await RS.TrainingRoutines.load();
+      await RS.VideoContent.load();
       RS.Auth.initActivity();
       document.addEventListener('click', onDocumentClick);
       document.addEventListener('submit', onDocumentSubmit);

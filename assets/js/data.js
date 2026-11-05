@@ -419,6 +419,7 @@
         source: 'admin',
       }],
       services: SERVICE_SEED.map((service) => ({ ...service, features: [...service.features] })),
+      videoCapsules: [],
       sessions: [],
       blockedSlots: [],
       payments: [],
@@ -440,6 +441,8 @@
         retention: 15.25,
         whatsapp: BRAND.whatsapp,
         address: 'Av. Providencia 1234, oficina 502 ? Santiago',
+        clubRecoveryReward: 'Sesión de sauna',
+        discountCodes: [],
         bank: {
           holder: 'DANIEL ESTEBAN BARRUETO',
           rut: '17.375.282-2',
@@ -480,6 +483,9 @@
           if (parsed && parsed.version === APP_VERSION && Array.isArray(parsed.users)) {
             state = parsed;
             state.settings = Object.assign({}, parsed.settings || {});
+            state.settings.discountCodes = Array.isArray(state.settings.discountCodes) ? state.settings.discountCodes : [];
+            state.settings.clubRecoveryReward = String(state.settings.clubRecoveryReward || 'Sesión de sauna');
+            state.videoCapsules = Array.isArray(parsed.videoCapsules) ? parsed.videoCapsules : [];
             return state;
           }
         } catch (e) {

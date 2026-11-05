@@ -77,6 +77,17 @@
           </section>
 
           <section class="card">
+            <div class="card-head"><h2 class="card-title">Premio Club Recovery</h2><p class="card-sub">Define qué premio recibirán los clientes al alcanzar cinco sellos.</p></div>
+            <div class="card-body">
+              <div class="field">
+                <label for="st-club-reward">Premio por constancia</label>
+                <input class="input" id="st-club-reward" name="clubRecoveryReward" value="${U.esc(s.clubRecoveryReward || 'Sesión de sauna')}" maxlength="120" required>
+                <span class="field-hint">Ejemplo: Sesión de sauna. Los clientes que ya tengan cinco sellos verán el premio configurado aquí.</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
             <div class="card-head"><h2 class="card-title">Pagos y transferencia</h2><p class="card-sub">Estos datos se muestran a los usuarios al pagar.</p></div>
             <div class="card-body">
               <div class="grid grid-2 gap-sm">
@@ -125,7 +136,7 @@
     </div>`;
   }
 
-  RS.forms['admin-settings'] = (form) => {
+  RS.forms['admin-settings'] = async (form) => {
     const s = st().settings;
     const enabledDays = Array.from(form.querySelectorAll('input[name="dayEnabled"]:checked')).map((i) => Number(i.value));
     const hoursByDay = {};
@@ -153,6 +164,12 @@
       UI.toast('Ingresa un WhatsApp válido en formato internacional.', 'error');
       return;
     }
+    const clubRecoveryReward = form.clubRecoveryReward.value.trim();
+    if (!clubRecoveryReward) {
+      UI.toast('Define el premio de Club Recovery.', 'error');
+      return;
+    }
+    await RS.VideoContent.saveClubRecoveryReward(clubRecoveryReward);
     s.hoursByDay = hoursByDay;
     s.openDays = enabledDays;
     s.start = hoursByDay[enabledDays[0]].start;
@@ -164,6 +181,7 @@
     s.autoLockMin = Number(form.autoLockMin.value) || 15;
     s.retention = retention;
     s.whatsapp = whatsapp;
+    s.clubRecoveryReward = clubRecoveryReward;
     s.address = form.address.value.trim();
     s.bank = {
       holder: form.bankHolder.value.trim(),
@@ -174,7 +192,7 @@
       email: form.bankEmail.value.trim(),
     };
     RS.DB.save();
-    RS.data.addAudit(me().name, 'Configuración actualizada', `${enabledDays.length} días de atención · Política ${s.policyHours} h · Retención ${s.retention}%.`);
+    RS.data.addAudit(me().name, 'Configuración actualizada', `${enabledDays.length} días de atención · Política ${s.policyHours} h · Retención ${s.retention}% · Premio Club Recovery: ${clubRecoveryReward}.`);
     UI.toast('Configuración guardada.', 'success');
     RS.App.render(true);
   };

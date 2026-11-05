@@ -13,13 +13,7 @@ La identidad visual usa azul marino (`#0A2342`), azul de apoyo (`#123F70`), nara
 
 ## Inicio y horarios
 
-La primera carga crea únicamente la cuenta administradora y el catálogo inicial: no se incluyen usuarios, reservas, pagos ni movimientos ficticios.
-
-| Rol | Correo | Contraseña | PIN |
-| --- | --- | --- | --- |
-| Administrador | `recoverystudio7@gmail.com` | `Recovery2026!` | `2468` |
-
-La cuenta administradora solicita contraseña y PIN. Cambia ambos desde **Admin → Seguridad** antes de registrar información real.
+La primera carga no incluye usuarios, reservas, pagos ni movimientos ficticios. No se documentan credenciales de administrador en el repositorio. Para habilitar el panel, crea la cuenta en Supabase Auth y asigna `role = 'admin'` a su perfil desde Supabase. El PIN de la interfaz sigue siendo local y no reemplaza controles de seguridad del servidor.
 
 Horario inicial, en bloques de 60 minutos:
 
@@ -38,24 +32,28 @@ El administrador puede activar o cerrar días y modificar sus horas desde **Admi
 - **Inicio:** próxima sesión, saldo del plan, asistencia, pagos pendientes y accesos rápidos.
 - **Agendar sesión:** selección de servicio, fecha y horario según disponibilidad, pago con sesión del plan, transferencia o pago en recepción.
 - **Mis reservas:** historial y próximas sesiones, con detalle, reagendamiento y cancelación.
+- **Club Recovery:** un sello por sesión completada y un sello de constancia por cada tres meses consecutivos con actividad. El administrador configura el premio de los cinco sellos en **Configuración → Premio Club Recovery** (por defecto, una sesión de sauna); el equipo valida y coordina el canje por WhatsApp.
 - **Planes:** catálogo de planes y servicios, compra de plan/sesión y creación de la orden de pago.
+- **Descuentos:** aplicación de códigos vigentes al comprar planes.
 - **Mis pagos:** estado de pagos, instrucciones de transferencia y envío de comprobante por WhatsApp.
-- **Entrenamiento:** rutina asignada por el coach y registro de maximales (sentadilla, peso muerto, press banca, etc.).
+- **Entrenamiento:** rutina asignada por el coach, fotos privadas de progreso y registro de maximales (sentadilla, peso muerto, press banca, etc.).
 - **Mi perfil:** datos personales, objetivo y preferencias de contacto.
 - **Sauna húmedo:** página pública con beneficios, protocolo de uso y advertencias responsables.
 - **Reseñas:** página pública con promedio, comentarios reales y formulario para dejar una opinión (queda pendiente de moderación).
+- **Cápsulas:** página pública de videos de recuperación, movilidad y entrenamiento.
 
 ### Panel administrativo
 
 - **Resumen:** KPIs del mes, pagos por validar, próximas sesiones, actividad reciente y accesos rápidos.
 - **Agenda:** vista de sesiones por día, creación/edición/reagendamiento y cambio de estado.
-- **Usuarios:** registro y edición de clientes, plan, créditos y estado de la cuenta.
+- **Usuarios:** registro y edición de clientes; el selector usa los planes y servicios activos del catálogo y completa las sesiones incluidas.
 - **Planes y servicios:** creación y edición de planes, servicios, precios y créditos.
 - **Pagos:** aprobación/rechazo de transferencias con comprobante, activación de créditos y registro de ingresos manuales.
 - **Finanzas:** ingresos, gastos, utilidad, margen, comparativo de seis meses y exportación CSV.
 - **Honorarios:** boletas emitidas, retención configurable (15,25 % por defecto), neto a recibir y resumen mensual.
 - **Cotizaciones:** pipeline de solicitudes de empresas, cambio de estado, monto final, notas y contacto por WhatsApp/correo.
 - **Reseñas:** listado de reseñas publicadas y acceso directo a la moderación en Supabase.
+- **Promociones y cápsulas:** creación, edición, activación y eliminación de códigos de descuento y videos de YouTube, Vimeo o archivos HTTPS.
 - **Configuración:** horarios por día, duración de bloques, anticipación, política de cambios, datos bancarios, retención, dirección y auto-bloqueo.
 - **Seguridad:** cambio de PIN y contraseña, bloqueo manual, cierre de todas las sesiones y registro de auditoría.
 
@@ -75,6 +73,7 @@ El administrador puede activar o cerrar días y modificar sus horas desde **Admi
 - **Ingresos:** se calculan con los pagos aprobados según su fecha. Los gastos se registran por mes.
 - **Honorarios:** retención de tercera categoría configurable (15,25 % inicial) y neto por boleta/mes.
 - **Cotizaciones:** estimación según servicios, cantidad de personas y descuento por volumen; el monto final puede ajustarse manualmente.
+- **Descuentos de planes:** el precio rebajado y el código se calculan y registran actualmente en el navegador; deben validarse en el servidor antes de tratarse como cobro definitivo.
 - **Seguridad admin:** contraseña + PIN de 4 dígitos, bloqueo automático por inactividad (15 min por defecto), bloqueo temporal tras 5 intentos fallidos y auditoría de acciones.
 
 ---
@@ -122,28 +121,44 @@ También puede abrirse `index.html` en el navegador. La app funciona, pero el se
 │       ├── user.js             # Vistas y acciones del cliente
 │       ├── admin-base.js       # Resumen, agenda y sesiones
 │       ├── admin-people.js     # Usuarios, catálogo, maximales y rutinas
+│       ├── routine-sync.js     # Sincronización privada de rutinas con Supabase
 │       ├── admin-money.js      # Pagos, finanzas, honorarios y cotizaciones
 │       ├── admin-system.js     # Configuración y seguridad
 │       ├── reviews.js          # Reseñas compartidas (Supabase) y sauna húmedo
+│       ├── supabase-client.js  # Cliente REST/Auth de Supabase
 │       └── app.js              # Router, shell, eventos globales y arranque
 ├── supabase/
+│   ├── migrations/             # Esquema y funciones de Supabase
 │   └── reviews.sql             # Tabla, permisos y políticas RLS de reseñas
 └── README.md
 ```
 
 No hay frameworks, bundler ni dependencias de npm. Los módulos se cargan con etiquetas `<script>` en orden y comparten el espacio global `window.RS`.
 
+## Integraciones externas
+
+- **Resend:** `recoverystudio.cl` aparece verificado en el panel. El CNAME `send` corresponde a recepción y no se necesita para notificaciones salientes. El MX y SPF raíz de Microsoft 365 deben permanecer sin cambios.
+- **Notificaciones por correo y WhatsApp:** todavía no están activas. La aplicación debe migrar primero las reservas, pagos y anulaciones a Supabase; después se deben enviar avisos desde una Edge Function con claves guardadas como secretos del proyecto, nunca desde JavaScript público.
+- La dirección planeada para las alertas es `recoverystudio7@gmail.com`, usando `notificaciones@recoverystudio.cl` como remitente de Resend.
+
 ---
 
 ## Persistencia y datos
 
 - **Estado principal:** `localStorage` bajo la clave `recoveryStudio.state.v1` (cuentas, reservas, pagos, planes, finanzas y configuración).
-- **Sesión activa:** `sessionStorage` (se pierde al cerrar la pestaña).
+- **Autenticación en curso:** las cuentas y contraseñas nuevas usan Supabase Auth; el perfil se consulta en Supabase y la sesión dura mientras la pestaña permanezca abierta. La administración requiere asignar `role = 'admin'` al perfil desde el panel Supabase; el registro público siempre crea clientes.
+- **Sesión y perfil:** sesión de Supabase en `sessionStorage`; la edición del perfil usa la función `update_own_profile` de `supabase/migrations/20261104232000_profile_self_service.sql`, aplicada y verificada en Supabase.
 - **Reseñas:** se guardan en **Supabase** y son compartidas entre todos los navegadores. Solo se leen las que tienen `status = 'approved'`.
+- **Promociones y cápsulas:** se guardan en `public.discount_codes` y `public.video_capsules`. Ambas tablas tienen RLS activo; visitantes leen solo contenido activo y los cambios requieren un perfil administrador. La migración `supabase/migrations/20261104233000_marketing_content.sql` ya se aplicó y se verificó en Supabase.
+- **Fotos de progreso de la rutina:** el administrador puede agregar fotos de inicio y de fin; el cliente las ve en **Entrenamiento → Mi rutina**. Las pautas de perfiles de Supabase, incluidas sus imágenes comprimidas, se guardan en `public.client_routines` y quedan disponibles al iniciar sesión desde otro dispositivo. Las cuentas creadas solo en el almacenamiento local no se sincronizan.
+- **Club Recovery:** el premio se configura desde el panel y se comparte mediante `public.studio_settings`; por defecto es una sesión de sauna. El progreso se calcula a partir de las sesiones completadas visibles para la cuenta en el navegador; el canje es manual con el equipo y no agrega créditos automáticamente. Hasta migrar las reservas, el historial y el progreso no están sincronizados entre dispositivos.
+- **Asignación de planes:** el formulario de usuarios toma los planes y servicios activos desde el catálogo local del administrador. Al seleccionar uno, completa el saldo inicial con sus sesiones incluidas; ese saldo puede ajustarse manualmente.
+- **Esquema base de operaciones:** aplicado al proyecto Supabase el 4 de noviembre de 2026. Crea 14 tablas con RLS y carga los 7 servicios y la configuración inicial del studio. Se verificaron las tablas, esos datos iniciales y RLS de sesiones.
+- **Migración pendiente:** las cuentas locales antiguas, reservas, pagos, finanzas, agenda y demás operaciones todavía se guardan localmente. Además, el descuento no se valida contra el importe en servidor. No considerar la migración completa ni usar los montos promocionales como cobros definitivos hasta completar esos flujos.
 - **Datos iniciales:** cuenta administradora, catálogo y horarios; sin usuarios ni actividad ficticia.
 - **Respaldos:** **Configuración → Descargar respaldo JSON**.
 
-Contraseñas y PIN se almacenan como hash SHA-256 cuando el navegador expone `crypto.subtle` (contexto seguro o `localhost`); en caso contrario se usa un hash de respaldo no criptográfico.
+Supabase Auth gestiona las contraseñas. El PIN de administrador sigue siendo local y debe migrarse a una verificación del servidor antes de tratarlo como un control de seguridad.
 
 ---
 
@@ -225,11 +240,13 @@ Esta versión es un **prototipo funcional del lado cliente**. Antes de usarla co
 - [ ] Reagendamiento dentro y fuera del plazo configurado.
 - [ ] Compra de plan, subida de comprobante y aprobación en admin.
 - [ ] Registro de usuario, edición de plan y créditos.
-- [ ] Edición de catálogo, maximales y rutina.
+- [ ] Edición de catálogo, maximales, rutina e imágenes de progreso visibles para el cliente.
 - [ ] Ingresos, gastos, boletas y honorarios de seis meses.
 - [ ] Cotización pública, confirmación y gestión en admin.
 - [ ] Reseña pública: envío, estado pendiente y aparición tras aprobación en Supabase.
 - [ ] Página de sauna húmedo y enlaces desde el inicio de sesión.
+- [ ] Crear/editar/desactivar/eliminar un descuento y comprobar sus fechas y cálculo en el checkout de un plan.
+- [ ] Crear/editar/desactivar/eliminar una cápsula y probar enlaces de YouTube, Vimeo y archivo HTTPS.
 - [ ] Verificación de horarios por día y bloqueo/desbloqueo de franjas.
 - [ ] Configuración de política, retención y datos bancarios.
 - [ ] Cambio de PIN, bloqueo automático, cierre de sesiones y auditoría.

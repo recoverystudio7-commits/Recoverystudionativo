@@ -120,7 +120,10 @@
 
   function openUserForm(user) {
     const isEdit = !!user;
-    UI.modal({
+    const selectableServices = st().services.filter((service) => service.active && ['Plan', 'Sesión', 'Asesoría'].includes(service.kind));
+    const currentPlan = isEdit ? user.planLabel || '' : '';
+    const hasCurrentPlan = selectableServices.some((service) => service.name === currentPlan);
+    const root = UI.modal({
       title: isEdit ? 'Editar usuario' : 'Inscribir nuevo usuario',
       subtitle: isEdit ? 'Actualiza los datos del usuario y su saldo de sesiones.' : 'Crea una cuenta manualmente. El usuario podrá ingresar con su correo y clave.',
       size: 'md',
@@ -130,7 +133,13 @@
           <div class="field"><label for="uf-name">Nombre completo *</label><input class="input" id="uf-name" name="name" value="${U.esc(isEdit ? user.name : '')}" required></div>
           <div class="field"><label for="uf-email">Correo *</label><input class="input" id="uf-email" name="email" type="email" value="${U.esc(isEdit ? user.email : '')}" required></div>
           <div class="field"><label for="uf-phone">WhatsApp</label><input class="input" id="uf-phone" name="phone" type="tel" value="${U.esc(isEdit ? user.phone || '' : '')}" placeholder="+56 9 …"></div>
-          <div class="field"><label for="uf-plan">Plan asignado</label><input class="input" id="uf-plan" name="planLabel" value="${U.esc(isEdit ? user.planLabel || '' : 'Sin plan activo')}" placeholder="Ej: Plan Performance 12"></div>
+          <div class="field"><label for="uf-plan">Plan o servicio asignado</label><select class="input" id="uf-plan" name="planLabel">
+            <option value="" ${!currentPlan || currentPlan === 'Sin plan activo' ? 'selected' : ''}>Sin plan activo</option>
+            ${isEdit && currentPlan && currentPlan !== 'Sin plan activo' && !hasCurrentPlan ? `<option value="legacy" data-label="${U.esc(currentPlan)}" data-sessions="${Number(user.credits) || 0}" selected>${U.esc(currentPlan)} (actual)</option>` : ''}
+            ${selectableServices.length
+              ? selectableServices.map((service) => `<option value="${U.esc(service.id)}" data-label="${U.esc(service.name)}" data-sessions="${Math.max(0, Number(service.sessions) || 0)}" ${currentPlan === service.name ? 'selected' : ''}>${U.esc(service.name)} · ${U.esc(service.kind)} · ${U.fmtMoney(service.price)}</option>`).join('')
+              : '<option disabled>No hay planes o servicios activos en el catálogo</option>'}
+          </select><span class="field-hint">Las sesiones se completan según el plan seleccionado.</span></div>
           <div class="field"><label for="uf-credits">Sesiones disponibles</label><input class="input" id="uf-credits" name="credits" type="number" min="0" step="1" value="${isEdit ? user.credits : 0}"></div>
           ${isEdit ? `<div class="field"><label>Estado</label><label class="check check-boxed"><input type="checkbox" name="active" ${user.active ? 'checked' : ''}><span>Cuenta activa</span></label></div>` : `<div class="field"><label for="uf-pass">Clave temporal *</label><input class="input" id="uf-pass" name="password" type="text" value="Recovery2026!" minlength="8" required><span class="field-hint">Compártela por WhatsApp. El usuario puede cambiarla luego.</span></div>`}
         </div>
@@ -139,6 +148,11 @@
         <p class="form-error" id="user-form-error" role="alert"></p>
       </form>`,
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" type="submit" form="user-form">${isEdit ? 'Guardar cambios' : 'Inscribir usuario'}</button>`,
+    });
+    if (!root) return;
+    root.querySelector('[name="planLabel"]').addEventListener('change', (event) => {
+      const option = event.target.selectedOptions[0];
+      root.querySelector('[name="credits"]').value = option.value ? option.dataset.sessions || '0' : '0';
     });
   }
 
@@ -161,7 +175,7 @@
       passwordHash: await U.hashPassword(password),
       active: true,
       credits: Math.max(0, Number(form.credits.value) || 0),
-      planLabel: form.planLabel.value.trim() || 'Sin plan activo',
+      planLabel: form.planLabel.selectedOptions[0].dataset.label || 'Sin plan activo',
       goal: form.goal.value.trim(),
       notes: form.notes.value.trim(),
       createdAt: new Date().toISOString(),
@@ -189,7 +203,7 @@
     user.name = name;
     user.email = email;
     user.phone = form.phone.value.trim();
-    user.planLabel = form.planLabel.value.trim() || 'Sin plan activo';
+    user.planLabel = form.planLabel.selectedOptions[0].dataset.label || 'Sin plan activo';
     user.credits = Math.max(0, Number(form.credits.value) || 0);
     user.goal = form.goal.value.trim();
     user.notes = form.notes.value.trim();
@@ -326,6 +340,21 @@
       ? JSON.parse(JSON.stringify(existing))
       : { id: U.uid('rt'), userId: user.id, title: 'Nueva pauta de entrenamiento', objective: '', weeks: 4, days: [newRoutineDay(0)] };
     if (!draft.days.length) draft.days.push(newRoutineDay(0));
+    draft.startImage = draft.startImage || '';
+    draft.endImage = draft.endImage || '';
+
+    const photoMarkup = (side, label) => `<div class="routine-photo-card">
+      <div class="routine-photo-copy"><strong>${label}</strong><span>Se guarda con la pauta privada del usuario.</span></div>
+      <div class="routine-photo-preview" data-r-photo-preview="${side}">${draft[`${side}Image`]
+        ? `<img src="${U.esc(draft[`${side}Image`])}" alt="Progreso ${label.toLowerCase()}">`
+        : '<span>Sin imagen</span>'}</div>
+      <div class="routine-photo-actions">
+        <label class="btn btn-outline btn-sm">${UI.icon('upload', 14)}<span data-r-photo-label="${side}">${draft[`${side}Image`] ? 'Cambiar imagen' : 'Agregar imagen'}</span>
+          <input type="file" accept="image/*" data-r-photo="${side}" hidden>
+        </label>
+        <button type="button" class="btn btn-ghost btn-sm" data-r-photo-remove="${side}" ${draft[`${side}Image`] ? '' : 'disabled'}>Quitar</button>
+      </div>
+    </div>`;
 
     const root = UI.modal({
       title: 'Rutina del usuario',
@@ -336,12 +365,14 @@
         <div class="field"><label>Objetivo</label><input class="input" data-r-meta="objective" value="${U.esc(draft.objective)}" placeholder="Foco principal del bloque"></div>
         <div class="field field-weeks"><label>Semanas</label><input class="input" type="number" min="1" max="52" data-r-meta="weeks" value="${U.esc(draft.weeks)}"></div>
       </div>
+      <div class="routine-photo-editor">${photoMarkup('start', 'Foto de inicio')}${photoMarkup('end', 'Foto de final')}</div>
       <div class="routine-editor" id="routine-editor"></div>
       <div class="routine-editor-foot"><button type="button" class="btn btn-outline btn-sm" data-r-add-day>${UI.icon('plus', 15)} Agregar día</button><span class="form-hint">${UI.icon('info', 13)} Los cambios se guardan al finalizar.</span></div>`,
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" data-routine-save>${UI.icon('check', 16)} Guardar rutina</button>`,
     });
     if (!root) return;
     const container = root.querySelector('#routine-editor');
+    const saveButton = root.querySelector('[data-routine-save]');
 
     const render = () => {
       container.innerHTML = draft.days.map((day, di) => `<div class="re-day">
@@ -367,6 +398,38 @@
       </div>`).join('');
     };
     render();
+
+    root.addEventListener('change', async (e) => {
+      const input = e.target.closest('[data-r-photo]');
+      const file = input && input.files && input.files[0];
+      if (!file) return;
+      const side = input.dataset.rPhoto;
+      root.querySelectorAll('[data-r-photo]').forEach((photoInput) => { photoInput.disabled = true; });
+      saveButton.disabled = true;
+      try {
+        draft[`${side}Image`] = await U.compressImage(file, 1100, 0.72);
+        root.querySelector(`[data-r-photo-preview="${side}"]`).innerHTML =
+          `<img src="${U.esc(draft[`${side}Image`])}" alt="Progreso ${side === 'start' ? 'inicial' : 'final'}">`;
+        root.querySelector(`[data-r-photo-remove="${side}"]`).disabled = false;
+        root.querySelector(`[data-r-photo-label="${side}"]`).textContent = 'Cambiar imagen';
+      } catch (error) {
+        UI.toast(error.message || 'No pudimos procesar la imagen.', 'error');
+      } finally {
+        input.value = '';
+        root.querySelectorAll('[data-r-photo]').forEach((photoInput) => { photoInput.disabled = false; });
+        saveButton.disabled = false;
+      }
+    });
+
+    root.addEventListener('click', (e) => {
+      const button = e.target.closest('[data-r-photo-remove]');
+      if (!button) return;
+      const side = button.dataset.rPhotoRemove;
+      draft[`${side}Image`] = '';
+      root.querySelector(`[data-r-photo-preview="${side}"]`).innerHTML = '<span>Sin imagen</span>';
+      button.disabled = true;
+      root.querySelector(`[data-r-photo-label="${side}"]`).textContent = 'Agregar imagen';
+    });
 
     root.addEventListener('input', (e) => {
       const meta = e.target.dataset.rMeta;
@@ -422,7 +485,7 @@
       render();
     });
 
-    root.querySelector('[data-routine-save]').addEventListener('click', () => {
+    saveButton.addEventListener('click', async () => {
       draft.title = draft.title.trim() || 'Pauta de entrenamiento';
       draft.objective = draft.objective.trim();
       draft.days.forEach((d) => {
@@ -434,13 +497,32 @@
         return;
       }
       draft.updatedAt = U.todayISO();
+      const remote = RS.TrainingRoutines.supportsUserId(user.id);
+      saveButton.disabled = true;
+      try {
+        if (remote) await RS.TrainingRoutines.save(user.id, draft, me().id);
+      } catch (error) {
+        UI.toast(`No pudimos sincronizar la rutina: ${error.message}`, 'error', 7000);
+        saveButton.disabled = false;
+        return;
+      }
       const idx = st().routines.findIndex((r) => r.userId === user.id);
       if (idx >= 0) st().routines[idx] = draft;
       else st().routines.push(draft);
-      RS.DB.save();
+      if (!RS.DB.save()) {
+        if (!remote) {
+          if (idx >= 0) st().routines[idx] = existing;
+          else st().routines.pop();
+          saveButton.disabled = false;
+          return;
+        }
+      }
       RS.data.addAudit(me().name, 'Rutina asignada', `${user.name} · ${draft.title} · ${draft.days.length} días.`);
       UI.closeModal();
-      UI.toast('Rutina guardada. El usuario ya puede verla.', 'success');
+      UI.toast(remote
+        ? 'Rutina guardada y sincronizada. El usuario ya puede verla desde su cuenta.'
+        : 'Rutina guardada en este navegador. Esta cuenta aún no está vinculada a un perfil de Supabase.',
+      remote ? 'success' : 'info', 6000);
       RS.App.render(true);
     });
   }
