@@ -120,7 +120,8 @@
         <button class="user-action" data-action="admin-reset-password" data-id="${user.id}"><span class="tone-blue">${UI.icon('key', 18)}</span><strong>Resetear clave</strong><small>Nueva clave temporal</small></button>
         <button class="user-action" data-action="admin-user-sessions" data-id="${user.id}"><span class="tone-green">${UI.icon('receipt', 18)}</span><strong>Historial</strong><small>${sessions.length} sesiones</small></button>
         ${(user.credits > 0 || (user.planLabel && user.planLabel !== 'Sin plan activo')) ? `<button class="user-action danger-text" data-action="admin-user-clear-plan" data-id="${user.id}"><span class="tone-orange">${UI.icon('trash', 18)}</span><strong>Quitar plan</strong><small>Eliminar plan y saldo</small></button>` : ''}
-      </div>`,
+        <button class="user-action danger-text" data-action="admin-user-delete" data-id="${user.id}"><span class="tone-red">${UI.icon('trash', 18)}</span><strong>Eliminar usuario</strong><small>Borrar cuenta y datos</small></button>
+</div>`,
       footer: `<button class="btn btn-ghost" data-modal-close>Cerrar</button><button class="btn btn-primary" data-action="admin-user-edit" data-id="${user.id}">Editar usuario</button>`,
     });
   }
@@ -872,6 +873,25 @@
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     UI.closeModal();
     UI.toast('Plan y saldo eliminados.', 'success');
+  RS.actions['admin-user-delete'] = async (el) => {
+    const user = st().users.find((item) => item.id === el.dataset.id && item.role === 'user');
+    if (!user) return;
+    const ok = await UI.confirm({
+      title: 'Eliminar usuario',
+      message: `Se eliminará permanentemente la cuenta de ${user.name} (${user.email}), sus sesiones, pagos y sellos. Esta acción no se puede deshacer. El usuario podrá registrarse nuevamente desde la app.`,
+      okText: 'Eliminar usuario',
+      danger: true,
+    });
+    if (!ok) return;
+    st().users = st().users.filter((u) => u.id !== user.id);
+    RS.DB.save();
+    RS.data.addAudit(me().name, 'Usuario eliminado', `${user.name} (${user.email}).`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+    UI.closeModal();
+    UI.toast('Usuario eliminado.', 'success');
+    RS.App.render(true);
+  };
+
     RS.App.render(true);
   };
 
