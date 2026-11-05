@@ -14,6 +14,7 @@
   RS.inputs = RS.inputs || {};
 
   let currentSession = null;
+  let supabaseSession = null;
   let pendingAdmin = null;
   let locking = false;
   let activityBound = false;
@@ -76,7 +77,9 @@
     return getSession() && getSession().role === 'admin';
   }
 
-  function startSession(user) {
+  function startSession(user, authSession) {
+    supabaseSession = authSession || RS.Supabase.readSession();
+    if (supabaseSession) RS.Supabase.writeSession(supabaseSession);
     currentSession = {
       userId: user.id,
       role: user.role,
@@ -88,11 +91,78 @@
     saveSession();
   }
 
+  async function loadRemoteProfile(authUser) {
+    supabaseSession = RS.Supabase.readSession() || supabaseSession;
+    if (!supabaseSession || !supabaseSession.access_token) {
+      throw new Error('La sesión de Supabase expiró. Ingresa nuevamente.');
+    }
+    const token = supabaseSession.access_token;
+    const rows = await RS.Supabase.request(
+      `/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=id,email,full_name,phone,goal,role,active`,
+      { method: 'GET' },
+      token
+    );
+    const profile = Array.isArray(rows) ? rows[0] : null;
+    if (!profile || !profile.active) {
+      throw new Error('No encontramos un perfil activo asociado a esta cuenta. Contacta al administrador.');
+    }
+
+    const accounts = await RS.Supabase.request(
+      `/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(authUser.id)}&select=credits,plan_label`,
+      { method: 'GET' },
+      token
+    );
+    const account = Array.isArray(accounts) ? accounts[0] : null;
+    let user = RS.data.getUser(authUser.id);
+    if (!user) {
+      user = { id: authUser.id, createdAt: authUser.created_at || new Date().toISOString(), notes: '' };
+      state().users.push(user);
+    }
+    Object.assign(user, {
+      role: profile.role === 'admin' ? 'admin' : 'user',
+      name: profile.full_name,
+      email: profile.email,
+      phone: profile.phone || '',
+      goal: profile.goal || '',
+      active: profile.active,
+      credits: account ? Number(account.credits) || 0 : 0,
+      planLabel: (account && account.plan_label) || 'Sin plan activo',
+      source: 'supabase',
+    });
+    return user;
+  }
+
+  async function restoreSession() {
+    supabaseSession = RS.Supabase.readSession();
+    if (!supabaseSession) {
+      clearSession();
+      return null;
+    }
+    const authUser = await RS.Supabase.auth.getUser();
+    if (!authUser) {
+      supabaseSession = null;
+      clearSession();
+      return null;
+    }
+    const user = await loadRemoteProfile(authUser);
+    startSession(user, RS.Supabase.readSession());
+    return currentSession;
+  }
+
   function logout(options) {
     const o = options || {};
     const user = getUser();
     if (user && o.silent !== true) {
       RS.data.addAudit(user.name, 'Cierre de sesión', o.reason || 'Cierre de sesión manual.');
+    }
+    const token = supabaseSession && supabaseSession.access_token;
+    supabaseSession = null;
+    RS.Supabase.writeSession(null);
+    if (token) {
+      RS.Supabase.auth.signOut(token).catch((error) => {
+        console.error('No se pudo cerrar la sesión de Supabase:', error);
+        UI.toast('Se cerró la sesión en este dispositivo, pero no pudimos revocarla en el servidor.', 'error', 6000);
+      });
     }
     clearSession();
     locking = false;
@@ -315,28 +385,44 @@
   }
 
   async function attemptLogin(identifier, password) {
-    const st = state();
-    const idNorm = U.normalize(identifier);
-    const user = st.users.find(
-      (u) => U.normalize(u.email) === idNorm || (idNorm.length > 3 && U.normalize(u.name) === idNorm)
-    );
-    if (!user) return { ok: false, error: 'No encontramos una cuenta con ese correo o nombre.' };
-    if (!user.active) return { ok: false, error: 'Tu cuenta está desactivada. Contacta al studio por WhatsApp.' };
-    const hashed = await U.hashPassword(password);
-    if (hashed !== user.passwordHash) return { ok: false, error: 'La contraseña no es correcta. Intenta nuevamente.' };
-    if (user.role === 'admin') return { ok: true, needsPin: true, user };
-    startSession(user);
-    RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso de usuario a la app.');
-    return { ok: true, needsPin: false, user };
+    const email = String(identifier || '').trim().toLowerCase();
+    if (!email.includes('@')) {
+      return { ok: false, error: 'Ingresa el correo electrónico de tu cuenta.' };
+    }
+    try {
+      supabaseSession = await RS.Supabase.auth.signInWithPassword(email, password);
+      if (!supabaseSession || !supabaseSession.user || !supabaseSession.access_token) {
+        throw new Error('La autenticación no entregó una sesión válida. Intenta nuevamente.');
+      }
+      RS.Supabase.writeSession(supabaseSession);
+      const authUser = supabaseSession.user;
+      const user = await loadRemoteProfile(authUser);
+      startSession(user, supabaseSession);
+      RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso autenticado por Supabase.');
+      return { ok: true, needsPin: user.role === 'admin', user };
+    } catch (error) {
+      supabaseSession = null;
+      RS.Supabase.writeSession(null);
+      const message = /invalid login credentials/i.test(error.message)
+        ? 'El correo o la contraseña no son correctos.'
+        : error.message;
+      return { ok: false, error: message };
+    }
   }
 
   async function changePassword(user, currentPassword, newPassword) {
-    const currentHash = await U.hashPassword(currentPassword);
-    if (currentHash !== user.passwordHash) return { ok: false, error: 'La contraseña actual no es correcta.' };
     if (String(newPassword).length < 8) return { ok: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' };
-    user.passwordHash = await U.hashPassword(newPassword);
-    state().security.lastPasswordChange = new Date().toISOString();
-    RS.DB.save();
+    try {
+      const reauthenticated = await RS.Supabase.auth.signInWithPassword(user.email, currentPassword);
+      await RS.Supabase.auth.updatePassword(newPassword, reauthenticated.access_token);
+      supabaseSession = reauthenticated;
+      RS.Supabase.writeSession(reauthenticated);
+    } catch (error) {
+      const message = /invalid login credentials/i.test(error.message)
+        ? 'La contraseña actual no es correcta.'
+        : error.message;
+      return { ok: false, error: message };
+    }
     RS.data.addAudit(user.name, 'Contraseña actualizada', 'Cambio de contraseña desde la app.');
     return { ok: true };
   }
@@ -455,6 +541,11 @@
           <a class="company-cta sauna-cta" href="sauna.html">
             <span class="company-cta-icon">${UI.icon('droplet', 20)}</span>
             <span><strong>Beneficios del sauna húmedo</strong><span>Calor, movilidad y recuperación profunda</span></span>
+            ${UI.icon('arrow-right', 18)}
+          </a>
+          <a class="company-cta" href="#/capsulas">
+            <span class="company-cta-icon">${UI.icon('play', 20)}</span>
+            <span><strong>Cápsulas de recuperación</strong><span>Consejos prácticos para moverte y entrenar mejor</span></span>
             ${UI.icon('arrow-right', 18)}
           </a>
           <a class="reviews-teaser" href="#/resenas" data-reviews-teaser hidden aria-label="Ver reseñas y calificaciones de clientes"></a>
@@ -801,34 +892,33 @@
     if (password.length < 8) return loginError('La contraseña debe tener al menos 8 caracteres.');
     if (password !== confirm) return loginError('Las contraseñas no coinciden.');
     if (!form.terms.checked) return loginError('Debes aceptar los términos y la política de reservas.');
-    const st = state();
-    if (st.users.some((u) => U.normalize(u.email) === U.normalize(email))) {
-      return loginError('Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.');
-    }
     setLoading(submitter, true, 'Creando cuenta…');
-    const user = {
-      id: U.uid('usr'),
-      role: 'user',
-      name,
-      email,
-      phone,
-      passwordHash: await U.hashPassword(password),
-      active: true,
-      credits: 0,
-      planLabel: 'Sin plan activo',
-      goal: '',
-      notes: 'Registro desde la app.',
-      createdAt: new Date().toISOString(),
-      source: 'registro',
-    };
-    st.users.push(user);
-    RS.DB.save();
-    RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email}.`);
-    startSession(user);
-    initActivity();
-    setLoading(submitter, false);
-    UI.toast('¡Cuenta creada! Agenda tu primera sesión.', 'success');
-    RS.App.go('agendar');
+    try {
+      const result = await RS.Supabase.auth.signUp(email, password, { full_name: name, phone });
+      if (!result.user) throw new Error('Supabase no confirmó la creación de la cuenta.');
+      if (!result.access_token) {
+        setLoading(submitter, false);
+        UI.toast('Cuenta creada. Revisa tu correo para confirmar la dirección antes de ingresar.', 'success', 6000);
+        RS.ui.authTab = 'login';
+        RS.App.render(true);
+        return;
+      }
+      supabaseSession = result;
+      RS.Supabase.writeSession(result);
+      const user = await loadRemoteProfile(result.user);
+      startSession(user, result);
+      initActivity();
+      RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
+      setLoading(submitter, false);
+      UI.toast('¡Cuenta creada! Agenda tu primera sesión.', 'success');
+      RS.App.go('agendar');
+    } catch (error) {
+      setLoading(submitter, false);
+      const message = /already registered|already exists/i.test(error.message)
+        ? 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.'
+        : error.message;
+      loginError(message);
+    }
   };
 
   RS.forms.quote = async (form, submitter) => {
@@ -909,6 +999,7 @@
     getSession,
     getUser,
     startSession,
+    restoreSession,
     logout,
     isAdmin,
     touch,

@@ -141,6 +141,7 @@
         ${UI.detailRow('Categoría', payment.category || 'Otros')}
         ${UI.detailRow('Método', payment.method)}
         ${payment.creditsToAdd ? UI.detailRow('Sesiones a activar', `${payment.creditsToAdd}`) : ''}
+        ${payment.discountAmount ? UI.detailRow(`Descuento ${payment.promoCode}`, `− ${U.fmtMoney(payment.discountAmount)} sobre ${U.fmtMoney(payment.originalAmount)}`) : ''}
         ${payment.note ? UI.detailRow('Observación', payment.note) : ''}
       </div>
       ${payment.proof ? `<div class="proof-preview large"><img src="${payment.proof}" alt="Comprobante de ${U.esc(payment.userName)}"><a class="btn btn-ghost btn-sm" href="${payment.proof}" target="_blank" rel="noopener">${UI.icon('external-link', 15)} Abrir comprobante</a></div>` : `<div class="callout callout-orange">${UI.icon('alert-circle', 17)}<span>Este pago no tiene comprobante adjunto. Verifica la transferencia antes de aprobarlo.</span></div>`}
