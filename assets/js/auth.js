@@ -985,10 +985,14 @@
       RS.App.go('agendar');
     } catch (error) {
       setLoading(submitter, false);
-      const message = /already registered|already exists/i.test(error.message)
-        ? 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.'
-        : error.message;
-      loginError(message);
+      const msg = String(error.message || '');
+      let friendly = msg;
+      if (/rate limit|too many|exceeded/i.test(msg)) {
+        friendly = 'Demasiados registros recientes. Intenta nuevamente en unos minutos o regístrate por WhatsApp.';
+      } else if (/already registered|already exists/i.test(msg)) {
+        friendly = 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.';
+      }
+      loginError(friendly);
     }
   };
 
