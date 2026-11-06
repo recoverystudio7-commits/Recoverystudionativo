@@ -24,7 +24,7 @@
 
   /* --------------------------------- pagos --------------------------------- */
 
-  function applyApproval(payment) {
+  async function applyApproval(payment) {
     if (!payment || payment.status === 'aprobado') return;
     payment.status = 'aprobado';
     payment.approvedAt = new Date().toISOString();
@@ -66,7 +66,7 @@
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
   }
 
-  function rejectPayment(payment, reason) {
+  async function rejectPayment(payment, reason) {
     payment.status = 'rechazado';
     payment.note = reason || 'Comprobante rechazado por el administrador.';
     payment.rejectedAt = new Date().toISOString();
@@ -185,9 +185,9 @@
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-danger" data-reject-confirm>${UI.icon('x', 16)} Rechazar pago</button>`,
     });
     const root = document.getElementById('modal-root');
-    root.querySelector('[data-reject-confirm]').addEventListener('click', () => {
+    root.querySelector('[data-reject-confirm]').addEventListener('click', async () => {
       const reason = root.querySelector('#reject-reason').value.trim();
-      rejectPayment(payment, reason);
+      await rejectPayment(payment, reason);
       UI.closeModal();
       UI.toast('Pago rechazado. El usuario verá el motivo.', 'info');
       RS.App.render(true);
@@ -697,7 +697,7 @@
       okText: 'Aprobar pago',
     });
     if (!ok) return;
-    applyApproval(payment);
+    await applyApproval(payment);
     UI.closeModal();
     UI.toast('Pago aprobado. El usuario fue notificado en su panel.', 'success');
     RS.App.render(true);

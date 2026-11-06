@@ -724,7 +724,7 @@
       okText: 'Sí, cancelar',
       cancelText: 'Mantener sesión',
       danger: true,
-    }).then((ok) => {
+    }).then(async (ok) => {
       if (!ok) return;
       session.status = 'cancelada';
       session.cancelledAt = new Date().toISOString();
@@ -1098,7 +1098,7 @@
           <div class="profile-stats">
             <div><strong>${completed}</strong><span>Completadas</span></div>
             <div><strong>${user.credits}</strong><span>Saldo plan</span></div>
-            <div><strong>${U.monthKey(user.createdAt.slice(0, 10)) === U.monthKey(U.todayISO()) ? 'Nuevo' : 'Activo'}</strong><span>Miembro</span></div>
+            <div><strong>${user.createdAt && U.monthKey(user.createdAt.slice(0, 10)) === U.monthKey(U.todayISO()) ? 'Nuevo' : 'Activo'}</strong><span>Miembro</span></div>
           </div>
           <div class="profile-info">
             ${UI.detailRow('Teléfono', user.phone || '—')}

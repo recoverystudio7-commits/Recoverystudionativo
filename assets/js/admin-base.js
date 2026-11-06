@@ -457,7 +457,7 @@
     }
   }
 
-  RS.forms['admin-session'] = (form) => {
+  RS.forms['admin-session'] = async (form) => {
     const values = {
       id: form.id.value,
       userId: form.userId.value,
@@ -662,7 +662,7 @@
       message: `Se cancelará la sesión de ${U.fmtDate(session.date, 'long')} a las ${session.time} h. El cupo quedará disponible.${refundsPlan ? ' Se devolverá 1 sesión al plan del cliente.' : ''}`,
       okText: 'Cancelar sesión',
       danger: true,
-    }).then((ok) => {
+    }).then(async (ok) => {
       if (!ok) return;
       session.status = 'cancelada';
       if (refundsPlan) {
