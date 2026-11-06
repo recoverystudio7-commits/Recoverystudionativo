@@ -555,6 +555,16 @@
       if (usesPlan) user.credits = Math.max(0, Number(user.credits) || 0) - 1;
       RS.data.addAudit(me().name, 'Sesión creada', `${RS.data.serviceName(values.serviceId)} para ${user.name} · ${values.date} ${values.time}${usesPlan ? ` · 1 sesión del plan (saldo ${user.credits})` : ''}.`);
       UI.toast(usesPlan ? 'Sesión creada y descontada del plan.' : 'Sesión creada correctamente.', 'success');
+
+      // Correo de confirmación al cliente (abre el cliente de correo del administrador)
+      if (user.email) {
+        const service = RS.data.getService(values.serviceId);
+        const settings = st().settings;
+        const email = RS.data.appointmentConfirmationEmail(session, user, service, settings);
+        const mailtoUrl = `mailto:${encodeURIComponent(email.to)}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`;
+        window.location.href = mailtoUrl;
+        UI.toast('Se abrió el correo de confirmación para enviarlo al cliente.', 'info', 5000);
+      }
     }
     RS.DB.save();
     UI.closeModal();

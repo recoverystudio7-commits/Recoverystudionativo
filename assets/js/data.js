@@ -1007,5 +1007,22 @@
     planNoticeMessage, planNoticeEmail, markPlanNotice,
     expensesInMonth, boletasInMonth, financeSummary, monthsBack, addAudit, whatsappUrl,
     bankData,
+    appointmentConfirmationEmail,
   };
 })();
+
+/* ==========================================================================
+   Correo de confirmación de cita (plantilla simple, sin backend)
+   ========================================================================== */
+function appointmentConfirmationEmail(session, user, service, settings) {
+  const dateLabel = U.fmtDate(session.date, 'long');
+  const coach = session.coach || 'Daniel Barrueto';
+  const address = (settings && settings.address) || 'Av. Providencia 1234, oficina 502, Santiago';
+  const whatsapp = (settings && settings.whatsappDisplay) || BRAND.whatsappDisplay;
+
+  const subject = '¡Cita Confirmada! 🗓️ Tu sesión en Recovery Kinesiología';
+
+  const body = `Hola ${user.name},\n\nTu cita ha sido agendada con éxito en nuestra plataforma. A continuación, te detallamos los datos de tu próxima sesión de recuperación:\n\n• 📅 Fecha: ${dateLabel}\n• ⏰ Hora de inicio: ${session.time} (Te recomendamos llegar 5 minutos antes)\n• 📍 Lugar / Modalidad: ${address}\n• 🩺 Profesional: ${coach}\n\n⚠️ INFORMACIÓN IMPORTANTE SOBRE TU AGENDA (Respaldo de Servicio)\n\nPara garantizar la disponibilidad de nuestros profesionales y el respeto por el tiempo de todos nuestros pacientes, te recordamos brevemente nuestras políticas aceptadas al crear tu cuenta:\n1. ¿Necesitas cambiar o cancelar tu hora?: Debes hacerlo con un mínimo de 12 horas de anticipación a través de tu perfil web o respondiendo a nuestros canales oficiales.\n2. Cancelaciones tardías o inasistencias: Si cancelas con menos de 12 horas de aviso o no te presentas, no se realizarán devoluciones de dinero ni reagendamientos. La sesión se considerará como realizada.\n3. Política de puntualidad: Si llegas tarde, tu sesión terminará en el horario originalmente programado para no retrasar al siguiente paciente. El valor total de la sesión se cobrará de igual manera.\n\nAgradecemos enormemente tu puntualidad y compromiso con tu proceso de rehabilitación. ¡Nos vemos pronto para seguir con tu recuperación!\n\nAtentamente,\nEquipo Recovery Kinesiología 🩺✨\nSi tienes alguna duda urgente, puedes contactarnos directamente respondiendo a este correo o vía WhatsApp al ${whatsapp}.`;
+
+  return { to: user.email, subject, body };
+}
