@@ -1195,7 +1195,7 @@
     if (btn) btn.disabled = !(b.time && b.policy);
   };
 
-  RS.actions['book-confirm'] = () => {
+  RS.actions['book-confirm'] = async () => {
     const user = me();
     const b = bookingState();
     const service = RS.data.getService(b.serviceId);
@@ -1226,6 +1226,12 @@
     };
     st().sessions.push(session);
     RS.DB.save();
+    try {
+      await RS.SupabaseSync.pushAppointment(session);
+    } catch (error) {
+      console.error('No se pudo sincronizar la reserva con Supabase:', error);
+      UI.toast('La reserva quedó guardada en este dispositivo, pero no se pudo compartir con el studio. ' + error.message, 'warning', 8000);
+    }
     RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${useCredit ? ' con crédito de plan' : ''}.`);
 
     if (useCredit) {

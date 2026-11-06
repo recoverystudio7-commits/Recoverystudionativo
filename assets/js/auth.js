@@ -156,6 +156,12 @@
     }
     const user = await loadRemoteProfile(authUser);
     startSession(user, RS.Supabase.readSession());
+    try {
+      await RS.SupabaseSync.pull();
+    } catch (error) {
+      console.error('No se pudieron actualizar los datos compartidos:', error);
+      UI.toast('Iniciaste sesión, pero no pudimos actualizar los datos compartidos: ' + error.message, 'warning', 8000);
+    }
     return currentSession;
   }
 
@@ -429,8 +435,9 @@
       RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso autenticado por Supabase.');
       try {
         await RS.SupabaseSync.pull();
-      } catch (e) {
-        /* La sincronización inicial no bloquea el ingreso. */
+      } catch (error) {
+        console.error('No se pudieron actualizar los datos compartidos:', error);
+        UI.toast('Iniciaste sesión, pero no pudimos actualizar los datos compartidos: ' + error.message, 'warning', 8000);
       }
       return { ok: true, needsPin: user.role === 'admin', user };
     } catch (error) {

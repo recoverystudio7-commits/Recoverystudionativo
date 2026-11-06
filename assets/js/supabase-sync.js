@@ -58,6 +58,136 @@
     return d.toISOString().slice(0, 10);
   }
 
+  function chileDateTimeParts(value) {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Santiago',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date(value));
+    const fields = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return {
+      date: `${fields.year}-${fields.month}-${fields.day}`,
+      time: `${fields.hour}:${fields.minute}`,
+    };
+  }
+
+  function chileDateTimeISO(date, time) {
+    const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || ''));
+    const timeMatch = /^(\d{2}):(\d{2})$/.exec(String(time || ''));
+    if (!dateMatch || !timeMatch) throw new Error('La fecha u hora de la reserva no es válida.');
+    const [, year, month, day] = dateMatch.map(Number);
+    const [, hour, minute] = timeMatch.map(Number);
+    const target = Date.UTC(year, month - 1, day, hour, minute);
+    let timestamp = target;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const local = chileDateTimeParts(timestamp);
+      if (local.date === date && local.time === time) return new Date(timestamp).toISOString();
+      const [localYear, localMonth, localDay] = local.date.split('-').map(Number);
+      const [localHour, localMinute] = local.time.split(':').map(Number);
+      timestamp += target - Date.UTC(localYear, localMonth - 1, localDay, localHour, localMinute);
+    }
+
+    throw new Error('La hora elegida no existe en la zona horaria de Santiago.');
+  }
+
+  async function pushAppointment(appointment) {
+    if (!configured()) throw new Error('La conexión con Supabase no está disponible.');
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid) throw new Error('Inicia sesión con Supabase antes de sincronizar una reserva.');
+    if (!appointment || appointment.userId !== user.id) {
+      throw new Error('No pudimos verificar el dueño de la reserva.');
+    }
+    const service = RS.data.getService(appointment.serviceId);
+    const startsAt = chileDateTimeISO(appointment.date, appointment.time);
+    const duration = service ? Number(service.duration) || 60 : 60;
+    const payload = {
+      id: appointment.id,
+      user_id: uid,
+      service_id: appointment.serviceId,
+      starts_at: startsAt,
+      ends_at: new Date(new Date(startsAt).getTime() + duration * 60000).toISOString(),
+      status: appointment.status || 'pendiente',
+      payment_status: appointment.payment || 'pendiente',
+      coach: appointment.coach || 'Recovery Studio',
+      notes: appointment.notes || '',
+      created_at: appointment.createdAt || new Date().toISOString(),
+    };
+
+    await RS.Supabase.request('/rest/v1/sessions?on_conflict=id', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify(payload),
+    }, token());
+    return { ok: true };
+  }
+
+  function mergeAppointments(rows, state) {
+    let merged = 0;
+    rows.forEach((row) => {
+      if (!row.id) return;
+      const current = state.sessions.find((session) => session.id === row.id);
+      const startsAt = chileDateTimeParts(row.starts_at);
+      const values = {
+        id: row.id,
+        userId: row.user_id,
+        date: startsAt.date,
+        time: startsAt.time,
+        serviceId: row.service_id || '',
+        duration: row.ends_at && row.starts_at
+          ? Math.max(1, Math.round((new Date(row.ends_at) - new Date(row.starts_at)) / 60000))
+          : 60,
+        status: row.status || 'pendiente',
+        payment: row.payment_status || 'pendiente',
+        coach: row.coach || '',
+        notes: row.notes || '',
+        createdAt: row.created_at || new Date().toISOString(),
+        updatedAt: row.updated_at || row.created_at || new Date().toISOString(),
+        source: 'supabase',
+      };
+      if (current) Object.assign(current, values);
+      else {
+        state.sessions.push(values);
+        merged += 1;
+      }
+    });
+    return merged;
+  }
+
+  function mergeAdminUsers(profiles, accounts, state) {
+    const accountsByUser = new Map(accounts.map((account) => [account.user_id, account]));
+    let merged = 0;
+    profiles.forEach((profile) => {
+      if (!profile.id) return;
+      const account = accountsByUser.get(profile.id);
+      let user = state.users.find((item) => item.id === profile.id);
+      if (!user) {
+        user = { id: profile.id, notes: '' };
+        state.users.push(user);
+        merged += 1;
+      }
+      Object.assign(user, {
+        role: profile.role === 'admin' ? 'admin' : 'user',
+        name: profile.full_name || profile.email || 'Cliente',
+        email: profile.email || '',
+        phone: profile.phone || '',
+        goal: profile.goal || '',
+        active: profile.active !== false,
+        credits: Number(account && account.credits) || 0,
+        planLabel: (account && account.plan_label) || 'Sin plan activo',
+        createdAt: profile.created_at || user.createdAt || new Date().toISOString(),
+        supabaseUserId: profile.id,
+        source: 'supabase',
+      });
+    });
+    return merged;
+  }
+
   /* ----------------------------- pull ----------------------------------- */
 
   async function pull() {
@@ -66,64 +196,47 @@
     const uid = supabaseUserId(user);
     if (!uid) return { ok: false, reason: 'no-user' };
     const tk = token();
+    const state = st();
 
-    const [apps, pays] = await Promise.all([
-      RS.Supabase.request(
-        `/rest/v1/appointments?user_id=eq.${encodeURIComponent(uid)}&select=*&order=created_at.desc`,
-        { method: 'GET' },
-        tk
-      ),
-      RS.Supabase.request(
-        `/rest/v1/payments?user_id=eq.${encodeURIComponent(uid)}&select=*&order=created_at.desc`,
-        { method: 'GET' },
-        tk
-      ),
-    ]);
+    let profiles = [];
+    let accounts = [];
+    let apps;
+    let pays = [];
+    if (user.role === 'admin') {
+      [profiles, accounts, apps] = await Promise.all([
+        RS.Supabase.request('/rest/v1/profiles?select=id,email,full_name,phone,goal,role,active,created_at&order=created_at.desc', { method: 'GET' }, tk),
+        RS.Supabase.request('/rest/v1/client_accounts?select=user_id,credits,plan_label', { method: 'GET' }, tk),
+        RS.Supabase.request('/rest/v1/sessions?select=*&order=starts_at.asc', { method: 'GET' }, tk),
+      ]);
+    } else {
+      const ownAppointments = (state.sessions || []).filter((item) => item.userId === uid || item.userId === user.id);
+      for (const appointment of ownAppointments) await pushAppointment(appointment);
+      [apps, pays] = await Promise.all([
+        RS.Supabase.request(
+          `/rest/v1/sessions?user_id=eq.${encodeURIComponent(uid)}&select=*&order=starts_at.desc`,
+          { method: 'GET' },
+          tk
+        ),
+        RS.Supabase.request(
+          `/rest/v1/payments?user_id=eq.${encodeURIComponent(uid)}&select=*&order=created_at.desc`,
+          { method: 'GET' },
+          tk
+        ),
+      ]);
+    }
 
     if (!Array.isArray(apps)) throw new Error('Supabase devolvió citas inválidas.');
     if (!Array.isArray(pays)) throw new Error('Supabase devolvió pagos inválidos.');
 
-    const state = st();
-    const localApps = state.sessions || [];
-    const localPays = state.payments || [];
-
-    // Index local por id
-    const byId = {};
-    localApps.forEach((a) => { byId['app:' + a.id] = a; });
-    localPays.forEach((p) => { byId['pay:' + p.id] = p; });
-
     let merged = 0;
-
-    // Traer citas remotas que no estén localmente
-    apps.forEach((row) => {
-      if (!row.id) return;
-      const key = 'app:' + row.id;
-      if (byId[key]) return;
-      localApps.push({
-        id: row.id,
-        userId: row.user_id,
-        date: row.date || '',
-        time: row.time || '',
-        serviceId: row.service_id || '',
-        serviceName: row.service_name || '',
-        duration: Number(row.duration) || 60,
-        status: row.status || 'pendiente',
-        payment: row.payment || 'pendiente',
-        coach: row.coach || '',
-        notes: row.notes || '',
-        createdAt: row.created_at || new Date().toISOString(),
-        updatedAt: row.updated_at || row.created_at || new Date().toISOString(),
-        source: 'supabase',
-      });
-      merged += 1;
-    });
+    if (user.role === 'admin') merged += mergeAdminUsers(profiles, accounts, state);
+    merged += mergeAppointments(apps, state);
 
     // Traer pagos remotos que no estén localmente
     pays.forEach((row) => {
       if (!row.id) return;
-      const key = 'pay:' + row.id;
-      if (byId[key]) return;
-      localPays.push({
+      if (state.payments.some((payment) => payment.id === row.id)) return;
+      state.payments.push({
         id: row.id,
         userId: row.user_id,
         amount: Number(row.amount) || 0,
@@ -133,7 +246,7 @@
         creditsToAdd: Number(row.credits_to_add) || 0,
         creditsAdded: Number(row.credits_added) || 0,
         sessionId: row.session_id || '',
-        ref: row.ref || '',
+        ref: row.ref || row.reference || '',
         approvedAt: row.approved_at || null,
         approvedBy: row.approved_by || '',
         createdAt: row.created_at || new Date().toISOString(),
@@ -144,7 +257,7 @@
     });
 
     RS.DB.save();
-    return { ok: true, merged };
+    return { ok: true, merged, users: profiles.length, appointments: apps.length };
   }
 
   /* ----------------------------- push ----------------------------------- */
@@ -163,20 +276,17 @@
     for (const app of myApps) {
       const payload = {
         user_id: uid,
-        date: app.date,
-        time: app.time,
-        service_id: app.serviceId || null,
-        service_name: app.serviceName || '',
-        duration: Number(app.duration) || 60,
+        starts_at: chileDateTimeISO(app.date, app.time),
+        ends_at: new Date(new Date(chileDateTimeISO(app.date, app.time)).getTime() + (Number(app.duration) || 60) * 60000).toISOString(),
+        service_id: app.serviceId,
         status: app.status || 'pendiente',
-        payment: app.payment || 'pendiente',
+        payment_status: app.payment || 'pendiente',
         coach: app.coach || '',
         notes: app.notes || '',
-        updated_at: app.updatedAt || app.createdAt || new Date().toISOString(),
       };
       try {
         await RS.Supabase.request(
-          `/rest/v1/appointments?id=eq.${encodeURIComponent(app.id)}`,
+          `/rest/v1/sessions?id=eq.${encodeURIComponent(app.id)}`,
           {
             method: 'PATCH',
             headers: { Prefer: 'return=representation' },
@@ -186,7 +296,7 @@
         );
       } catch (e) {
         // Si no existe, crear
-        await RS.Supabase.request('/rest/v1/appointments', {
+        await RS.Supabase.request('/rest/v1/sessions', {
           method: 'POST',
           headers: { Prefer: 'return=representation' },
           body: JSON.stringify(Object.assign({ id: app.id, user_id: uid }, payload)),
@@ -267,6 +377,7 @@
     configured,
     pull,
     push,
+    pushAppointment,
     supabaseUserId,
   };
 })();
