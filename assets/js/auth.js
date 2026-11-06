@@ -966,10 +966,20 @@
     setLoading(submitter, true, 'Creando cuenta…');
     try {
       const result = await RS.Supabase.auth.signUp(email, password, { full_name: name, phone });
-      if (!result.user) throw new Error('Supabase no confirmó la creación de la cuenta.');
-      if (!result.access_token) {
+      if (!result.user) {
         setLoading(submitter, false);
-        UI.toast('Cuenta creada. Revisa tu correo para confirmar la dirección antes de ingresar.', 'success', 6000);
+        const msg = String(error.message || '');
+        if (/rate limit|too many|exceeded/i.test(msg)) {
+          loginError('Demasiados registros recientes. Intenta nuevamente en unos minutos o regístrate por WhatsApp.');
+        } else {
+          loginError('No se pudo crear la cuenta. Intenta nuevamente o regístrate por WhatsApp.');
+        }
+        return;
+      }
+      if (!result.access_token) {
+        // Cuenta creada pero requiere confirmación de correo (email confirmations activado en Supabase)
+        setLoading(submitter, false);
+        UI.toast('Cuenta creada. Revisa tu correo para confirmar la dirección antes de ingresar.', 'success', 8000);
         RS.ui.authTab = 'login';
         RS.App.render(true);
         return;
@@ -991,6 +1001,8 @@
         friendly = 'Demasiados registros recientes. Intenta nuevamente en unos minutos o regístrate por WhatsApp.';
       } else if (/already registered|already exists/i.test(msg)) {
         friendly = 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.';
+      } else {
+        friendly = 'No se pudo crear la cuenta. Intenta nuevamente o regístrate por WhatsApp.';
       }
       loginError(friendly);
     }
