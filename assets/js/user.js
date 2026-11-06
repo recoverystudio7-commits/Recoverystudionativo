@@ -515,6 +515,7 @@
         <p class="success-note">${UI.icon('info', 14)} Recuerda que puedes reagendar hasta ${st().settings.policyHours} h antes.</p>
       </div>`,
       footer: `<button class="btn btn-ghost" data-action="download-ics" data-id="${session.id}">${UI.icon('calendar', 16)} Agregar al calendario</button>
+        <a class="btn btn-outline" href="${RS.data.googleCalendarUrl(session)}" target="_blank" rel="noopener">${UI.icon('calendar', 16)} Agregar a Google Calendar</a>
         <a class="btn btn-primary" href="#/reservas" data-modal-close>Ver mis reservas</a>`,
     });
   }
@@ -738,6 +739,16 @@
       }
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión cancelada', `${RS.data.serviceName(session.serviceId)} del ${U.fmtDate(session.date, 'long')} ${session.time} h.`);
+      // Notificación al admin por correo (cliente cancela sesión)
+      try {
+        const user = RS.data.getUser(session.userId);
+        await RS.data.sendAdminNotification(
+          `Sesión cancelada por el cliente · ${user ? user.name : 'Cliente'}`,
+          `Un cliente canceló su sesión:\n\n• Cliente: ${user ? user.name : 'N/D'} (${user ? user.email : 'N/D'})\n• Servicio: ${RS.data.serviceName(session.serviceId)}\n• Fecha: ${U.fmtDate(session.date, 'long')}\n• Hora: ${session.time}\n• Sesión devuelta al plan: ${session.payment === 'plan' ? 'Sí' : 'No'}\n\nIngresa al panel de admin para revisar.`
+        );
+      } catch (err) {
+        console.error('Notificación admin (cancelar sesión cliente) falló:', err);
+      }
       UI.toast('Tu sesión fue cancelada. El cupo quedó liberado.', 'success');
       RS.App.render(true);
     });

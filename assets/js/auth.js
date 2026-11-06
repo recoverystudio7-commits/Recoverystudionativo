@@ -969,6 +969,15 @@
         startSession(user, result);
         initActivity();
         RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
+        // Notificación al admin por correo (nuevo registro)
+        try {
+          await RS.data.sendAdminNotification(
+            `Nuevo registro de usuario · ${name}`,
+            `Se creó una nueva cuenta:\n\n• Nombre: ${name}\n• Correo: ${email}\n• Teléfono: ${phone}\n\nEl usuario ya puede iniciar sesión y agendar sesiones.`
+          );
+        } catch (err) {
+          console.error('Notificación admin (registro) falló:', err);
+        }
         setLoading(submitter, false);
         UI.toast('¡Cuenta creada! Bienvenido a Recovery Studio.', 'success');
         RS.App.go('agendar');
@@ -984,6 +993,15 @@
           startSession(user, loginResult);
           initActivity();
           RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
+          // Notificación al admin por correo (nuevo registro)
+          try {
+            await RS.data.sendAdminNotification(
+              `Nuevo registro de usuario · ${name}`,
+              `Se creó una nueva cuenta:\n\n• Nombre: ${name}\n• Correo: ${email}\n• Teléfono: ${phone}\n\nEl usuario ya puede iniciar sesión y agendar sesiones.`
+            );
+          } catch (err) {
+            console.error('Notificación admin (registro) falló:', err);
+          }
           setLoading(submitter, false);
           UI.toast('¡Cuenta creada! Bienvenido a Recovery Studio.', 'success');
           RS.App.go('agendar');

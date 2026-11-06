@@ -54,6 +54,15 @@
       'Pago aprobado',
       `${payment.ref} · ${payment.userName} · ${U.fmtMoney(payment.amount)}${payment.creditsAdded ? ` · +${payment.creditsAdded} sesiones` : ''}.`
     );
+    // Notificación al admin por correo (pago aprobado)
+    try {
+      await RS.data.sendAdminNotification(
+        `Pago aprobado · ${payment.ref}`,
+        `Se aprobó un pago:\n\n• Usuario: ${payment.userName}\n• Referencia: ${payment.ref}\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Créditos agregados: ${payment.creditsAdded || 0}\n${payment.sessionId ? '• Sesión vinculada: sí' : ''}\n\nIngresa al panel de admin para revisar.`
+      );
+    } catch (err) {
+      console.error('Notificación admin (pago aprobado) falló:', err);
+    }
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
   }
 
@@ -70,6 +79,15 @@
     }
     RS.DB.save();
     RS.data.addAudit(me().name, 'Pago rechazado', `${payment.ref} · ${payment.userName} · ${reason || 'Sin motivo especificado'}.`);
+    // Notificación al admin por correo (pago rechazado)
+    try {
+      await RS.data.sendAdminNotification(
+        `Pago rechazado · ${payment.ref}`,
+        `Se rechazó un pago:\n\n• Usuario: ${payment.userName}\n• Referencia: ${payment.ref}\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Motivo: ${reason || 'Sin motivo especificado'}\n\nIngresa al panel de admin para revisar.`
+      );
+    } catch (err) {
+      console.error('Notificación admin (pago rechazado) falló:', err);
+    }
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
   }
 

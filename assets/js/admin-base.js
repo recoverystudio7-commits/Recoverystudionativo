@@ -556,14 +556,30 @@
       RS.data.addAudit(me().name, 'Sesión creada', `${RS.data.serviceName(values.serviceId)} para ${user.name} · ${values.date} ${values.time}${usesPlan ? ` · 1 sesión del plan (saldo ${user.credits})` : ''}.`);
       UI.toast(usesPlan ? 'Sesión creada y descontada del plan.' : 'Sesión creada correctamente.', 'success');
 
-      // Correo de confirmación al cliente (abre el cliente de correo del administrador)
+      // Correo de confirmación al cliente vía Resend (Edge Function de Supabase)
       if (user.email) {
         const service = RS.data.getService(values.serviceId);
         const settings = st().settings;
         const email = RS.data.appointmentConfirmationEmail(session, user, service, settings);
-        const mailtoUrl = `mailto:${encodeURIComponent(email.to)}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`;
-        window.location.href = mailtoUrl;
-        UI.toast('Se abrió el correo de confirmación para enviarlo al cliente.', 'info', 5000);
+        try {
+          await RS.data.sendAppointmentEmail(email.to, email.subject, email.body);
+          UI.toast('Correo de confirmación enviado al cliente.', 'success', 5000);
+        } catch (err) {
+          console.error(err);
+          UI.toast('No se pudo enviar el correo automáticamente. Abre tu cliente de correo.', 'warning', 5000);
+          const mailtoUrl = `mailto:${encodeURIComponent(email.to)}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`;
+          window.location.href = mailtoUrl;
+        }
+      }
+
+      // Notificación al admin por correo (nueva sesión agendada)
+      try {
+        await RS.data.sendAdminNotification(
+          `Nueva sesión agendada · ${user.name}`,
+          `Se agendó una nueva sesión:\n\n• Cliente: ${user.name} (${user.email})\n• Servicio: ${RS.data.serviceName(values.serviceId)}\n• Fecha: ${U.fmtDate(values.date, 'long')}\n• Hora: ${values.time}\n• Pago: ${values.payment}\n• Estado: ${values.status}\n\nIngresa al panel de admin para revisar la agenda.`
+        );
+      } catch (err) {
+        console.error('Notificación admin (nueva sesión) falló:', err);
       }
     }
     RS.DB.save();
@@ -655,6 +671,16 @@
       }
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión cancelada (admin)', `${RS.data.serviceName(session.serviceId)} · ${session.date} ${session.time}${refundsPlan ? ' · sesión devuelta al plan' : ''}.`);
+      // Notificación al admin por correo (sesión cancelada por admin)
+      try {
+        const planUser = RS.data.getUser(session.userId);
+        await RS.data.sendAdminNotification(
+          `Sesión cancelada · ${planUser ? planUser.name : 'Cliente'}`,
+          `Se canceló una sesión:\n\n• Cliente: ${planUser ? planUser.name : 'N/D'} (${planUser ? planUser.email : 'N/D'})\n• Servicio: ${RS.data.serviceName(session.serviceId)}\n• Fecha: ${U.fmtDate(session.date, 'long')}\n• Hora: ${session.time}\n• Sesión devuelta al plan: ${refundsPlan ? 'Sí' : 'No'}\n\nIngresa al panel de admin para revisar.`
+        );
+      } catch (err) {
+        console.error('Notificación admin (cancelar sesión) falló:', err);
+      }
       RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
       UI.toast('Sesión cancelada.', 'info');
       RS.App.render();

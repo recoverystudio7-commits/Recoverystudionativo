@@ -1008,6 +1008,10 @@
     expensesInMonth, boletasInMonth, financeSummary, monthsBack, addAudit, whatsappUrl,
     bankData,
     appointmentConfirmationEmail,
+    sendAppointmentEmail,
+    sendEmail,
+    sendAdminNotification,
+    googleCalendarUrl,
   };
 })();
 
@@ -1025,4 +1029,64 @@ function appointmentConfirmationEmail(session, user, service, settings) {
   const body = `Hola ${user.name},\n\nTu cita ha sido agendada con éxito en nuestra plataforma. A continuación, te detallamos los datos de tu próxima sesión de recuperación:\n\n• 📅 Fecha: ${dateLabel}\n• ⏰ Hora de inicio: ${session.time} (Te recomendamos llegar 5 minutos antes)\n• 📍 Lugar / Modalidad: ${address}\n• 🩺 Profesional: ${coach}\n\n⚠️ INFORMACIÓN IMPORTANTE SOBRE TU AGENDA (Respaldo de Servicio)\n\nPara garantizar la disponibilidad de nuestros profesionales y el respeto por el tiempo de todos nuestros pacientes, te recordamos brevemente nuestras políticas aceptadas al crear tu cuenta:\n1. ¿Necesitas cambiar o cancelar tu hora?: Debes hacerlo con un mínimo de 12 horas de anticipación a través de tu perfil web o respondiendo a nuestros canales oficiales.\n2. Cancelaciones tardías o inasistencias: Si cancelas con menos de 12 horas de aviso o no te presentas, no se realizarán devoluciones de dinero ni reagendamientos. La sesión se considerará como realizada.\n3. Política de puntualidad: Si llegas tarde, tu sesión terminará en el horario originalmente programado para no retrasar al siguiente paciente. El valor total de la sesión se cobrará de igual manera.\n\nAgradecemos enormemente tu puntualidad y compromiso con tu proceso de rehabilitación. ¡Nos vemos pronto para seguir con tu recuperación!\n\nAtentamente,\nEquipo Recovery Kinesiología 🩺✨\nSi tienes alguna duda urgente, puedes contactarnos directamente respondiendo a este correo o vía WhatsApp al ${whatsapp}.`;
 
   return { to: user.email, subject, body };
+}
+
+/* ==========================================================================
+   Envío de correo vía Edge Function de Supabase + Resend
+   ========================================================================== */
+
+// ⚠️ Configura aquí el correo del admin para recibir notificaciones.
+// Si lo dejas vacío, se usará el correo del admin logueado (me().email).
+const ADMIN_EMAIL = '';
+
+async function sendEmail(to, subject, body) {
+  const config = RS.SupabaseConfig;
+  if (!config || !config.url) throw new Error('Supabase no está configurado.');
+
+  const res = await fetch(`${config.url.replace(/\/$/, '')}/functions/v1/send-email`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${config.anonKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ to, subject, body }),
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Error enviando correo');
+  }
+  return data;
+}
+
+async function sendAppointmentEmail(to, subject, body) {
+  return sendEmail(to, subject, body);
+}
+
+function sendAdminNotification(subject, body) {
+  const to = ADMIN_EMAIL || (me() && me().email);
+  if (!to) {
+    return Promise.reject(new Error('No hay correo de admin configurado para notificaciones.'));
+  }
+  return sendEmail(to, subject, body);
+}
+
+/* ==========================================================================
+   Google Calendar (enlace para agregar el evento al calendario del usuario)
+   ========================================================================== */
+
+function googleCalendarUrl(session) {
+  const service = getService(session.serviceId);
+  const start = dateTime(session.date, session.time);
+  const duration = service ? Number(service.duration) || 60 : 60;
+  const end = new Date(start.getTime() + duration * 60000);
+  const fmt = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `${service ? service.name : 'Sesión'} · Recovery Studio`,
+    dates: `${fmt(start)}/${fmt(end)}`,
+    details: `Sesión en Recovery Studio con ${session.coach || 'Daniel Barrueto'}.\nServicio: ${service ? service.name : ''}.\nFecha: ${U.fmtDate(session.date, 'long')} a las ${session.time} h.\nLugar: Recovery Studio, Santiago.\n\nPólizas: cancela con 12 h de anticipación. Llega 5 minutos antes.`,
+    location: 'Recovery Studio · Santiago',
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
