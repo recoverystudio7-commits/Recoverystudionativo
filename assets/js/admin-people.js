@@ -37,6 +37,7 @@
       <div class="page-head">
         <div><span class="eyebrow">Comunidad</span><h1 class="page-title">Usuarios</h1><p class="page-sub">Inscribe, edita y gestiona a las personas del studio.</p></div>
         <button class="btn btn-accent" data-action="admin-user-new">${UI.icon('user-plus', 17)} Inscribir usuario</button>
+        <button class="btn btn-outline btn-danger" data-action="admin-users-reset" style="margin-left:8px">${UI.icon('trash', 17)} Eliminar todos (salvo admin)</button>
       </div>
 
       <div class="stats-grid">
@@ -874,6 +875,8 @@
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     UI.closeModal();
     UI.toast('Plan y saldo eliminados.', 'success');
+  };
+
   RS.actions['admin-user-delete'] = async (el) => {
     const user = st().users.find((item) => item.id === el.dataset.id && item.role === 'user');
     if (!user) return;
@@ -893,6 +896,26 @@
     RS.App.render(true);
   };
 
+  RS.actions['admin-users-reset'] = async () => {
+    const current = me();
+    const users = st().users.filter((u) => u.role === 'user');
+    if (!users.length) {
+      UI.toast('No hay usuarios para eliminar.', 'info');
+      return;
+    }
+    const ok = await UI.confirm({
+      title: 'Eliminar todos los usuarios',
+      message: `Se eliminarán ${users.length} cuenta(s) de usuario. El administrador (${current.name}) se mantendrá. Esta acción no se puede deshacer.`,
+      okText: 'Eliminar todo',
+      cancelText: 'Cancelar',
+      danger: true,
+    });
+    if (!ok) return;
+    st().users = st().users.filter((u) => u.role === 'admin');
+    RS.DB.save();
+    RS.data.addAudit(current.name, 'Reset de usuarios', `Se eliminaron ${users.length} cuentas de usuario.`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+    UI.toast('Se eliminaron todos los usuarios. Queda solo el administrador.', 'success');
     RS.App.render(true);
   };
 
