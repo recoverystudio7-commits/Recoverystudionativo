@@ -1232,6 +1232,15 @@
       console.error('No se pudo sincronizar la reserva con Supabase:', error);
       UI.toast('La reserva quedó guardada en este dispositivo, pero no se pudo compartir con el studio. ' + error.message, 'warning', 8000);
     }
+    try {
+      await RS.data.sendAdminNotification(
+        `Nueva sesión agendada · ${user.name}`,
+        `Se agendó una nueva sesión:\n\n• Cliente: ${user.name} (${user.email})\n• Servicio: ${service.name}\n• Fecha: ${U.fmtDate(b.date, 'long')}\n• Hora: ${b.time}\n• Pago: ${session.payment}\n• Estado: ${session.status}\n\nIngresa al panel de administración para revisar la agenda.`
+      );
+    } catch (error) {
+      console.error('No se pudo enviar el aviso de nueva reserva al administrador:', error);
+      UI.toast('La reserva quedó registrada, pero no se pudo enviar el correo al administrador: ' + error.message, 'warning', 8000);
+    }
     RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${useCredit ? ' con crédito de plan' : ''}.`);
 
     if (useCredit) {

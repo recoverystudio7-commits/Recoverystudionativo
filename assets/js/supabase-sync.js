@@ -202,12 +202,22 @@
     let accounts = [];
     let apps;
     let pays = [];
+    let merged = 0;
     if (user.role === 'admin') {
-      [profiles, accounts, apps] = await Promise.all([
+      [profiles, accounts] = await Promise.all([
         RS.Supabase.request('/rest/v1/profiles?select=id,email,full_name,phone,goal,role,active,created_at&order=created_at.desc', { method: 'GET' }, tk),
         RS.Supabase.request('/rest/v1/client_accounts?select=user_id,credits,plan_label', { method: 'GET' }, tk),
-        RS.Supabase.request('/rest/v1/sessions?select=*&order=starts_at.asc', { method: 'GET' }, tk),
       ]);
+      if (!Array.isArray(profiles) || !Array.isArray(accounts)) {
+        throw new Error('Supabase devolvió perfiles o cuentas inválidos.');
+      }
+      merged += mergeAdminUsers(profiles, accounts, state);
+      RS.DB.save();
+      apps = await RS.Supabase.request(
+        '/rest/v1/sessions?select=*&order=starts_at.asc',
+        { method: 'GET' },
+        tk
+      );
     } else {
       const ownAppointments = (state.sessions || []).filter((item) => item.userId === uid || item.userId === user.id);
       for (const appointment of ownAppointments) await pushAppointment(appointment);
@@ -228,8 +238,6 @@
     if (!Array.isArray(apps)) throw new Error('Supabase devolvió citas inválidas.');
     if (!Array.isArray(pays)) throw new Error('Supabase devolvió pagos inválidos.');
 
-    let merged = 0;
-    if (user.role === 'admin') merged += mergeAdminUsers(profiles, accounts, state);
     merged += mergeAppointments(apps, state);
 
     // Traer pagos remotos que no estén localmente

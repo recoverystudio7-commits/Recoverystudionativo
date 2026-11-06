@@ -18,6 +18,8 @@
   let pendingAdmin = null;
   let locking = false;
   let activityBound = false;
+  let adminSyncAt = 0;
+  let adminSyncPromise = null;
 
   function state() {
     return RS.DB.get();
@@ -206,6 +208,44 @@
     }
   }
 
+  async function refreshAdminData() {
+    if (
+      document.hidden ||
+      !currentSession ||
+      currentSession.role !== 'admin' ||
+      adminSyncPromise ||
+      Date.now() - adminSyncAt < 15000
+    ) return;
+    adminSyncAt = Date.now();
+    const knownSessionIds = new Set((state().sessions || []).map((session) => session.id));
+    adminSyncPromise = RS.SupabaseSync.pull()
+      .then((result) => {
+        if (result && result.ok && currentSession && currentSession.role === 'admin' && RS.App) {
+          const newAppointments = (state().sessions || []).filter(
+            (session) => session.source === 'supabase' && !knownSessionIds.has(session.id)
+          );
+          RS.App.render();
+          if (newAppointments.length) {
+            UI.toast(
+              newAppointments.length === 1
+                ? 'Nueva reserva recibida. Revisa la agenda.'
+                : `Se recibieron ${newAppointments.length} reservas nuevas. Revisa la agenda.`,
+              'info',
+              8000
+            );
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('No se pudo actualizar la agenda del administrador:', error);
+        UI.toast('No se pudo actualizar la agenda: ' + error.message, 'warning', 8000);
+      })
+      .finally(() => {
+        adminSyncPromise = null;
+      });
+    await adminSyncPromise;
+  }
+
   function initActivity() {
     if (activityBound) return;
     activityBound = true;
@@ -215,9 +255,14 @@
     document.addEventListener('pointerdown', bump, { passive: true });
     document.addEventListener('keydown', bump);
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) checkAutoLock();
+      if (!document.hidden) {
+        checkAutoLock();
+        refreshAdminData();
+      }
     });
+    window.addEventListener('focus', refreshAdminData);
     setInterval(checkAutoLock, 15000);
+    setInterval(refreshAdminData, 30000);
   }
 
   async function verifyPin(pin) {

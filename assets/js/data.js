@@ -1035,9 +1035,7 @@ function appointmentConfirmationEmail(session, user, service, settings) {
    Envío de correo vía Edge Function de Supabase + Resend
    ========================================================================== */
 
-// ⚠️ Configura aquí el correo del admin para recibir notificaciones.
-// Si lo dejas vacío, se usará el correo del admin logueado (me().email).
-const ADMIN_EMAIL = '';
+const ADMIN_EMAIL = window.RS && window.RS.BRAND ? window.RS.BRAND.adminEmail : '';
 
 async function sendEmail(to, subject, body) {
   const config = RS.SupabaseConfig;
@@ -1064,11 +1062,8 @@ async function sendAppointmentEmail(to, subject, body) {
 }
 
 function sendAdminNotification(subject, body) {
-  const to = ADMIN_EMAIL || (me() && me().email);
-  if (!to) {
-    return Promise.reject(new Error('No hay correo de admin configurado para notificaciones.'));
-  }
-  return sendEmail(to, subject, body);
+  if (!ADMIN_EMAIL) return Promise.reject(new Error('No hay correo de administración configurado para notificaciones.'));
+  return sendEmail(ADMIN_EMAIL, subject, body);
 }
 
 /* ==========================================================================
