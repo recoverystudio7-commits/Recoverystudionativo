@@ -98,55 +98,26 @@
     }
     const token = supabaseSession.access_token;
 
-    /* ── Perfil: leer o crear si no existe (registro nuevo) ── */
-    let rows = await RS.Supabase.request(
+    /* El trigger de Auth debe crear perfiles; el cliente no puede saltarse RLS. */
+    const rows = await RS.Supabase.request(
       `/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=id,email,full_name,phone,goal,role,active`,
       { method: 'GET' },
       token
     );
-    let profile = Array.isArray(rows) ? rows[0] : null;
+    const profile = Array.isArray(rows) ? rows[0] : null;
     if (!profile) {
-      const metaName = authUser.user_meta_data && authUser.user_meta_data.full_name ? authUser.user_meta_data.full_name : '';
-      const metaPhone = authUser.user_meta_data && authUser.user_meta_data.phone ? authUser.user_meta_data.phone : '';
-      const created = await RS.Supabase.request('/rest/v1/profiles', {
-        method: 'POST',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({
-          id: authUser.id,
-          email: authUser.email || '',
-          full_name: metaName || '',
-          phone: metaPhone || '',
-          goal: '',
-          role: 'user',
-          active: true,
-        }),
-      }, token);
-      profile = Array.isArray(created) ? created[0] : created;
+      throw new Error('Tu usuario ya existe en Supabase, pero falta completar su perfil. No vuelvas a registrarte; contacta al administrador para reparar la cuenta.');
     }
-    if (!profile || !profile.active) {
-      throw new Error('No encontramos un perfil activo asociado a esta cuenta. Contacta al administrador.');
-    }
+    if (!profile.active) throw new Error('Tu cuenta está desactivada. Contacta al administrador.');
 
-    /* ── Cuenta de cliente: leer o crear con saldo 0 ── */
     const accounts = await RS.Supabase.request(
       `/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(authUser.id)}&select=credits,plan_label`,
       { method: 'GET' },
       token
     );
-    let account = Array.isArray(accounts) ? accounts[0] : null;
+    const account = Array.isArray(accounts) ? accounts[0] : null;
     if (!account) {
-      const createdAcct = await RS.Supabase.request('/rest/v1/client_accounts', {
-        method: 'POST',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({
-          user_id: authUser.id,
-          credits: 0,
-          plan_label: null,
-          plan_start: null,
-          plan_expires: null,
-        }),
-      }, token);
-      account = Array.isArray(createdAcct) ? createdAcct[0] : createdAcct;
+      throw new Error('Tu usuario ya existe en Supabase, pero falta su cuenta inicial. No vuelvas a registrarte; contacta al administrador para reparar la cuenta.');
     }
 
     let user = RS.data.getUser(authUser.id);
@@ -1008,21 +979,28 @@
           return;
         }
       } catch (loginErr) {
-        // Si falla, continúa al mensaje de confirmación pendiente abajo
+        if (!/email not confirmed|email_not_confirmed|invalid login credentials/i.test(String(loginErr.message || ''))) {
+          throw loginErr;
+        }
       }
       setLoading(submitter, false);
       UI.toast('Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.', 'success', 8000);
       RS.ui.authTab = 'login';
       RS.App.render(true);
     } catch (error) {
+      supabaseSession = null;
+      RS.Supabase.writeSession(null);
       setLoading(submitter, false);
       const msg = String(error.message || '');
       if (/rate limit|too many|exceeded/i.test(msg)) {
         loginError('Demasiados registros recientes. Intenta nuevamente en unos minutos.');
       } else if (/already registered|already exists/i.test(msg)) {
         loginError('Ya existe una cuenta con ese correo. Inicia sesión.');
+      } else if (/ya existe en Supabase|cuenta está desactivada/i.test(msg)) {
+        loginError(msg);
       } else {
-        loginError('No se pudo crear la cuenta. Intenta nuevamente.');
+        console.error('Registro en Supabase falló:', error);
+        loginError(msg || 'No se pudo crear la cuenta. Intenta nuevamente.');
       }
     }
   };
