@@ -676,21 +676,14 @@
             <div class="input-icon">${UI.icon('phone', 18)}<input class="input" id="reg-phone" name="phone" type="tel" autocomplete="tel" placeholder="+56 9 …" required></div>
           </div>
         </div>
-        <div class="grid grid-2 gap-sm">
-          <div class="field">
-            <label for="reg-password">Contraseña</label>
-            <div class="input-icon has-action">
-              ${UI.icon('lock', 18)}
-              <input class="input" id="reg-password" name="password" type="password" autocomplete="new-password" placeholder="Mín. 8 caracteres" required>
-              <button type="button" class="input-action" data-action="toggle-password" data-target="reg-password" aria-label="Mostrar contraseña">${UI.icon('eye', 18)}</button>
-            </div>
-          </div>
-          <div class="field">
-            <label for="reg-confirm">Repetir contraseña</label>
-            <div class="input-icon">${UI.icon('lock', 18)}<input class="input" id="reg-confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Repite tu clave" required></div>
+        <div class="field">
+          <label for="reg-password">Contraseña</label>
+          <div class="input-icon has-action">
+            ${UI.icon('lock', 18)}
+            <input class="input" id="reg-password" name="password" type="password" autocomplete="new-password" placeholder="Mín. 8 caracteres" required>
+            <button type="button" class="input-action" data-action="toggle-password" data-target="reg-password" aria-label="Mostrar contraseña">${UI.icon('eye', 18)}</button>
           </div>
         </div>
-        <label class="check check-top"><input type="checkbox" name="terms" required><span>Acepto los términos y la política de reagendamiento de 12 h.</span></label>
         <button class="btn btn-accent btn-block btn-lg" type="submit" data-register-submit>Crear mi cuenta ${UI.icon('arrow-right', 18)}</button>
       </form>
       <div class="auth-divider"><span>¿Prefieres que te inscribamos?</span></div>
@@ -954,57 +947,65 @@
     const email = form.email.value.trim().toLowerCase();
     const phone = form.phone.value.trim();
     const password = form.password.value;
-    const confirm = form.confirm.value;
     const error = document.getElementById('auth-error');
     if (error) error.classList.remove('show');
     if (name.length < 3) return loginError('Ingresa tu nombre y apellido.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return loginError('Ingresa un correo válido.');
     if (phone.replace(/\D/g, '').length < 8) return loginError('Ingresa un WhatsApp válido.');
     if (password.length < 8) return loginError('La contraseña debe tener al menos 8 caracteres.');
-    if (password !== confirm) return loginError('Las contraseñas no coinciden.');
-    if (!form.terms.checked) return loginError('Debes aceptar los términos y la política de reservas.');
     setLoading(submitter, true, 'Creando cuenta…');
     try {
       const result = await RS.Supabase.auth.signUp(email, password, { full_name: name, phone });
       if (!result.user) {
         setLoading(submitter, false);
-        const msg = String(error.message || '');
-        if (/rate limit|too many|exceeded/i.test(msg)) {
-          loginError('Demasiados registros recientes. Intenta nuevamente en unos minutos o regístrate por WhatsApp.');
-        } else {
-          loginError('No se pudo crear la cuenta. Intenta nuevamente o regístrate por WhatsApp.');
-        }
+        loginError('No se pudo crear la cuenta. Intenta nuevamente.');
         return;
       }
-      if (!result.access_token) {
-        // Cuenta creada pero requiere confirmación de correo (email confirmations activado en Supabase)
+      // Sesión inmediata si Supabase entregó access_token
+      if (result.access_token) {
+        supabaseSession = result;
+        RS.Supabase.writeSession(result);
+        const user = await loadRemoteProfile(result.user);
+        startSession(user, result);
+        initActivity();
+        RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
         setLoading(submitter, false);
-        UI.toast('Cuenta creada. Revisa tu correo para confirmar la dirección antes de ingresar.', 'success', 8000);
-        RS.ui.authTab = 'login';
-        RS.App.render(true);
+        UI.toast('¡Cuenta creada! Bienvenido a Recovery Studio.', 'success');
+        RS.App.go('agendar');
         return;
       }
-      supabaseSession = result;
-      RS.Supabase.writeSession(result);
-      const user = await loadRemoteProfile(result.user);
-      startSession(user, result);
-      initActivity();
-      RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
+      // Si Supabase no entregó access_token, intentar login directo con las mismas credenciales
+      try {
+        const loginResult = await RS.Supabase.auth.signInWithPassword(email, password);
+        if (loginResult && loginResult.access_token) {
+          supabaseSession = loginResult;
+          RS.Supabase.writeSession(loginResult);
+          const user = await loadRemoteProfile(loginResult.user);
+          startSession(user, loginResult);
+          initActivity();
+          RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
+          setLoading(submitter, false);
+          UI.toast('¡Cuenta creada! Bienvenido a Recovery Studio.', 'success');
+          RS.App.go('agendar');
+          return;
+        }
+      } catch (loginErr) {
+        // Si falla, continúa al mensaje de confirmación pendiente abajo
+      }
       setLoading(submitter, false);
-      UI.toast('¡Cuenta creada! Agenda tu primera sesión.', 'success');
-      RS.App.go('agendar');
+      UI.toast('Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.', 'success', 8000);
+      RS.ui.authTab = 'login';
+      RS.App.render(true);
     } catch (error) {
       setLoading(submitter, false);
       const msg = String(error.message || '');
-      let friendly = msg;
       if (/rate limit|too many|exceeded/i.test(msg)) {
-        friendly = 'Demasiados registros recientes. Intenta nuevamente en unos minutos o regístrate por WhatsApp.';
+        loginError('Demasiados registros recientes. Intenta nuevamente en unos minutos.');
       } else if (/already registered|already exists/i.test(msg)) {
-        friendly = 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.';
+        loginError('Ya existe una cuenta con ese correo. Inicia sesión.');
       } else {
-        friendly = 'No se pudo crear la cuenta. Intenta nuevamente o regístrate por WhatsApp.';
+        loginError('No se pudo crear la cuenta. Intenta nuevamente.');
       }
-      loginError(friendly);
     }
   };
 
