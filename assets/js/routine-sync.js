@@ -19,11 +19,37 @@
   async function load() {
     const session = RS.Supabase.readSession();
     if (!session || !session.access_token) return;
-    const rows = await RS.Supabase.request(
-      '/rest/v1/client_routines?select=id,user_id,routine,updated_at',
-      { method: 'GET' },
-      session.access_token
-    );
+    let rows;
+    try {
+      rows = await RS.Supabase.request(
+        '/rest/v1/client_routines?select=id,user_id,routine,updated_at',
+        { method: 'GET' },
+        session.access_token
+      );
+    } catch (error) {
+      if ((error.status === 401 || error.status === 403) && session.refresh_token) {
+        try {
+          const refreshed = await RS.Supabase.refreshSession(session);
+          if (!refreshed || !refreshed.access_token) {
+            RS.Supabase.writeSession(null);
+            return;
+          }
+          rows = await RS.Supabase.request(
+            '/rest/v1/client_routines?select=id,user_id,routine,updated_at',
+            { method: 'GET' },
+            refreshed.access_token
+          );
+        } catch (refreshError) {
+          if (refreshError.status === 400 || refreshError.status === 401 || refreshError.status === 403) {
+            RS.Supabase.writeSession(null);
+            return;
+          }
+          throw refreshError;
+        }
+      } else {
+        throw error;
+      }
+    }
     if (!Array.isArray(rows)) throw new Error('Supabase devolvió un listado de rutinas no válido.');
 
     const state = RS.DB.get();

@@ -57,13 +57,40 @@
   }
 
   async function load() {
-    const session = RS.Supabase.readSession();
-    const token = session && session.access_token;
-    const [discountRows, videoRows, studioRows] = await Promise.all([
-      RS.Supabase.request('/rest/v1/discount_codes?select=id,code,discount_type,value,starts_at,ends_at,active,created_at&order=created_at.desc', { method: 'GET' }, token),
-      RS.Supabase.request('/rest/v1/video_capsules?select=id,title,category,url,description,active,created_at&order=created_at.desc', { method: 'GET' }, token),
-      RS.Supabase.request('/rest/v1/studio_settings?select=config&id=eq.studio&limit=1', { method: 'GET' }, token),
-    ]);
+    let session = RS.Supabase.readSession();
+    const retrySession = async (error) => {
+      if (!session || !session.refresh_token || (error.status !== 401 && error.status !== 403)) throw error;
+      try {
+        session = await RS.Supabase.refreshSession(session);
+      } catch (refreshError) {
+        if (refreshError.status === 400 || refreshError.status === 401 || refreshError.status === 403) {
+          RS.Supabase.writeSession(null);
+          return null;
+        }
+        throw refreshError;
+      }
+      if (!session || !session.access_token) {
+        RS.Supabase.writeSession(null);
+        return null;
+      }
+      return session.access_token;
+    };
+    const fetchRows = (path, token) => RS.Supabase.request(path, { method: 'GET' }, token);
+    const paths = [
+      '/rest/v1/discount_codes?select=id,code,discount_type,value,starts_at,ends_at,active,created_at&order=created_at.desc',
+      '/rest/v1/video_capsules?select=id,title,category,url,description,active,created_at&order=created_at.desc',
+      '/rest/v1/studio_settings?select=config&id=eq.studio&limit=1',
+    ];
+    let token = session && session.access_token;
+    let rows;
+    try {
+      rows = await Promise.all(paths.map((path) => fetchRows(path, token)));
+    } catch (error) {
+      token = await retrySession(error);
+      if (!token) return;
+      rows = await Promise.all(paths.map((path) => fetchRows(path, token)));
+    }
+    const [discountRows, videoRows, studioRows] = rows;
     if (!Array.isArray(studioRows) || !studioRows.length || !studioRows[0].config || typeof studioRows[0].config !== 'object') {
       throw new Error('No pudimos cargar la configuración del studio desde Supabase.');
     }

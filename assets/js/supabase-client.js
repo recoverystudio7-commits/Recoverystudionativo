@@ -108,7 +108,7 @@
     try {
       return await request('/auth/v1/user', { method: 'GET' }, session.access_token);
     } catch (error) {
-      if (error.status !== 401) throw error;
+      if (error.status !== 401 && error.status !== 403) throw error;
       if (!session.refresh_token) {
         writeSession(null);
         return null;
