@@ -98,7 +98,7 @@ async function runBooking24h(dryRun: boolean) {
   // Ventana amplia para cron horario (ajustar si el cron corre con otra frecuencia).
   const from = new Date(now + 23 * 60 * 60 * 1000).toISOString();
   const to = new Date(now + 25 * 60 * 60 * 1000).toISOString();
-  const q = `sessions?select=id,user_id,starts_at,status,coach,service_id,profiles(email,full_name),services(name)&status=eq.confirmada&starts_at=gte.${encodeURIComponent(from)}&starts_at=lte.${encodeURIComponent(to)}&limit=100`;
+  const q = `sessions?select=id,user_id,starts_at,status,coach,service_id,profiles!sessions_user_id_fkey(email,full_name),services(name)&status=eq.confirmada&starts_at=gte.${encodeURIComponent(from)}&starts_at=lte.${encodeURIComponent(to)}&limit=100`;
   const sessions = await svcGet(q) as Array<Json>;
   const results: Json[] = [];
   for (const s of sessions || []) {
