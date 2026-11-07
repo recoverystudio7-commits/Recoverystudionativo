@@ -454,6 +454,7 @@
                   ${U.esc(s.time)}${s.available ? '' : `<span>${U.esc(s.reason)}</span>`}
                 </button>`).join('') : `<div class="slot-empty">${UI.icon('calendar', 20)} No hay horarios este día. Prueba con otra fecha.</div>`}
               </div>
+              ${slots.length && !slots.some((s) => s.available) ? `<div class="callout callout-orange" style="margin-top:12px">${UI.icon('info', 16)}<span><strong>No hay cupos disponibles en esta fecha.</strong> Puedes elegir otro día o avisarnos por WhatsApp para que te contactemos si se libera un horario. <a href="${RS.data.whatsappUrl(`Hola Recovery Studio, quiero consultar por lista de espera/disponibilidad para ${service ? service.name : 'una sesión'} el ${U.fmtDate(b.date, 'long')}.`)}" target="_blank" rel="noopener noreferrer"><strong>Escribir por WhatsApp</strong></a></span></div>` : ''}
               <div class="slot-legend"><span><i class="dot free"></i> Disponible</span><span><i class="dot selected"></i> Seleccionado</span><span><i class="dot busy"></i> Ocupado / fuera de plazo</span></div>
             </div>
           </section>
