@@ -112,7 +112,8 @@ También puede abrirse `index.html` en el navegador. La app funciona, pero el se
 ├── manifest.webmanifest        # Metadatos PWA
 ├── sw.js                       # Service worker (red primero, caché de respaldo)
 ├── assets/
-│   ├── icon.svg                # Ícono/logo
+│   ├── recoverylogo.png        # Ícono/logo de la app
+│   ├── icon.svg                # Ícono SVG de respaldo
 │   ├── css/
 │   │   ├── styles.css          # Sistema de diseño, layout y componentes base
 │   │   └── views.css           # Estilos específicos de las vistas
