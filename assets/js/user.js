@@ -121,7 +121,7 @@
         ${session.notes ? `<p class="session-note">${UI.icon('info', 13)} ${U.esc(session.notes)}</p>` : ''}
         <div class="session-foot">
           <span class="session-pay">${UI.icon('credit-card', 14)} ${session.payment === 'plan' ? 'Incluida en tu plan' : session.payment === 'pagado' ? 'Pagada' : session.payment === 'cortesia' ? 'Cortesía' : 'Pago por validar'}</span>
-          ${pay && pay.status === 'pendiente' ? `<span class="tiny-pill">${UI.icon('alert-circle', 12)} Comprobante en revisión</span>` : ''}
+          ${pay && pay.status === 'pendiente' ? `<span class="tiny-pill">${UI.icon(pay.proof ? 'clock' : 'alert-circle', 12)} ${pay.proof ? 'Comprobante en revisión' : 'Falta comprobante'}</span>` : ''}
         </div>
       </div>
       <div class="session-actions">
@@ -136,6 +136,7 @@
   }
 
   function paymentCard(payment) {
+    const pendingReview = payment.status === 'pendiente' && !!payment.proof;
     return `<article class="payment-card">
       <div class="payment-icon ${payment.status === 'aprobado' ? 'ok' : payment.status === 'rechazado' ? 'bad' : 'wait'}">${UI.icon(payment.status === 'aprobado' ? 'check' : payment.status === 'rechazado' ? 'x' : 'clock', 20)}</div>
       <div class="payment-main">
@@ -144,7 +145,7 @@
             <h3>${U.esc(payment.concept)}</h3>
             <p>${U.esc(payment.ref)} · ${U.fmtDate(payment.date, 'long')} · ${U.esc(payment.method)}</p>
           </div>
-          <div class="payment-amount">${U.fmtMoney(payment.amount)}${UI.statusPill(payment.status, 'payment')}</div>
+          <div class="payment-amount">${U.fmtMoney(payment.amount)}${pendingReview ? '<span class="pill pill-info"><span class="pill-dot"></span>En revisión</span>' : UI.statusPill(payment.status, 'payment')}</div>
         </div>
         ${payment.status === 'rechazado' && payment.note ? `<p class="payment-note bad">${UI.icon('alert-circle', 13)} ${U.esc(payment.note)}</p>` : ''}
         ${payment.status === 'pendiente' ? `<p class="payment-note">${UI.icon('info', 13)} ${payment.proof ? 'Comprobante recibido. Estamos validando tu pago.' : 'Falta adjuntar tu comprobante de transferencia.'}</p>` : ''}
@@ -322,6 +323,20 @@
           </div>
         </section>
       </div>
+
+      <section class="card" aria-labelledby="how-title">
+        <div class="card-head">
+          <div><span class="eyebrow">Ayuda rápida</span><h2 class="card-title" id="how-title">Cómo funciona</h2><p class="card-sub">Pasos simples para usar tu cuenta.</p></div>
+        </div>
+        <div class="card-body">
+          <div class="steps-grid">
+            <div class="step-info"><span>1</span><div><strong>Agenda</strong><p>Elige servicio, fecha y hora. Recibirás confirmación cuando corresponda.</p></div></div>
+            <div class="step-info"><span>2</span><div><strong>Paga o usa tu plan</strong><p>Transfiere y sube el comprobante, o usa una sesión disponible.</p></div></div>
+            <div class="step-info"><span>3</span><div><strong>Asiste y sigue tu progreso</strong><p>Revisa tu agenda, entrenamiento y pagos desde cualquier dispositivo.</p></div></div>
+          </div>
+          <p class="muted small" style="margin-top:12px">${UI.icon('info', 14)} Puedes reagendar o cancelar hasta ${st().settings.policyHours} h antes. Si necesitas ayuda, escríbenos por <a href="${RS.data.whatsappUrl('Hola Recovery Studio, necesito ayuda con mi cuenta o una reserva.')}" target="_blank" rel="noopener">WhatsApp</a>.</p>
+        </div>
+      </section>
     </div>`;
   }
 
@@ -358,7 +373,25 @@
     if (!b.useCredit) b.useCredit = false;
     if (!b.policy) b.policy = false;
     if (!b.method) b.method = 'Transferencia';
+    if (b.busy) b.busy = false;
     return b;
+  }
+
+  function policyDeadlineText(date, time) {
+    const hours = Number(st().settings.policyHours) || 12;
+    const when = U.dateTime(date, time);
+    if (!when || isNaN(when.getTime())) return '';
+    const deadline = new Date(when.getTime() - hours * 3600000);
+    return deadline.toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  function bookingBlockers(b, useCredit) {
+    const blockers = [];
+    if (!b.serviceId) blockers.push('Selecciona un servicio.');
+    if (!b.date) blockers.push('Selecciona una fecha.');
+    if (!b.time) blockers.push('Selecciona un horario disponible.');
+    if (!b.policy) blockers.push(`Acepta la política de cambios (${Number(st().settings.policyHours) || 12} h antes).`);
+    return { blockers, ready: blockers.length === 0, useCredit: !!useCredit };
   }
 
   function renderBooking() {
@@ -456,7 +489,7 @@
                 </label>
               </div>` : ''}
 
-              <label class="policy-check">
+              <label class="policy-check" for="booking-policy">
                 <input type="checkbox" id="booking-policy" ${b.policy ? 'checked' : ''} data-change="booking-policy">
                 <span>Confirmo que puedo reagendar o cancelar hasta <strong>${st().settings.policyHours} horas antes</strong>. Si aviso con menos tiempo, la sesión no será reagendada y se considerará utilizada.</span>
               </label>
@@ -482,10 +515,8 @@
               <div class="summary-grand"><span>Total a pagar</span><strong>${U.fmtMoney(total)}</strong></div>
             </div>
             ${useCredit ? `<p class="summary-note">${UI.icon('layers', 14)} Se descontará 1 sesión de tu plan al confirmar.</p>` : `<p class="summary-note">${UI.icon('info', 14)} Si eliges transferencia, podrás adjuntar el comprobante al finalizar.</p>`}
-            <button class="btn btn-accent btn-block btn-lg" data-action="book-confirm" ${b.time && b.policy ? '' : 'disabled'}>
-              ${UI.icon('calendar-check', 18)} ${useCredit ? 'Confirmar con mi plan' : 'Confirmar reserva'}
-            </button>
-            <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes.</p>
+            ${(() => { const check = bookingBlockers(b, useCredit); const deadline = b.time ? policyDeadlineText(b.date, b.time) : ''; return `${deadline ? `<p class="summary-note">${UI.icon('clock', 14)} Cambios permitidos hasta: <strong>${U.esc(deadline)}</strong>.</p>` : ''}${!check.ready ? `<div class="callout callout-orange" role="status">${UI.icon('info', 16)}<span>${U.esc(check.blockers[0])}</span></div>` : ''}<button class="btn btn-accent btn-block btn-lg" data-action="book-confirm" ${(check.ready && !b.busy) ? '' : 'disabled'}>${UI.icon('calendar-check', 18)} ${b.busy ? 'Confirmando…' : (useCredit ? 'Confirmar con mi plan' : 'Confirmar reserva')}</button>`; })()}
+            <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes. ${UI.icon('mail', 14)} Enviaremos confirmación por correo cuando sea posible.</p>
           </div>
           <div class="help-card">
             <span class="help-icon">${UI.icon('whatsapp', 20)}</span>
@@ -766,6 +797,8 @@
     const payment = pendingPaymentForSession(session.id);
     const hours = U.hoursUntil(session.date, session.time);
     const canChange = hours >= st().settings.policyHours && session.status !== 'cancelada' && session.status !== 'completada';
+    const deadline = canChange ? policyDeadlineText(session.date, session.time) : '';
+    const location = (st().settings && st().settings.address) ? st().settings.address : 'Recovery Studio';
     UI.modal({
       title: 'Detalle de la sesión',
       subtitle: U.fmtDate(session.date, 'long'),
@@ -779,13 +812,13 @@
         ${UI.detailRow('Profesional', session.coach || 'Daniel Barrueto')}
         ${UI.detailRow('Fecha', U.fmtDate(session.date, 'long'))}
         ${UI.detailRow('Horario', `${session.time} h`)}
-        ${UI.detailRow('Ubicación', 'Recovery Studio · Santiago')}
+        ${UI.detailRow('Ubicación', location)}
         ${UI.detailRow('Pago', session.payment === 'plan' ? 'Incluida en tu plan' : session.payment === 'pagado' ? 'Pagada' : session.payment === 'cortesia' ? 'Cortesía' : 'Pendiente de validación')}
         ${payment ? UI.detailRow('Comprobante', payment.proof ? 'Recibido, en revisión' : 'Pendiente de subir') : ''}
         ${session.notes ? UI.detailRow('Notas', session.notes) : ''}
       </div>
-      <div class="callout ${canChange ? 'callout-green' : 'callout-orange'}">${UI.icon(canChange ? 'check-circle' : 'clock', 17)}<span>${canChange ? `Puedes reagendar o cancelar hasta ${st().settings.policyHours} h antes.` : `Faltan ${Math.max(0, Math.floor(hours))} h. Ya no aplica el plazo de ${st().settings.policyHours} h para cambios.`}</span></div>`,
-      footer: `<button class="btn btn-ghost" data-action="download-ics" data-id="${session.id}">${UI.icon('calendar', 16)} Calendario</button>${canChange ? `<button class="btn btn-outline" data-action="reschedule-open" data-id="${session.id}">${UI.icon('refresh', 15)} Reagendar</button>` : ''}<button class="btn btn-primary" data-modal-close>Cerrar</button>`,
+      <div class="callout ${canChange ? 'callout-green' : 'callout-orange'}">${UI.icon(canChange ? 'check-circle' : 'clock', 17)}<span>${canChange ? `Puedes reagendar o cancelar hasta ${st().settings.policyHours} h antes${deadline ? ` (antes de <strong>${U.esc(deadline)}</strong>)` : ''}.` : (session.status === 'cancelada' || session.status === 'completada' ? 'Esta sesión ya no permite cambios desde la app.' : `Ya no aplica el plazo de ${st().settings.policyHours} h para cambios.`)}</span></div>`,
+      footer: `<button class="btn btn-ghost" data-action="download-ics" data-id="${session.id}">${UI.icon('calendar', 16)} Archivo</button><button class="btn btn-ghost" data-action="calendar-subscribe">${UI.icon('calendar', 16)} Mi calendario</button>${canChange ? `<button class="btn btn-outline" data-action="reschedule-open" data-id="${session.id}">${UI.icon('refresh', 15)} Reagendar</button>` : ''}<button class="btn btn-primary" data-modal-close>Cerrar</button>`,
     });
   }
 
@@ -1198,22 +1231,30 @@
   RS.changes['booking-policy'] = (el) => {
     const b = bookingState();
     b.policy = el.checked;
-    const btn = document.querySelector('[data-action="book-confirm"]');
-    if (btn) btn.disabled = !(b.time && b.policy);
+    RS.App.render();
   };
 
   RS.actions['book-confirm'] = async () => {
     const user = me();
     const b = bookingState();
+    if (b.busy) return;
     const service = RS.data.getService(b.serviceId);
     if (!service) return UI.toast('Selecciona un servicio.', 'error');
     if (!b.time) return UI.toast('Selecciona un horario.', 'error');
     if (!b.policy) return UI.toast('Debes aceptar la política de reagendamiento.', 'error');
-    const available = RS.data.availableSlots(b.date, b.serviceId).find((s) => s.time === b.time && s.available);
+    b.busy = true;
+    RS.App.render();
+    const finish = (opts) => {
+      const o = opts || {};
+      b.busy = false;
+      if (o.clear !== false) { b.time = null; b.policy = false; }
+      RS.App.render();
+    };
+    const available = RS.data.availableSlots(b.date, b.serviceId).find((slot) => slot.time === b.time && slot.available);
     if (!available) {
       UI.toast('Ese horario ya no está disponible. Elige otro.', 'error');
       b.time = null;
-      RS.App.render(true);
+      finish({ clear: false });
       return;
     }
     const useCredit = b.useCredit && user.credits > 0;
@@ -1233,11 +1274,12 @@
     };
     st().sessions.push(session);
     RS.DB.save();
+    let syncWarning = '';
     try {
       await RS.SupabaseSync.pushAppointment(session);
     } catch (error) {
       console.error('No se pudo sincronizar la reserva con Supabase:', error);
-      UI.toast('La reserva quedó guardada en este dispositivo, pero no se pudo compartir con el studio. ' + error.message, 'warning', 8000);
+      syncWarning = 'La reserva quedó guardada en este dispositivo, pero no se pudo compartir con el studio. Usa "Sincronizar" cuando tengas conexión.';
     }
     RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${useCredit ? ' con crédito de plan' : ''}.`);
 
@@ -1252,11 +1294,11 @@
         console.error('No se pudieron enviar los correos de la reserva:', error);
       });
 
+    if (syncWarning) UI.toast(syncWarning, 'warning', 9000);
+
     if (useCredit) {
       showBookingSuccess(session);
-      RS.ui.booking.time = null;
-      RS.ui.booking.policy = false;
-      RS.App.render();
+      finish();
       return;
     }
 
@@ -1270,14 +1312,13 @@
       creditsToAdd: 0,
       items: [{ name: service.name, qty: 1, price: service.price }],
     });
-    RS.ui.booking.time = null;
-    RS.ui.booking.policy = false;
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     openPaymentModal(payment, {
       title: 'Reserva registrada',
       subtitle: 'Guarda tu comprobante para dejar el pago en revisión.',
       session,
     });
-    RS.App.render();
+    finish();
   };
 
   RS.actions['download-ics'] = (el) => {
@@ -1408,6 +1449,8 @@
     const phone = form.phone.value.trim();
     const goal = form.goal.value.trim();
     const err = document.getElementById('profile-error');
+    const btn = form.querySelector('button[type="submit"]');
+    if (err) err.classList.remove('show');
     if (name.length < 3) {
       if (err) {
         err.textContent = 'Ingresa tu nombre completo.';
@@ -1415,6 +1458,7 @@
       }
       return;
     }
+    if (btn) { btn.disabled = true; btn.dataset.label = btn.innerHTML; btn.innerHTML = `${UI.icon('clock', 16)} Guardando…`; }
     try {
       const auth = RS.Supabase.readSession();
       const updated = await RS.Supabase.request('/rest/v1/rpc/update_own_profile', {
@@ -1435,16 +1479,23 @@
       RS.App.render();
     } catch (error) {
       if (err) {
-        err.textContent = error.message || 'No pudimos actualizar tus datos.';
+        err.textContent = error.message || 'No pudimos actualizar tus datos. Revisa tu conexión e inténtalo de nuevo.';
         err.classList.add('show');
       }
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.label || btn.innerHTML; }
     }
   };
 
   RS.forms['profile-password'] = async (form) => {
     const user = me();
     const err = document.getElementById('password-error');
+    const btn = form.querySelector('button[type="submit"]');
     if (err) err.classList.remove('show');
+    if (form.next.value.length < 8) {
+      if (err) { err.textContent = 'La nueva contraseña debe tener al menos 8 caracteres.'; err.classList.add('show'); }
+      return;
+    }
     if (form.next.value !== form.confirm.value) {
       if (err) {
         err.textContent = 'Las nuevas contraseñas no coinciden.';
@@ -1452,16 +1503,21 @@
       }
       return;
     }
-    const result = await RS.Auth.changePassword(user, form.current.value, form.next.value);
-    if (!result.ok) {
-      if (err) {
-        err.textContent = result.error;
-        err.classList.add('show');
+    if (btn) { btn.disabled = true; btn.dataset.label = btn.innerHTML; btn.innerHTML = `${UI.icon('clock', 16)} Actualizando…`; }
+    try {
+      const result = await RS.Auth.changePassword(user, form.current.value, form.next.value);
+      if (!result.ok) {
+        if (err) {
+          err.textContent = result.error;
+          err.classList.add('show');
+        }
+        return;
       }
-      return;
+      form.reset();
+      UI.toast('Contraseña actualizada.', 'success');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.label || btn.innerHTML; }
     }
-    form.reset();
-    UI.toast('Contraseña actualizada.', 'success');
   };
 
   RS.User = {
@@ -1483,8 +1539,21 @@
       if (!payment) return;
       const file = input.files && input.files[0];
       if (!file) return;
+      if (input.dataset.busy === '1') return;
+      if (!/^image\/(jpeg|png|jpg|webp|heic|heif)$/i.test(file.type || '') && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name || '')) {
+        UI.toast('Selecciona una imagen válida (JPG, PNG o WEBP).', 'error');
+        input.value = '';
+        return;
+      }
+      if (file.size > 12 * 1024 * 1024) {
+        UI.toast('La imagen es muy pesada. Usa un archivo de hasta 12 MB.', 'error');
+        input.value = '';
+        return;
+      }
+      input.dataset.busy = '1';
+      UI.toast('Procesando comprobante…', 'info', 2200);
       try {
-        const data = await U.compressImage(file, 1100, 0.72);
+        const data = await U.compressImage(file, 1400, 0.78);
         payment.proof = data;
         payment.proofName = file.name;
         if (payment.status === 'rechazado') payment.status = 'pendiente';
@@ -1497,15 +1566,22 @@
         RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
         const owner = RS.data.getUser(payment.userId);
         if (owner) {
-          RS.data.paymentProofNotification(payment, owner).catch((error) => {
-            console.error('No se pudo notificar el comprobante:', error);
-          });
+          RS.data.paymentProofNotification(payment, owner)
+            .then((mail) => {
+              if (mail && mail.admin && !mail.admin.ok) UI.toast('Comprobante guardado. No pudimos avisar al studio por correo; también puedes enviarlo por WhatsApp.', 'warning', 7000);
+            })
+            .catch((error) => {
+              console.error('No se pudo notificar el comprobante:', error);
+            });
         }
         UI.toast('Comprobante adjuntado. Tu pago quedó en revisión.', 'success');
         UI.closeModal();
         RS.App.render();
       } catch (err) {
         UI.toast(err.message || 'No pudimos procesar la imagen.', 'error');
+      } finally {
+        input.dataset.busy = '0';
+        input.value = '';
       }
     },
     downloadIcs,

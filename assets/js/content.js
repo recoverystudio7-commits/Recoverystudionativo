@@ -402,8 +402,15 @@
     const code = String(form.code.value || '').trim().toUpperCase();
     const today = U.todayISO();
     const item = discountCodes().find((entry) => entry.active && entry.code.toUpperCase() === code);
-    if (!item || (item.startsAt && today < item.startsAt) || (item.endsAt && today > item.endsAt)) {
-      return UI.toast('El código no existe, está inactivo o fuera de vigencia.', 'error');
+    if (!item) {
+      RS.ui.discountFeedback = 'Ese código no existe o no está activo.';
+      RS.User.refreshCheckout();
+      return UI.toast('Revisa el código ingresado.', 'error');
+    }
+    if ((item.startsAt && today < item.startsAt) || (item.endsAt && today > item.endsAt)) {
+      RS.ui.discountFeedback = 'Ese código está fuera de vigencia.';
+      RS.User.refreshCheckout();
+      return UI.toast('El código no está vigente en esta fecha.', 'error');
     }
     const originalAmount = Number(checkout.originalAmount) || Number(checkout.amount) || 0;
     const discountAmount = item.type === 'percent'
@@ -413,7 +420,7 @@
     checkout.discountAmount = discountAmount;
     checkout.amount = Math.max(0, originalAmount - discountAmount);
     RS.ui.checkout = checkout;
-    RS.ui.discountFeedback = `Código ${item.code} aplicado: ahorras ${U.fmtMoney(discountAmount)}.`;
+    RS.ui.discountFeedback = `Código ${item.code} aplicado: ahorras ${U.fmtMoney(discountAmount)}. El descuento se valida con la revisión del pago.`;
     RS.User.refreshCheckout();
   };
 
