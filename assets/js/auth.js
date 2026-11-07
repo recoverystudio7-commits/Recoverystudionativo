@@ -18,6 +18,8 @@
   let pendingAdmin = null;
   let locking = false;
   let activityBound = false;
+  let adminSyncAt = 0;
+  let adminSyncPromise = null;
 
   function state() {
     return RS.DB.get();
@@ -99,7 +101,7 @@
     const token = supabaseSession.access_token;
 
     /* ── Perfil: leer o crear si no existe (registro nuevo) ── */
-    let rows = await RS.Supabase.request(
+    const rows = await RS.Supabase.request(
       `/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=*`,
       { method: 'GET' },
       token
@@ -109,32 +111,37 @@
       const meta = authUser.user_metadata || authUser.user_meta_data || {};
       const metaName = meta.full_name || meta.name || '';
       const metaPhone = meta.phone || '';
-      const created = await RS.Supabase.request('/rest/v1/profiles', {
-        method: 'POST',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({
-          id: authUser.id,
-          email: authUser.email || '',
-          full_name: metaName || '',
-          phone: metaPhone || '',
-          goal: '',
-          role: 'user',
-          active: true,
-        }),
-      }, token);
+      let created = null;
+      try {
+        created = await RS.Supabase.request('/rest/v1/profiles', {
+          method: 'POST',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({
+            id: authUser.id,
+            email: authUser.email || '',
+            full_name: metaName || '',
+            phone: metaPhone || '',
+            goal: '',
+            role: 'user',
+            active: true,
+          }),
+        }, token);
+      } catch (createError) {
+        console.warn('No se pudo crear el perfil automáticamente:', createError.message);
+      }
       profile = Array.isArray(created) ? created[0] : created;
+      if (!profile) {
+        throw new Error('Tu usuario ya existe en Supabase, pero falta completar su perfil. No vuelvas a registrarte; contacta al administrador para reparar la cuenta.');
+      }
     }
-    if (!profile || !profile.active) {
-      throw new Error('No encontramos un perfil activo asociado a esta cuenta. Contacta al administrador.');
-    }
+    if (!profile.active) throw new Error('Tu cuenta está desactivada. Contacta al administrador.');
 
-    /* ── Cuenta de cliente: leer o crear con saldo 0 ── */
     const accounts = await RS.Supabase.request(
       `/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(authUser.id)}&select=*`,
       { method: 'GET' },
       token
     );
-    let account = Array.isArray(accounts) ? accounts[0] : null;
+    const account = Array.isArray(accounts) ? accounts[0] : null;
     if (!account) {
       try {
         const createdAcct = await RS.Supabase.request('/rest/v1/client_accounts', {
@@ -238,6 +245,45 @@
     }
   }
 
+  async function refreshAdminData() {
+    if (
+      document.hidden ||
+      !currentSession ||
+      currentSession.role !== 'admin' ||
+      adminSyncPromise ||
+      Date.now() - adminSyncAt < 15000
+    ) return;
+    adminSyncAt = Date.now();
+    const knownSessionIds = new Set((state().sessions || []).map((session) => session.id));
+    adminSyncPromise = RS.SupabaseSync.pull()
+      .then((result) => {
+        if (!result || !result.ok || !currentSession || currentSession.role !== 'admin' || !RS.App) return;
+        const newAppointments = (state().sessions || []).filter(
+          (session) => session.source === 'supabase' && !knownSessionIds.has(session.id)
+        );
+        // Solo repintamos si hay cambios reales: evita perder formularios abiertos.
+        if (!result.merged && !newAppointments.length) return;
+        RS.App.render();
+        if (newAppointments.length) {
+          UI.toast(
+            newAppointments.length === 1
+              ? 'Nueva reserva recibida. Revisa la agenda.'
+              : `Se recibieron ${newAppointments.length} reservas nuevas. Revisa la agenda.`,
+            'info',
+            8000
+          );
+        }
+      })
+      .catch((error) => {
+        console.error('No se pudo actualizar la agenda del administrador:', error);
+        UI.toast('No se pudo actualizar la agenda: ' + error.message, 'warning', 8000);
+      })
+      .finally(() => {
+        adminSyncPromise = null;
+      });
+    await adminSyncPromise;
+  }
+
   function initActivity() {
     if (activityBound) return;
     activityBound = true;
@@ -247,9 +293,14 @@
     document.addEventListener('pointerdown', bump, { passive: true });
     document.addEventListener('keydown', bump);
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) checkAutoLock();
+      if (!document.hidden) {
+        checkAutoLock();
+        refreshAdminData();
+      }
     });
+    window.addEventListener('focus', refreshAdminData);
     setInterval(checkAutoLock, 15000);
+    setInterval(refreshAdminData, 30000);
   }
 
   async function verifyPin(pin) {
@@ -467,8 +518,9 @@
       RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso autenticado por Supabase.');
       try {
         await RS.SupabaseSync.pull();
-      } catch (e) {
-        /* La sincronización inicial no bloquea el ingreso. */
+      } catch (error) {
+        console.error('No se pudieron actualizar los datos compartidos:', error);
+        UI.toast('Iniciaste sesión, pero no pudimos actualizar los datos compartidos: ' + error.message, 'warning', 8000);
       }
       if (RS.App && RS.App.startSync) RS.App.startSync();
       return { ok: true, needsPin: user.role === 'admin', user };
@@ -978,7 +1030,7 @@
       title: 'Privacidad y datos',
       size: 'md',
       body: `<div class="prose">
-        <p>La información de esta cuenta se guarda en el almacenamiento local de este navegador. No se sincroniza con otros dispositivos.</p>
+        <p>Tu cuenta, tus reservas y tus pagos se sincronizan de forma segura con la nube, para que puedas verlos desde cualquier dispositivo. Solo tú y el equipo de Recovery Studio pueden acceder a tu información.</p>
         <p>Los datos de salud, pagos y entrenamiento deben protegerse con cifrado en tránsito y en reposo, control de acceso por roles y una política de retención.</p>
       </div>`,
       footer: '<button class="btn btn-primary" data-modal-close>Entendido</button>',
@@ -1090,21 +1142,28 @@
           return;
         }
       } catch (loginErr) {
-        // Si falla, continúa al mensaje de confirmación pendiente abajo
+        if (!/email not confirmed|email_not_confirmed|invalid login credentials/i.test(String(loginErr.message || ''))) {
+          throw loginErr;
+        }
       }
       setLoading(submitter, false);
       UI.toast('Tu cuenta fue creada, pero este proyecto exige confirmar el correo antes de ingresar. Revisa tu bandeja (y spam). Si no llega el correo, escríbenos por WhatsApp para activarla.', 'info', 12000);
       RS.ui.authTab = 'login';
       RS.App.render(true);
     } catch (error) {
+      supabaseSession = null;
+      RS.Supabase.writeSession(null);
       setLoading(submitter, false);
       const msg = String(error.message || '');
       if (/rate limit|too many|exceeded/i.test(msg)) {
         loginError('Demasiados registros recientes. Intenta nuevamente en unos minutos.');
       } else if (/already registered|already exists/i.test(msg)) {
         loginError('Ya existe una cuenta con ese correo. Inicia sesión.');
+      } else if (/ya existe en Supabase|cuenta está desactivada/i.test(msg)) {
+        loginError(msg);
       } else {
-        loginError('No se pudo crear la cuenta. Intenta nuevamente.');
+        console.error('Registro en Supabase falló:', error);
+        loginError(msg || 'No se pudo crear la cuenta. Intenta nuevamente.');
       }
     }
   };

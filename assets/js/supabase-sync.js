@@ -171,6 +171,144 @@
     return ids[0] || 'srv-recovery';
   }
 
+  function chileDateTimeParts(value) {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Santiago',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date(value));
+    const fields = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return {
+      date: `${fields.year}-${fields.month}-${fields.day}`,
+      time: `${fields.hour}:${fields.minute}`,
+    };
+  }
+
+  function chileDateTimeISO(date, time) {
+    const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || ''));
+    const timeMatch = /^(\d{2}):(\d{2})$/.exec(String(time || ''));
+    if (!dateMatch || !timeMatch) throw new Error('La fecha u hora de la reserva no es válida.');
+    const [, year, month, day] = dateMatch.map(Number);
+    const [, hour, minute] = timeMatch.map(Number);
+    const target = Date.UTC(year, month - 1, day, hour, minute);
+    let timestamp = target;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const local = chileDateTimeParts(timestamp);
+      if (local.date === date && local.time === time) return new Date(timestamp).toISOString();
+      const [localYear, localMonth, localDay] = local.date.split('-').map(Number);
+      const [localHour, localMinute] = local.time.split(':').map(Number);
+      timestamp += target - Date.UTC(localYear, localMonth - 1, localDay, localHour, localMinute);
+    }
+
+    throw new Error('La hora elegida no existe en la zona horaria de Santiago.');
+  }
+
+  async function pushAppointment(appointment) {
+    if (!configured()) throw new Error('La conexión con Supabase no está disponible.');
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid) throw new Error('Inicia sesión con Supabase antes de sincronizar una reserva.');
+    if (!appointment || appointment.userId !== user.id) {
+      throw new Error('No pudimos verificar el dueño de la reserva.');
+    }
+    const tk = await freshToken();
+    const service = RS.data.getService(appointment.serviceId);
+    // El id local del servicio puede no existir en Supabase (FK obligatoria).
+    const serviceId = await resolveServiceId(appointment.serviceId);
+    const startsAt = chileToIso(appointment.date, appointment.time);
+    if (!startsAt) throw new Error('La fecha o la hora de la reserva no es válida.');
+    const duration = Number(appointment.duration) || (service && Number(service.duration)) || 60;
+    const payload = {
+      id: appointment.id,
+      user_id: uid,
+      service_id: serviceId,
+      service_name: (service && service.name) || appointment.serviceName || 'Sesión',
+      duration,
+      starts_at: startsAt,
+      ends_at: new Date(new Date(startsAt).getTime() + duration * 60000).toISOString(),
+      status: dbSessionStatus(appointment.status),
+      payment_status: dbPaymentStatus(appointment.payment),
+      coach: appointment.coach || 'Daniel Barrueto',
+      notes: appointment.notes || '',
+      created_at: appointment.createdAt || new Date().toISOString(),
+      created_by: uid,
+      updated_at: new Date().toISOString(),
+    };
+
+    await RS.Supabase.request('/rest/v1/sessions?on_conflict=id', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify(payload),
+    }, tk);
+    return { ok: true };
+  }
+
+  function mergeAppointments(rows, state) {
+    let merged = 0;
+    rows.forEach((row) => {
+      if (!row.id) return;
+      const current = state.sessions.find((session) => session.id === row.id);
+      const startsAt = chileDateTimeParts(row.starts_at);
+      const values = {
+        id: row.id,
+        userId: row.user_id,
+        date: startsAt.date,
+        time: startsAt.time,
+        serviceId: row.service_id || '',
+        duration: row.ends_at && row.starts_at
+          ? Math.max(1, Math.round((new Date(row.ends_at) - new Date(row.starts_at)) / 60000))
+          : 60,
+        status: row.status || 'pendiente',
+        payment: row.payment_status || 'pendiente',
+        coach: row.coach || '',
+        notes: row.notes || '',
+        createdAt: row.created_at || new Date().toISOString(),
+        updatedAt: row.updated_at || row.created_at || new Date().toISOString(),
+        source: 'supabase',
+      };
+      if (current) Object.assign(current, values);
+      else {
+        state.sessions.push(values);
+        merged += 1;
+      }
+    });
+    return merged;
+  }
+
+  function mergeAdminUsers(profiles, accounts, state) {
+    const accountsByUser = new Map(accounts.map((account) => [account.user_id, account]));
+    let merged = 0;
+    profiles.forEach((profile) => {
+      if (!profile.id) return;
+      const account = accountsByUser.get(profile.id);
+      let user = state.users.find((item) => item.id === profile.id);
+      if (!user) {
+        user = { id: profile.id, notes: '' };
+        state.users.push(user);
+        merged += 1;
+      }
+      Object.assign(user, {
+        role: profile.role === 'admin' ? 'admin' : 'user',
+        name: profile.full_name || profile.email || 'Cliente',
+        email: profile.email || '',
+        phone: profile.phone || '',
+        goal: profile.goal || '',
+        active: profile.active !== false,
+        credits: Number(account && account.credits) || 0,
+        planLabel: (account && account.plan_label) || 'Sin plan activo',
+        createdAt: profile.created_at || user.createdAt || new Date().toISOString(),
+        supabaseUserId: profile.id,
+        source: 'supabase',
+      });
+    });
+    return merged;
+  }
+
   /* ----------------------------- pull ----------------------------------- */
 
   async function pullProfiles(tk) {
@@ -570,6 +708,7 @@
     syncNow,
     startAutoSync,
     stopAutoSync,
+    pushAppointment,
     supabaseUserId,
     localUserId,
     chileToIso,

@@ -17,6 +17,10 @@ const ALLOWED_ORIGINS = [
   "https://recoverystudio7-commits.github.io",
   "http://localhost:8080",
   "http://127.0.0.1:8080",
+  "http://localhost:5055",
+  "http://127.0.0.1:5055",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
 ];
 
 const RATE_WINDOW_MS = 60_000;

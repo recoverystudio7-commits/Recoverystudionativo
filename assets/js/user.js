@@ -1105,7 +1105,7 @@
           <div class="profile-stats">
             <div><strong>${completed}</strong><span>Completadas</span></div>
             <div><strong>${user.credits}</strong><span>Saldo plan</span></div>
-            <div><strong>${U.monthKey(user.createdAt.slice(0, 10)) === U.monthKey(U.todayISO()) ? 'Nuevo' : 'Activo'}</strong><span>Miembro</span></div>
+            <div><strong>${user.createdAt && U.monthKey(user.createdAt.slice(0, 10)) === U.monthKey(U.todayISO()) ? 'Nuevo' : 'Activo'}</strong><span>Miembro</span></div>
           </div>
           <div class="profile-info">
             ${UI.detailRow('Teléfono', user.phone || '—')}
@@ -1233,12 +1233,24 @@
     };
     st().sessions.push(session);
     RS.DB.save();
+    try {
+      await RS.SupabaseSync.pushAppointment(session);
+    } catch (error) {
+      console.error('No se pudo sincronizar la reserva con Supabase:', error);
+      UI.toast('La reserva quedó guardada en este dispositivo, pero no se pudo compartir con el studio. ' + error.message, 'warning', 8000);
+    }
     RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${useCredit ? ' con crédito de plan' : ''}.`);
 
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
-    RS.data.bookingNotification(session, user, service, st().settings).catch((error) => {
-      console.error('No se pudieron enviar los correos de la reserva:', error);
-    });
+    RS.data.bookingNotification(session, user, service, st().settings)
+      .then((mail) => {
+        if (mail && mail.client && !mail.client.ok && mail.admin && !mail.admin.ok) {
+          UI.toast('La reserva quedó guardada, pero no pudimos enviar los correos de confirmación.', 'warning', 7000);
+        }
+      })
+      .catch((error) => {
+        console.error('No se pudieron enviar los correos de la reserva:', error);
+      });
 
     if (useCredit) {
       showBookingSuccess(session);

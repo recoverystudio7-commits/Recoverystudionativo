@@ -5,7 +5,8 @@ Aplicación web estática (HTML, CSS y JavaScript sin dependencias) para que cli
 Las **reseñas y calificaciones son compartidas** entre todos los visitantes mediante Supabase (con moderación previa), y el sitio incluye una página pública con los **beneficios del sauna húmedo**.
 
 - App online: `https://recoverystudio7-commits.github.io/Recoverystudionativo/`
-- Dominio objetivo: `https://www.recoverystudio.cl`
+- Dominio vivo: `https://www.recoverystudio.cl`
+- **Pasos pendientes en Supabase/Resend:** ver `supabase/INSTRUCCIONES.md` y `supabase/APLICAR_EN_SUPABASE.sql`.
 
 La identidad visual usa azul marino (`#0A2342`), azul de apoyo (`#123F70`), naranja (`#FF7A18`) y una interfaz clara, minimalista y responsive en español de Chile.
 
@@ -139,24 +140,28 @@ No hay frameworks, bundler ni dependencias de npm. Los módulos se cargan con et
 
 ## Integraciones externas
 
-- **Resend:** `recoverystudio.cl` aparece verificado en el panel. El CNAME `send` corresponde a recepción y no se necesita para notificaciones salientes. El MX y SPF raíz de Microsoft 365 deben permanecer sin cambios.
-- **Notificaciones por correo y WhatsApp:** todavía no están activas. La aplicación debe migrar primero las reservas, pagos y anulaciones a Supabase; después se deben enviar avisos desde una Edge Function con claves guardadas como secretos del proyecto, nunca desde JavaScript público.
-- La dirección planeada para las alertas es `recoverystudio7@gmail.com`, usando `notificaciones@recoverystudio.cl` como remitente de Resend.
+- **Resend:** el remitente es `notificaciones@recoverystudio.cl` y las alertas llegan a `recoverystudio7@gmail.com`. El CNAME `send` corresponde a recepción y no se necesita para notificaciones salientes. El MX y SPF raíz de Microsoft 365 deben permanecer sin cambios.
+- **Notificaciones por correo:** la app ya llama a la Edge Function `send-email` (Resend) para reservas, reagendamientos, cancelaciones, pagos, planes y nuevos registros. Cliente y administrador reciben copia. Falta desplegar la función y configurar `RESEND_API_KEY` como secreto; ver `supabase/INSTRUCCIONES.md`. Las claves nunca van en JavaScript público.
+- **Calendario:** enlaces privados de suscripción ICS por usuario y por administrador (`calendar-ics`), sin exponer datos de otros clientes.
 
 ---
 
 ## Persistencia y datos
 
 - **Estado principal:** `localStorage` bajo la clave `recoveryStudio.state.v1` (cuentas, reservas, pagos, planes, finanzas y configuración).
-- **Autenticación en curso:** las cuentas y contraseñas nuevas usan Supabase Auth; el perfil se consulta en Supabase y la sesión dura mientras la pestaña permanezca abierta. La administración requiere asignar `role = 'admin'` al perfil desde el panel Supabase; el registro público siempre crea clientes.
-- **Sesión y perfil:** sesión de Supabase en `sessionStorage`; la edición del perfil usa la función `update_own_profile` de `supabase/migrations/20261104232000_profile_self_service.sql`, aplicada y verificada en Supabase.
+- **Autenticación en curso:** las cuentas y contraseñas nuevas usan Supabase Auth; el perfil se consulta en Supabase y la sesión queda guardada en `localStorage` (persiste entre dispositivos y se renueva automáticamente). La administración requiere `role = 'admin'` en el perfil; el correo `recoverystudio7@gmail.com` se promueve automáticamente. El registro público siempre crea clientes.
+- **Registro incompleto:** si un correo ya aparece en **Supabase → Authentication → Users** pero no puede iniciar sesión, no vuelvas a registrarlo ni crees otra contraseña desde el panel. Comprueba que existan su fila en `public.profiles` y su cuenta en `public.client_accounts`; el trigger `on_auth_user_created_recovery_studio` y la migración `20261106150000_auth_profile_backfill.sql` las crean/reparan. Después de reparar el perfil, la persona inicia sesión con su propia contraseña o usa «¿Olvidaste tu clave?».
+- **Agenda compartida:** aplica `supabase/migrations/20261106190000_shared_sessions.sql` para que clientes puedan guardar reservas en `public.sessions`. El panel descarga perfiles y agenda al iniciar sesión y actualiza la agenda cada 30 segundos, avisando cuando recibe reservas nuevas. El cliente vuelve a intentar sincronizar sus reservas locales al iniciar sesión.
+- **Avisos por correo:** requieren la Edge Function `send-email` en Supabase. El endpoint respondió 404 en la última comprobación (función aún no desplegada); los avisos dentro del panel funcionan, pero el correo no se enviará hasta desplegarla y configurar Resend. Pasos en `supabase/INSTRUCCIONES.md`.
+- **Sincronización:** `assets/js/supabase-sync.js` sube y baja perfiles, reservas, pagos y saldos. El panel admin se actualiza solo cada 45 s (y al volver a la pestaña), además del botón **Sincronizar** en la barra superior. Los cambios remotos más recientes ganan sobre los locales.
+- **Sesión y perfil:** sesión de Supabase en `localStorage` con respaldo en `sessionStorage`; `RS.Supabase.ensureSession()` renueva el token antes de cada llamada. La edición del perfil usa la función `update_own_profile` de `supabase/migrations/20261104232000_profile_self_service.sql`.
 - **Reseñas:** se guardan en **Supabase** y son compartidas entre todos los navegadores. Solo se leen las que tienen `status = 'approved'`.
 - **Promociones y cápsulas:** se guardan en `public.discount_codes` y `public.video_capsules`. Ambas tablas tienen RLS activo; visitantes leen solo contenido activo y los cambios requieren un perfil administrador. La migración `supabase/migrations/20261104233000_marketing_content.sql` ya se aplicó y se verificó en Supabase.
 - **Fotos de progreso de la rutina:** el administrador puede agregar fotos de inicio y de fin; el cliente las ve en **Entrenamiento → Mi rutina**. Las pautas de perfiles de Supabase, incluidas sus imágenes comprimidas, se guardan en `public.client_routines` y quedan disponibles al iniciar sesión desde otro dispositivo. Las cuentas creadas solo en el almacenamiento local no se sincronizan.
 - **Club Recovery:** el premio se configura desde el panel y se comparte mediante `public.studio_settings`; por defecto es una sesión de sauna. El progreso se calcula a partir de las sesiones completadas visibles para la cuenta en el navegador; el canje es manual con el equipo y no agrega créditos automáticamente. Hasta migrar las reservas, el historial y el progreso no están sincronizados entre dispositivos.
 - **Asignación de planes:** el formulario de usuarios toma los planes y servicios activos desde el catálogo local del administrador. Al seleccionar uno, completa el saldo inicial con sus sesiones incluidas; ese saldo puede ajustarse manualmente.
 - **Esquema base de operaciones:** aplicado al proyecto Supabase el 4 de noviembre de 2026. Crea 14 tablas con RLS y carga los 7 servicios y la configuración inicial del studio. Se verificaron las tablas, esos datos iniciales y RLS de sesiones.
-- **Migración pendiente:** las cuentas locales antiguas, reservas, pagos, finanzas, agenda y demás operaciones todavía se guardan localmente. Además, el descuento no se valida contra el importe en servidor. No considerar la migración completa ni usar los montos promocionales como cobros definitivos hasta completar esos flujos.
+- **Migración pendiente:** perfiles, reservas, pagos y saldos ya se sincronizan con Supabase. Las finanzas, gastos, boletas, cotizaciones y rutinas especiales siguen en `localStorage`; el descuento no se valida contra el importe en servidor. No usar los montos promocionales como cobros definitivos. Requiere aplicar `supabase/APLICAR_EN_SUPABASE.sql` en el proyecto.
 - **Datos iniciales:** cuenta administradora, catálogo y horarios; sin usuarios ni actividad ficticia.
 - **Respaldos:** **Configuración → Descargar respaldo JSON**.
 
@@ -226,7 +231,7 @@ Después, en **GitHub → Settings → Pages → Custom domain**, escribe `www.r
 Esta versión es un **prototipo funcional del lado cliente**. Antes de usarla con datos reales de clientes y pagos, se recomienda migrar a una arquitectura con backend:
 
 - La autenticación, los roles y los permisos se validan en el navegador; un usuario con conocimientos técnicos puede modificarlos.
-- **Las reseñas ya son compartidas** mediante Supabase, pero las cuentas, reservas, pagos, planes y finanzas siguen en `localStorage`: no se sincronizan entre dispositivos ni tienen respaldo automático. Migrar esos módulos a Supabase es la siguiente etapa.
+- **Las reseñas, perfiles, reservas, pagos y saldos ya se comparten** mediante Supabase. Finanzas, gastos, boletas, cotizaciones y contenido de marketing siguen en `localStorage` y no se sincronizan entre dispositivos; migrar esos módulos es la siguiente etapa.
 - `localStorage` no está cifrado y los datos viven solo en el navegador/dispositivo.
 - Los comprobantes de transferencia se guardan como data URLs en el navegador; no se envían a un servidor ni sustituyen la validación bancaria.
 - El PIN y la contraseña protegen la interfaz, pero no reemplazan autenticación robusta del lado servidor (sesiones firmadas, rate limiting, 2FA real).
@@ -258,5 +263,5 @@ Esta versión es un **prototipo funcional del lado cliente**. Antes de usarla co
 
 ## Créditos
 
-Desarrollado para **Recovery Studio** · Santiago, Chile.
+Desarrollado para **Recovery Studio** · Gorbea, Región de la Araucanía, Chile.
 Entrena. Recupera. Rinde.
