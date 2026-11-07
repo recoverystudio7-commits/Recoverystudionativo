@@ -112,8 +112,10 @@ async function runBooking24h(dryRun: boolean) {
     if (await alreadySent(kind, refId, "email", scheduledFor)) { results.push({ refId, skipped: "duplicate" }); continue; }
     const when = fmtDateTimeCL(String(s.starts_at || ""));
     const serviceName = String(service.name || "tu sesión");
-    const subject = `Recordatorio: ${serviceName} mañana`;
-    const text = `Hola ${String(profile.full_name || "").trim() || ""},\n\nTe recordamos tu sesión en Recovery Studio:\n- Servicio: ${serviceName}\n- Fecha y hora: ${when}\n\nSi necesitas reagendar o cancelar, hazlo desde tu cuenta con la anticipación indicada en las políticas.\n\nRecovery Studio`;
+    const coach = String(s.coach || "Recovery Studio");
+    const name = String(profile.full_name || "").trim();
+    const subject = `Recordatorio: tu sesión en Recovery Studio es mañana`;
+    const text = `Hola ${name || ""},\n\nTe recordamos tu sesión en Recovery Studio:\n- Servicio: ${serviceName}\n- Fecha y hora: ${when}\n- Profesional: ${coach}\n\nSi necesitas reagendar o cancelar, hazlo desde tu cuenta con la anticipación indicada en las políticas.\n\n¿Necesitas ayuda? Escríbenos por WhatsApp o responde este correo.\n\nRecovery Studio`;
     if (dryRun) { results.push({ refId, email, dryRun: true, kind }); continue; }
     const mail = await sendResend(email, subject, text);
     const rec = await recordDispatch({
@@ -153,8 +155,14 @@ async function runPlanExpiry(daysBefore: number, dryRun: boolean) {
     if (!userId || !isEmail(email)) { results.push({ refId, skipped: "no-email" }); continue; }
     if (await alreadySent(kind, refId, "email", targetDate)) { results.push({ refId, skipped: "duplicate" }); continue; }
     const plan = String(a.plan_label || "tu plan");
-    const subject = daysBefore === 1 ? `Tu plan vence mañana` : `Tu plan vence en ${daysBefore} días`;
-    const text = `Hola ${String(profile.full_name || "").trim() || ""},\n\nTe avisamos que ${plan} tiene fecha de vencimiento el ${targetDate}.\nCréditos disponibles: ${Number(a.credits) || 0}.\n\nSi quieres, puedes agendar tus sesiones o renovar desde tu cuenta.\n\nRecovery Studio`;
+    const name = String(profile.full_name || "").trim();
+    const credits = Number(a.credits) || 0;
+    const subject = daysBefore === 1
+      ? `Tu plan en Recovery Studio vence mañana`
+      : `Tu plan en Recovery Studio vence en ${daysBefore} días`;
+    const text = daysBefore === 1
+      ? `Hola ${name || ""},\n\nTu plan (${plan}) vence el ${targetDate}.\nCréditos disponibles: ${credits}.\n\nAgenda tus sesiones o renueva desde tu cuenta cuando quieras.\n\nRecovery Studio`
+      : `Hola ${name || ""},\n\nTe avisamos que tu plan (${plan}) vence el ${targetDate}.\nCréditos disponibles: ${credits}.\n\nSi quieres, puedes agendar tus sesiones pendientes o renovar tu plan desde tu cuenta.\n\nRecovery Studio`;
     if (dryRun) { results.push({ refId, email, dryRun: true, kind }); continue; }
     const mail = await sendResend(email, subject, text);
     const rec = await recordDispatch({
