@@ -1,8 +1,16 @@
-# Recovery Studio · Pasos pendientes (sin tocar código)
+# Recovery Studio · Configuración de Supabase y Resend
 
-Todo el código de la web ya está listo. Faltan **4 ajustes en los paneles de
-Supabase y Resend**. Son solo copiar/pegar y activar interruptores; no hay que
-programar nada. Hazlos en este orden.
+> **Estado al 7 de noviembre de 2026: configuración COMPLETADA y probada.**
+> Ya se aplicó el SQL, se activó el registro sin confirmación de correo, se
+> crearon los 5 secretos y se desplegaron `send-email` y `calendar-ics`.
+> Se verificaron registro, reserva, pago, lectura desde el panel admin,
+> calendarios ICS y envío real de correos de reserva/reagendamiento/comprobante.
+> Este documento queda solo como referencia por si hay que repetir la
+> configuración en otro proyecto. Lo único pendiente es Google Login.
+
+Todo el código de la web ya está listo. Si tuvieras que repetir la
+configuración, estos son los **4 ajustes en los paneles de Supabase y Resend**.
+Son solo copiar/pegar y activar interruptores; no hay que programar nada.
 
 Proyecto de Supabase: **bkvjlpdkyjrfvvokqjsx**
 Panel: https://supabase.com/dashboard/project/bkvjlpdkyjrfvvokqjsx

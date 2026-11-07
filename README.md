@@ -6,7 +6,7 @@ Las **reseñas y calificaciones son compartidas** entre todos los visitantes med
 
 - App online: `https://recoverystudio7-commits.github.io/Recoverystudionativo/`
 - Dominio vivo: `https://www.recoverystudio.cl`
-- **Pasos pendientes en Supabase/Resend:** ver `supabase/INSTRUCCIONES.md` y `supabase/APLICAR_EN_SUPABASE.sql`.
+- **Backend configurado y probado:** SQL aplicado, registro sin confirmación de correo, Resend y las funciones `send-email`/`calendar-ics` activas. La guía queda en `supabase/INSTRUCCIONES.md`; el SQL reproducible está en `supabase/APLICAR_EN_SUPABASE.sql`.
 
 La identidad visual usa azul marino (`#0A2342`), azul de apoyo (`#123F70`), naranja (`#FF7A18`) y una interfaz clara, minimalista y responsive en español de Chile.
 
@@ -141,7 +141,7 @@ No hay frameworks, bundler ni dependencias de npm. Los módulos se cargan con et
 ## Integraciones externas
 
 - **Resend:** el remitente es `notificaciones@recoverystudio.cl` y las alertas llegan a `recoverystudio7@gmail.com`. El CNAME `send` corresponde a recepción y no se necesita para notificaciones salientes. El MX y SPF raíz de Microsoft 365 deben permanecer sin cambios.
-- **Notificaciones por correo:** la app ya llama a la Edge Function `send-email` (Resend) para reservas, reagendamientos, cancelaciones, pagos, planes y nuevos registros. Cliente y administrador reciben copia. Falta desplegar la función y configurar `RESEND_API_KEY` como secreto; ver `supabase/INSTRUCCIONES.md`. Las claves nunca van en JavaScript público.
+- **Notificaciones por correo:** la app llama a la Edge Function `send-email` (Resend) para reservas, reagendamientos, cancelaciones, pagos, planes y nuevos registros. Cliente y administrador reciben copia. La función y los secretos están desplegados y se verificó el envío real de reserva, reagendamiento y comprobante. Las claves nunca van en JavaScript público.
 - **Calendario:** enlaces privados de suscripción ICS por usuario y por administrador (`calendar-ics`), sin exponer datos de otros clientes.
 
 ---
@@ -152,7 +152,7 @@ No hay frameworks, bundler ni dependencias de npm. Los módulos se cargan con et
 - **Autenticación en curso:** las cuentas y contraseñas nuevas usan Supabase Auth; el perfil se consulta en Supabase y la sesión queda guardada en `localStorage` (persiste entre dispositivos y se renueva automáticamente). La administración requiere `role = 'admin'` en el perfil; el correo `recoverystudio7@gmail.com` se promueve automáticamente. El registro público siempre crea clientes.
 - **Registro incompleto:** si un correo ya aparece en **Supabase → Authentication → Users** pero no puede iniciar sesión, no vuelvas a registrarlo ni crees otra contraseña desde el panel. Comprueba que existan su fila en `public.profiles` y su cuenta en `public.client_accounts`; el trigger `on_auth_user_created_recovery_studio` y la migración `20261106150000_auth_profile_backfill.sql` las crean/reparan. Después de reparar el perfil, la persona inicia sesión con su propia contraseña o usa «¿Olvidaste tu clave?».
 - **Agenda compartida:** aplica `supabase/migrations/20261106190000_shared_sessions.sql` para que clientes puedan guardar reservas en `public.sessions`. El panel descarga perfiles y agenda al iniciar sesión y actualiza la agenda cada 30 segundos, avisando cuando recibe reservas nuevas. El cliente vuelve a intentar sincronizar sus reservas locales al iniciar sesión.
-- **Avisos por correo:** requieren la Edge Function `send-email` en Supabase. El endpoint respondió 404 en la última comprobación (función aún no desplegada); los avisos dentro del panel funcionan, pero el correo no se enviará hasta desplegarla y configurar Resend. Pasos en `supabase/INSTRUCCIONES.md`.
+- **Avisos por correo:** la Edge Function `send-email` está desplegada y verificada con Resend. Los avisos dentro del panel y los correos funcionan; los secretos quedan únicamente en Supabase. La guía de referencia está en `supabase/INSTRUCCIONES.md`.
 - **Sincronización:** `assets/js/supabase-sync.js` sube y baja perfiles, reservas, pagos y saldos. El panel admin se actualiza solo cada 45 s (y al volver a la pestaña), además del botón **Sincronizar** en la barra superior. Los cambios remotos más recientes ganan sobre los locales.
 - **Sesión y perfil:** sesión de Supabase en `localStorage` con respaldo en `sessionStorage`; `RS.Supabase.ensureSession()` renueva el token antes de cada llamada. La edición del perfil usa la función `update_own_profile` de `supabase/migrations/20261104232000_profile_self_service.sql`.
 - **Reseñas:** se guardan en **Supabase** y son compartidas entre todos los navegadores. Solo se leen las que tienen `status = 'approved'`.

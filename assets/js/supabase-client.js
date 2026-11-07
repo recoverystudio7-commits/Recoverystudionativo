@@ -133,6 +133,7 @@
   }
 
   RS.Supabase = {
+    config,
     request,
     readSession,
     writeSession,
