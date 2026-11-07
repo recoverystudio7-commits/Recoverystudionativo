@@ -1,12 +1,11 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v32';
+const CACHE = 'recovery-studio-v31';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './sitemap.xml',
   './robots.txt',
-  './assets/recoverylogo.png',
   './assets/icon.svg',
   './assets/css/styles.css?v=2',
   './assets/css/views.css?v=5',

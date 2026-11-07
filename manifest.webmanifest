@@ -10,16 +10,10 @@
   "theme_color": "#0A2342",
   "icons": [
     {
-      "src": "assets/recoverylogo.png",
-      "sizes": "1280x1133",
-      "type": "image/png",
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "assets/recoverylogo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }
