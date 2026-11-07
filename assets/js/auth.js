@@ -100,14 +100,15 @@
 
     /* ── Perfil: leer o crear si no existe (registro nuevo) ── */
     let rows = await RS.Supabase.request(
-      `/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=id,email,full_name,phone,goal,role,active`,
+      `/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=*`,
       { method: 'GET' },
       token
     );
     let profile = Array.isArray(rows) ? rows[0] : null;
     if (!profile) {
-      const metaName = authUser.user_meta_data && authUser.user_meta_data.full_name ? authUser.user_meta_data.full_name : '';
-      const metaPhone = authUser.user_meta_data && authUser.user_meta_data.phone ? authUser.user_meta_data.phone : '';
+      const meta = authUser.user_metadata || authUser.user_meta_data || {};
+      const metaName = meta.full_name || meta.name || '';
+      const metaPhone = meta.phone || '';
       const created = await RS.Supabase.request('/rest/v1/profiles', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
@@ -129,24 +130,27 @@
 
     /* ── Cuenta de cliente: leer o crear con saldo 0 ── */
     const accounts = await RS.Supabase.request(
-      `/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(authUser.id)}&select=credits,plan_label`,
+      `/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(authUser.id)}&select=*`,
       { method: 'GET' },
       token
     );
     let account = Array.isArray(accounts) ? accounts[0] : null;
     if (!account) {
-      const createdAcct = await RS.Supabase.request('/rest/v1/client_accounts', {
-        method: 'POST',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({
-          user_id: authUser.id,
-          credits: 0,
-          plan_label: null,
-          plan_start: null,
-          plan_expires: null,
-        }),
-      }, token);
-      account = Array.isArray(createdAcct) ? createdAcct[0] : createdAcct;
+      try {
+        const createdAcct = await RS.Supabase.request('/rest/v1/client_accounts', {
+          method: 'POST',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({
+            user_id: authUser.id,
+            credits: 0,
+            plan_label: '',
+          }),
+        }, token);
+        account = Array.isArray(createdAcct) ? createdAcct[0] : createdAcct;
+      } catch (accountError) {
+        console.warn('No se pudo crear la cuenta de cliente; se usará saldo 0:', accountError.message);
+        account = { credits: 0, plan_label: '' };
+      }
     }
 
     let user = RS.data.getUser(authUser.id);
@@ -185,6 +189,11 @@
     }
     const user = await loadRemoteProfile(authUser);
     startSession(user, RS.Supabase.readSession());
+    try {
+      await RS.SupabaseSync.pull();
+    } catch (error) {
+      console.warn('No se pudo sincronizar al restaurar la sesión:', error.message);
+    }
     return currentSession;
   }
 
@@ -461,13 +470,17 @@
       } catch (e) {
         /* La sincronización inicial no bloquea el ingreso. */
       }
+      if (RS.App && RS.App.startSync) RS.App.startSync();
       return { ok: true, needsPin: user.role === 'admin', user };
     } catch (error) {
       supabaseSession = null;
       RS.Supabase.writeSession(null);
-      const message = /invalid login credentials/i.test(error.message)
-        ? 'El correo o la contraseña no son correctos.'
-        : error.message;
+      let message = error.message;
+      if (/invalid login credentials/i.test(message)) {
+        message = 'El correo o la contraseña no son correctos.';
+      } else if (/email not confirmed/i.test(message)) {
+        message = 'Tu cuenta existe, pero el correo aún no está confirmado. Escríbenos por WhatsApp para activarla o revisa el enlace de confirmación en tu correo.';
+      }
       return { ok: false, error: message };
     }
   }
@@ -622,6 +635,71 @@
     </div>`;
   }
 
+  RS.actions['google-login'] = () => startGoogleLogin();
+
+  /* --------------------------- inicio de sesión --------------------------- */
+
+  let googleEnabled = false;
+
+  async function loadProviders() {
+    try {
+      const settings = await RS.Supabase.request('/auth/v1/settings', { method: 'GET' });
+      googleEnabled = Boolean(settings && settings.external && settings.external.google);
+    } catch (error) {
+      googleEnabled = false;
+    }
+    RS.Auth.googleEnabled = googleEnabled;
+    return googleEnabled;
+  }
+
+  function consumeOAuthRedirect() {
+    const raw = location.hash || '';
+    if (!raw) return false;
+    const params = new URLSearchParams(raw.replace(/^#/, ''));
+    if (params.get('error')) {
+      const message = params.get('error_description') || 'No pudimos completar el ingreso con Google.';
+      history.replaceState(null, '', location.pathname + location.search);
+      setTimeout(() => UI.toast(message, 'error', 7000), 400);
+      return false;
+    }
+    const access = params.get('access_token');
+    if (!access) return false;
+    const expiresIn = Number(params.get('expires_in')) || 3600;
+    RS.Supabase.writeSession({
+      access_token: access,
+      refresh_token: params.get('refresh_token') || '',
+      token_type: params.get('token_type') || 'bearer',
+      expires_in: expiresIn,
+      expires_at: Math.floor(Date.now() / 1000) + expiresIn,
+    });
+    history.replaceState(null, '', location.pathname + location.search);
+    return true;
+  }
+
+  function startGoogleLogin() {
+    const config = RS.SupabaseConfig;
+    if (!config || !config.url) {
+      UI.toast('Supabase no está configurado.', 'error');
+      return;
+    }
+    if (!googleEnabled) {
+      UI.toast('El ingreso con Google aún no está habilitado. Usa tu correo y contraseña.', 'info', 6000);
+      return;
+    }
+    const redirect = `${location.origin}${location.pathname}`;
+    const url = `${config.url.replace(/\/$/, '')}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;
+    location.href = url;
+  }
+
+  function googleButton() {
+    if (!RS.Auth.googleEnabled) return '';
+    return `<div class="auth-divider"><span>o</span></div>
+      <button type="button" class="btn btn-outline btn-block" data-action="google-login">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+        Continuar con Google
+      </button>`;
+  }
+
   function renderLoginForm() {
     return `<div class="auth-form-wrap">
       <div class="auth-heading">
@@ -651,6 +729,7 @@
         </div>
         <button class="btn btn-primary btn-block btn-lg" type="submit" data-login-submit>Ingresar a mi cuenta ${UI.icon('arrow-right', 18)}</button>
       </form>
+      ${googleButton()}
     </div>`;
   }
 
@@ -686,6 +765,7 @@
         </div>
         <button class="btn btn-accent btn-block btn-lg" type="submit" data-register-submit>Crear mi cuenta ${UI.icon('arrow-right', 18)}</button>
       </form>
+      ${googleButton()}
       <div class="auth-divider"><span>¿Prefieres que te inscribamos?</span></div>
       <a class="btn btn-outline btn-block" href="https://wa.me/${RS.BRAND.whatsapp}?text=${encodeURIComponent('Hola Recovery Studio, quiero inscribirme y agendar mi primera evaluación.')}" target="_blank" rel="noopener">${UI.icon('whatsapp', 18)} Escríbenos por WhatsApp</a>
     </div>`;
@@ -967,6 +1047,7 @@
         RS.Supabase.writeSession(result);
         const user = await loadRemoteProfile(result.user);
         startSession(user, result);
+        if (RS.App && RS.App.startSync) RS.App.startSync();
         initActivity();
         RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
         // Notificación al admin por correo (nuevo registro)
@@ -991,6 +1072,7 @@
           RS.Supabase.writeSession(loginResult);
           const user = await loadRemoteProfile(loginResult.user);
           startSession(user, loginResult);
+          if (RS.App && RS.App.startSync) RS.App.startSync();
           initActivity();
           RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
           // Notificación al admin por correo (nuevo registro)
@@ -1011,7 +1093,7 @@
         // Si falla, continúa al mensaje de confirmación pendiente abajo
       }
       setLoading(submitter, false);
-      UI.toast('Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.', 'success', 8000);
+      UI.toast('Tu cuenta fue creada, pero este proyecto exige confirmar el correo antes de ingresar. Revisa tu bandeja (y spam). Si no llega el correo, escríbenos por WhatsApp para activarla.', 'info', 12000);
       RS.ui.authTab = 'login';
       RS.App.render(true);
     } catch (error) {
@@ -1120,5 +1202,9 @@
     renderQuoteThanks,
     clearSession,
     quoteEstimate,
+    loadProviders,
+    consumeOAuthRedirect,
+    startGoogleLogin,
+    googleEnabled: false,
   };
 })();

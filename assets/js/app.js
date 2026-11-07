@@ -156,8 +156,9 @@
         <strong>${role === 'admin' ? 'Panel de administración' : 'Mi cuenta'}</strong>
       </div>
       <div class="topbar-actions">
-        <span class="local-chip" title="Tu cuenta y reservas se guardan en este navegador.">${UI.icon('sparkles', 13)} Guardado local</span>
+        <span class="local-chip" title="Tus datos se sincronizan con la nube y se actualizan automáticamente.">${UI.icon('refresh', 13)} Sincronizado</span>
         <a class="icon-btn topbar-help" href="${RS.data.whatsappUrl('Hola Recovery Studio, necesito ayuda.')}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${UI.icon('whatsapp', 19)}</a>
+        <button class="icon-btn" type="button" data-action="sync-now" title="Sincronizar datos con la nube" aria-label="Sincronizar datos con la nube">${UI.icon('refresh', 19)}</button>
         <a class="icon-btn topbar-bell" href="#/${notificationRoute}" title="Notificaciones" aria-label="Notificaciones">${UI.icon('bell', 19)}${badge ? `<span class="bell-badge">${badge}</span>` : ''}</a>
         <a class="topbar-user" href="#/${role === 'admin' ? 'admin/seguridad' : 'perfil'}" title="Mi cuenta">
           ${UI.avatar(user ? user.name : 'Usuario', 36)}
@@ -443,16 +444,89 @@
     });
   };
 
+  function modalIsOpen() {
+    const root = document.getElementById('modal-root');
+    return Boolean(root && root.childElementCount);
+  }
+
+  function refreshAfterSync(result) {
+    if (!result || !result.ok || !result.merged) return;
+    const route = currentRoute();
+    UI.toast(`${result.merged} dato${result.merged === 1 ? '' : 's'} nuevo${result.merged === 1 ? '' : 's'} sincronizado${result.merged === 1 ? '' : 's'}.`, 'info', 3500);
+    if (modalIsOpen()) return;
+    const safeToRefresh = route.indexOf('admin') === 0 || ['inicio', 'reservas', 'pagos', 'perfil'].indexOf(route) !== -1;
+    if (safeToRefresh) render(false);
+  }
+
+  RS.actions['sync-now'] = async (el) => {
+    if (!RS.SupabaseSync || !RS.SupabaseSync.configured()) {
+      UI.toast('Inicia sesión con tu correo para sincronizar tus datos.', 'info');
+      return;
+    }
+    if (el) el.disabled = true;
+    try {
+      const result = await RS.SupabaseSync.syncNow();
+      render(false);
+      if (result && result.ok) {
+        UI.toast(result.merged ? `Sincronización completa: ${result.merged} cambio(s).` : 'Todo está al día.', 'success', 3000);
+      } else {
+        UI.toast('No pudimos sincronizar. Revisa tu conexión e inténtalo nuevamente.', 'error', 5000);
+      }
+    } catch (error) {
+      UI.toast(error.message || 'No pudimos sincronizar los datos.', 'error', 6000);
+    } finally {
+      if (el) el.disabled = false;
+    }
+  };
+
+  RS.actions['calendar-subscribe'] = async () => {
+    const user = RS.Auth.getUser();
+    if (!user) {
+      UI.toast('Ingresa a tu cuenta para ver tu calendario.', 'error');
+      return;
+    }
+    try {
+      UI.toast('Generando tu calendario privado…', 'info', 1800);
+      const feed = await RS.data.calendarFeedUrl(user);
+      UI.modal({
+        title: 'Tu calendario privado',
+        subtitle: 'Tus sesiones agendadas se actualizarán solas en Google Calendar.',
+        size: 'sm',
+        body: `<div class="callout callout-blue">${UI.icon('calendar', 17)}<span>Este enlace es <strong>privado</strong>. No lo compartas: quien lo tenga puede ver tus horas.</span></div>
+          <div class="field"><label for="calendar-feed">Enlace de suscripción</label><input class="input" id="calendar-feed" readonly value="${U.esc(feed.url)}"></div>
+          <ol class="calendar-steps">
+            <li>Abre Google Calendar en tu computador.</li>
+            <li>En “Otros calendarios”, elige <strong>Añadir por URL</strong>.</li>
+            <li>Pega el enlace y confirma.</li>
+          </ol>
+          <p class="form-hint">${UI.icon('info', 14)} También funciona en Apple Calendario y Outlook con el enlace <code>webcal://</code>.</p>`,
+        footer: `<button class="btn btn-ghost" data-action="copy" data-copy="${U.esc(feed.url)}">${UI.icon('copy', 15)} Copiar enlace</button>
+          <a class="btn btn-primary" href="${U.esc(feed.google)}" target="_blank" rel="noopener">${UI.icon('calendar', 16)} Abrir Google Calendar</a>`,
+      });
+    } catch (error) {
+      UI.toast(error.message || 'No pudimos generar tu calendario.', 'error', 7000);
+    }
+  };
+
+  function startSync() {
+    if (RS.SupabaseSync && RS.SupabaseSync.configured()) {
+      RS.SupabaseSync.startAutoSync(refreshAfterSync, 45000);
+    }
+  }
+
   /* --------------------------------- inicio -------------------------------- */
 
   async function boot() {
     try {
       await RS.DB.init();
+      if (RS.Auth.consumeOAuthRedirect) RS.Auth.consumeOAuthRedirect();
+      if (RS.Auth.loadProviders) await RS.Auth.loadProviders();
       await RS.Auth.restoreSession();
       RS.ui = RS.ui || {};
       await RS.TrainingRoutines.load();
       await RS.VideoContent.load();
       RS.Auth.initActivity();
+      startSync();
       document.addEventListener('click', onDocumentClick);
       document.addEventListener('submit', onDocumentSubmit);
       document.addEventListener('change', onDocumentChange);
@@ -481,6 +555,7 @@
     currentRoute,
     boot,
     hardReload,
+    startSync,
   };
 
   if (document.readyState === 'loading') {

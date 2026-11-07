@@ -17,7 +17,7 @@
 
   function readSession() {
     try {
-      const raw = sessionStorage.getItem(AUTH_STORAGE_KEY);
+      const raw = localStorage.getItem(AUTH_STORAGE_KEY) || sessionStorage.getItem(AUTH_STORAGE_KEY);
       return raw ? JSON.parse(raw) : null;
     } catch (error) {
       throw new Error('No pudimos leer la sesión segura del navegador.');
@@ -26,8 +26,13 @@
 
   function writeSession(session) {
     try {
-      if (session) sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-      else sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      if (session) {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+        sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      } else {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      }
     } catch (error) {
       throw new Error('No pudimos guardar la sesión. Habilita el almacenamiento del navegador e inténtalo de nuevo.');
     }
@@ -78,6 +83,25 @@
     return refreshed;
   }
 
+  /* Devuelve una sesión válida; renueva el token si está por vencer. */
+  async function ensureSession() {
+    let session = readSession();
+    if (!session || !session.access_token) return null;
+    const expiresAt = Number(session.expires_at) || 0;
+    if (expiresAt && expiresAt * 1000 < Date.now() + 120000 && session.refresh_token) {
+      try {
+        session = await refreshSession(session);
+      } catch (error) {
+        if (error.status === 400 || error.status === 401) {
+          writeSession(null);
+          return null;
+        }
+        throw error;
+      }
+    }
+    return session;
+  }
+
   async function getUser() {
     const session = readSession();
     if (!session || !session.access_token) return null;
@@ -113,6 +137,7 @@
     readSession,
     writeSession,
     refreshSession,
+    ensureSession,
     auth: {
       signInWithPassword(email, password) {
         return request('/auth/v1/token?grant_type=password', {

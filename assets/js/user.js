@@ -593,7 +593,10 @@
     return `<div class="view">
       <div class="page-head">
         <div><span class="eyebrow">Mi agenda</span><h1 class="page-title">Mis reservas</h1><p class="page-sub">Gestiona tus sesiones y revisa tu historial.</p></div>
-        <a class="btn btn-accent" href="#/agendar">${UI.icon('plus', 17)} Nueva reserva</a>
+        <div class="page-actions">
+          <button class="btn btn-outline" data-action="calendar-subscribe">${UI.icon('calendar', 16)} Mi calendario</button>
+          <a class="btn btn-accent" href="#/agendar">${UI.icon('plus', 17)} Nueva reserva</a>
+        </div>
       </div>
 
       <div class="callout callout-orange">
@@ -673,7 +676,7 @@
       }
     };
     dateInput.addEventListener('change', refresh);
-    root.querySelector('[data-res-submit]').addEventListener('click', () => {
+    root.querySelector('[data-res-submit]').addEventListener('click', async () => {
       const date = dateInput.value;
       const time = timeSelect.value;
       if (!date || !time) {
@@ -690,11 +693,16 @@
         UI.toast(`El nuevo horario debe tener al menos ${policy} h de anticipación.`, 'error');
         return;
       }
+      const previous = { date: session.date, time: session.time };
       session.date = date;
       session.time = time;
       session.rescheduledAt = new Date().toISOString();
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión reagendada', `${service ? service.name : 'Sesión'} movida a ${U.fmtDate(date, 'long')} ${time} h.`);
+      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+      RS.data.rescheduleNotification(session, me(), service, st().settings, previous).catch((error) => {
+        console.error('No se pudieron enviar los correos del reagendamiento:', error);
+      });
       UI.closeModal();
       UI.toast('Sesión reagendada correctamente.', 'success');
       RS.App.render(true);
@@ -724,7 +732,7 @@
       okText: 'Sí, cancelar',
       cancelText: 'Mantener sesión',
       danger: true,
-    }).then((ok) => {
+    }).then(async (ok) => {
       if (!ok) return;
       session.status = 'cancelada';
       session.cancelledAt = new Date().toISOString();
@@ -739,15 +747,14 @@
       }
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión cancelada', `${RS.data.serviceName(session.serviceId)} del ${U.fmtDate(session.date, 'long')} ${session.time} h.`);
-      // Notificación al admin por correo (cliente cancela sesión)
+      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
       try {
         const user = RS.data.getUser(session.userId);
-        await RS.data.sendAdminNotification(
-          `Sesión cancelada por el cliente · ${user ? user.name : 'Cliente'}`,
-          `Un cliente canceló su sesión:\n\n• Cliente: ${user ? user.name : 'N/D'} (${user ? user.email : 'N/D'})\n• Servicio: ${RS.data.serviceName(session.serviceId)}\n• Fecha: ${U.fmtDate(session.date, 'long')}\n• Hora: ${session.time}\n• Sesión devuelta al plan: ${session.payment === 'plan' ? 'Sí' : 'No'}\n\nIngresa al panel de admin para revisar.`
-        );
+        if (user) {
+          await RS.data.cancellationNotification(session, user, RS.data.getService(session.serviceId), st().settings, false);
+        }
       } catch (err) {
-        console.error('Notificación admin (cancelar sesión cliente) falló:', err);
+        console.error('Notificación de cancelación falló:', err);
       }
       UI.toast('Tu sesión fue cancelada. El cupo quedó liberado.', 'success');
       RS.App.render(true);
@@ -1195,7 +1202,7 @@
     if (btn) btn.disabled = !(b.time && b.policy);
   };
 
-  RS.actions['book-confirm'] = () => {
+  RS.actions['book-confirm'] = async () => {
     const user = me();
     const b = bookingState();
     const service = RS.data.getService(b.serviceId);
@@ -1227,6 +1234,11 @@
     st().sessions.push(session);
     RS.DB.save();
     RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${useCredit ? ' con crédito de plan' : ''}.`);
+
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+    RS.data.bookingNotification(session, user, service, st().settings).catch((error) => {
+      console.error('No se pudieron enviar los correos de la reserva:', error);
+    });
 
     if (useCredit) {
       showBookingSuccess(session);
@@ -1343,6 +1355,10 @@
       note: checkout.credits ? `${checkout.credits} sesiones al aprobar el pago.` : '',
     });
     RS.data.addAudit(user.name, 'Orden de pago creada', `${checkout.concept} · ${U.fmtMoney(checkout.amount)} · ${payment.ref}.`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+    RS.data.planPurchaseNotification(payment, user).catch((error) => {
+      console.error('No se pudieron enviar los correos de la compra:', error);
+    });
     RS.ui.planCart = {};
     openPaymentModal(payment, {
       title: 'Orden de pago generada',
@@ -1466,6 +1482,13 @@
           return;
         }
         RS.data.addAudit(me().name, 'Comprobante adjuntado', `${payment.ref} · ${payment.concept}.`);
+        RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+        const owner = RS.data.getUser(payment.userId);
+        if (owner) {
+          RS.data.paymentProofNotification(payment, owner).catch((error) => {
+            console.error('No se pudo notificar el comprobante:', error);
+          });
+        }
         UI.toast('Comprobante adjuntado. Tu pago quedó en revisión.', 'success');
         UI.closeModal();
         RS.App.render();

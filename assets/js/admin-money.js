@@ -24,8 +24,9 @@
 
   /* --------------------------------- pagos --------------------------------- */
 
-  function applyApproval(payment) {
+  async function applyApproval(payment) {
     if (!payment || payment.status === 'aprobado') return;
+    const targetUser = RS.data.getUser(payment.userId);
     payment.status = 'aprobado';
     payment.approvedAt = new Date().toISOString();
     payment.approvedBy = me().name;
@@ -54,19 +55,22 @@
       'Pago aprobado',
       `${payment.ref} · ${payment.userName} · ${U.fmtMoney(payment.amount)}${payment.creditsAdded ? ` · +${payment.creditsAdded} sesiones` : ''}.`
     );
-    // Notificación al admin por correo (pago aprobado)
+    if (targetUser) {
+      RS.SupabaseSync.pushAccount(targetUser.id).catch((error) => {
+        console.warn('No se pudo sincronizar el saldo del cliente:', error.message);
+      });
+    }
+    // Correo al cliente + notificación al admin (pago aprobado)
     try {
-      await RS.data.sendAdminNotification(
-        `Pago aprobado · ${payment.ref}`,
-        `Se aprobó un pago:\n\n• Usuario: ${payment.userName}\n• Referencia: ${payment.ref}\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Créditos agregados: ${payment.creditsAdded || 0}\n${payment.sessionId ? '• Sesión vinculada: sí' : ''}\n\nIngresa al panel de admin para revisar.`
-      );
+      const mailUser = targetUser || { name: payment.userName || 'Cliente', email: '', credits: 0 };
+      await RS.data.paymentApprovedNotification(payment, mailUser);
     } catch (err) {
-      console.error('Notificación admin (pago aprobado) falló:', err);
+      console.error('Notificación de pago aprobado falló:', err);
     }
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
   }
 
-  function rejectPayment(payment, reason) {
+  async function rejectPayment(payment, reason) {
     payment.status = 'rechazado';
     payment.note = reason || 'Comprobante rechazado por el administrador.';
     payment.rejectedAt = new Date().toISOString();
@@ -79,14 +83,12 @@
     }
     RS.DB.save();
     RS.data.addAudit(me().name, 'Pago rechazado', `${payment.ref} · ${payment.userName} · ${reason || 'Sin motivo especificado'}.`);
-    // Notificación al admin por correo (pago rechazado)
+    // Correo al cliente + notificación al admin (pago rechazado)
     try {
-      await RS.data.sendAdminNotification(
-        `Pago rechazado · ${payment.ref}`,
-        `Se rechazó un pago:\n\n• Usuario: ${payment.userName}\n• Referencia: ${payment.ref}\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Motivo: ${reason || 'Sin motivo especificado'}\n\nIngresa al panel de admin para revisar.`
-      );
+      const mailUser = RS.data.getUser(payment.userId) || { name: payment.userName || 'Cliente', email: '' };
+      await RS.data.paymentRejectedNotification(payment, mailUser, reason);
     } catch (err) {
-      console.error('Notificación admin (pago rechazado) falló:', err);
+      console.error('Notificación de pago rechazado falló:', err);
     }
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
   }
@@ -185,9 +187,9 @@
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-danger" data-reject-confirm>${UI.icon('x', 16)} Rechazar pago</button>`,
     });
     const root = document.getElementById('modal-root');
-    root.querySelector('[data-reject-confirm]').addEventListener('click', () => {
+    root.querySelector('[data-reject-confirm]').addEventListener('click', async () => {
       const reason = root.querySelector('#reject-reason').value.trim();
-      rejectPayment(payment, reason);
+      await rejectPayment(payment, reason);
       UI.closeModal();
       UI.toast('Pago rechazado. El usuario verá el motivo.', 'info');
       RS.App.render(true);
@@ -697,7 +699,7 @@
       okText: 'Aprobar pago',
     });
     if (!ok) return;
-    applyApproval(payment);
+    await applyApproval(payment);
     UI.closeModal();
     UI.toast('Pago aprobado. El usuario fue notificado en su panel.', 'success');
     RS.App.render(true);

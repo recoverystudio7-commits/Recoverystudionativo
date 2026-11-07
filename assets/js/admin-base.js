@@ -305,6 +305,7 @@
       <div class="page-head">
         <div><span class="eyebrow">Agenda</span><h1 class="page-title">Sesiones del studio</h1><p class="page-sub">Organiza, reagenda y gestiona la agenda diaria.</p></div>
         <div class="page-actions">
+          <button class="btn btn-outline" data-action="calendar-subscribe">${UI.icon('calendar', 16)} Calendario del studio</button>
           <button class="btn btn-outline" data-action="agenda-today">${UI.icon('calendar', 16)} Hoy</button>
           <button class="btn btn-accent" data-action="admin-new-session" data-date="${selected}">${UI.icon('plus', 17)} Nueva sesión</button>
         </div>
@@ -457,7 +458,7 @@
     }
   }
 
-  RS.forms['admin-session'] = (form) => {
+  RS.forms['admin-session'] = async (form) => {
     const values = {
       id: form.id.value,
       userId: form.userId.value,
@@ -526,9 +527,16 @@
         const previousUser = RS.data.getUser(session.userId);
         if (previousUser) previousUser.credits = Math.max(0, Number(previousUser.credits) || 0) + 1;
       }
+      const previous = { date: session.date, time: session.time };
       Object.assign(session, values, { coach: 'Daniel Barrueto' });
       if (usesPlan) user.credits = Math.max(0, Number(user.credits) || 0) - 1;
       RS.data.addAudit(me().name, 'Sesión modificada', `${RS.data.serviceName(values.serviceId)} de ${user.name} · ${values.date} ${values.time}${usesPlan ? ` · saldo del plan: ${user.credits}` : ''}.`);
+      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+      if (previous.date !== session.date || previous.time !== session.time) {
+        RS.data.rescheduleNotification(session, user, RS.data.getService(session.serviceId), st().settings, previous).catch((error) => {
+          console.error('No se pudo notificar el reagendamiento:', error);
+        });
+      }
       UI.toast('Sesión actualizada.', 'success');
     } else {
       const usesPlan = values.payment === 'plan' && values.status !== 'cancelada';
@@ -539,7 +547,7 @@
         }
         return;
       }
-      st().sessions.push({
+      const session = {
         id: U.uid('ses'),
         userId: values.userId,
         serviceId: values.serviceId,
@@ -551,36 +559,17 @@
         coach: 'Daniel Barrueto',
         createdAt: new Date().toISOString(),
         createdBy: 'admin',
-      });
+      };
+      st().sessions.push(session);
       if (usesPlan) user.credits = Math.max(0, Number(user.credits) || 0) - 1;
       RS.data.addAudit(me().name, 'Sesión creada', `${RS.data.serviceName(values.serviceId)} para ${user.name} · ${values.date} ${values.time}${usesPlan ? ` · 1 sesión del plan (saldo ${user.credits})` : ''}.`);
       UI.toast(usesPlan ? 'Sesión creada y descontada del plan.' : 'Sesión creada correctamente.', 'success');
 
-      // Correo de confirmación al cliente vía Resend (Edge Function de Supabase)
-      if (user.email) {
-        const service = RS.data.getService(values.serviceId);
-        const settings = st().settings;
-        const email = RS.data.appointmentConfirmationEmail(session, user, service, settings);
-        try {
-          await RS.data.sendAppointmentEmail(email.to, email.subject, email.body);
-          UI.toast('Correo de confirmación enviado al cliente.', 'success', 5000);
-        } catch (err) {
-          console.error(err);
-          UI.toast('No se pudo enviar el correo automáticamente. Abre tu cliente de correo.', 'warning', 5000);
-          const mailtoUrl = `mailto:${encodeURIComponent(email.to)}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`;
-          window.location.href = mailtoUrl;
-        }
-      }
-
-      // Notificación al admin por correo (nueva sesión agendada)
-      try {
-        await RS.data.sendAdminNotification(
-          `Nueva sesión agendada · ${user.name}`,
-          `Se agendó una nueva sesión:\n\n• Cliente: ${user.name} (${user.email})\n• Servicio: ${RS.data.serviceName(values.serviceId)}\n• Fecha: ${U.fmtDate(values.date, 'long')}\n• Hora: ${values.time}\n• Pago: ${values.payment}\n• Estado: ${values.status}\n\nIngresa al panel de admin para revisar la agenda.`
-        );
-      } catch (err) {
-        console.error('Notificación admin (nueva sesión) falló:', err);
-      }
+      // Correo al cliente + notificación al admin (Resend vía Edge Function)
+      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+      RS.data.bookingNotification(session, user, RS.data.getService(values.serviceId), st().settings).catch((err) => {
+        console.error('No se pudieron enviar los correos de la sesión:', err);
+      });
     }
     RS.DB.save();
     UI.closeModal();
@@ -662,7 +651,7 @@
       message: `Se cancelará la sesión de ${U.fmtDate(session.date, 'long')} a las ${session.time} h. El cupo quedará disponible.${refundsPlan ? ' Se devolverá 1 sesión al plan del cliente.' : ''}`,
       okText: 'Cancelar sesión',
       danger: true,
-    }).then((ok) => {
+    }).then(async (ok) => {
       if (!ok) return;
       session.status = 'cancelada';
       if (refundsPlan) {
@@ -671,17 +660,15 @@
       }
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión cancelada (admin)', `${RS.data.serviceName(session.serviceId)} · ${session.date} ${session.time}${refundsPlan ? ' · sesión devuelta al plan' : ''}.`);
-      // Notificación al admin por correo (sesión cancelada por admin)
+      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
       try {
         const planUser = RS.data.getUser(session.userId);
-        await RS.data.sendAdminNotification(
-          `Sesión cancelada · ${planUser ? planUser.name : 'Cliente'}`,
-          `Se canceló una sesión:\n\n• Cliente: ${planUser ? planUser.name : 'N/D'} (${planUser ? planUser.email : 'N/D'})\n• Servicio: ${RS.data.serviceName(session.serviceId)}\n• Fecha: ${U.fmtDate(session.date, 'long')}\n• Hora: ${session.time}\n• Sesión devuelta al plan: ${refundsPlan ? 'Sí' : 'No'}\n\nIngresa al panel de admin para revisar.`
-        );
+        if (planUser) {
+          await RS.data.cancellationNotification(session, planUser, RS.data.getService(session.serviceId), st().settings, true);
+        }
       } catch (err) {
-        console.error('Notificación admin (cancelar sesión) falló:', err);
+        console.error('Notificación de cancelación falló:', err);
       }
-      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
       UI.toast('Sesión cancelada.', 'info');
       RS.App.render();
     });

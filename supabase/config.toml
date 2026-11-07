@@ -1,0 +1,8 @@
+# Configuración de Supabase CLI para Recovery Studio
+project_id = "bkvjlpdkyjrfvvokqjsx"
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.calendar-ics]
+verify_jwt = false
