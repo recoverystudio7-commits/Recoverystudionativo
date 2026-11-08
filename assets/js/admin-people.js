@@ -892,10 +892,27 @@
       danger: true,
     });
     if (!ok) return;
+
+    const supabaseId = RS.SupabaseSync && RS.SupabaseSync.supabaseUserId ? RS.SupabaseSync.supabaseUserId(user) : null;
+    if (supabaseId) {
+      try {
+        const session = RS.Supabase.readSession();
+        if (!session || !session.access_token) throw new Error('Inicia sesión como admin para eliminar en el servidor.');
+        await RS.Supabase.request('/functions/v1/delete-user', {
+          method: 'POST',
+          body: JSON.stringify({ userId: supabaseId }),
+        }, session.access_token);
+      } catch (error) {
+        UI.toast(error && error.message ? error.message : 'No se pudo eliminar en el servidor. No se eliminó localmente.', 'error');
+        return;
+      }
+    }
+
     st().users = st().users.filter((u) => u.id !== user.id);
+    st().sessions = (st().sessions || []).filter((s) => s.userId !== user.id);
+    st().payments = (st().payments || []).filter((p) => p.userId !== user.id);
     RS.DB.save();
     RS.data.addAudit(me().name, 'Usuario eliminado', `${user.name} (${user.email}).`);
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     UI.closeModal();
     UI.toast('Usuario eliminado.', 'success');
     RS.App.render(true);
