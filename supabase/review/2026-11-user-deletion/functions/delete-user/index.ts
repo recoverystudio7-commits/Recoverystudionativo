@@ -119,7 +119,9 @@ serve(async (req) => {
     { headers: serviceHeaders() },
   );
   if (!profileRes.ok) {
-    return json({ error: "No se pudo verificar el usuario." }, 500, origin);
+    const errText = await profileRes.text();
+    console.error("profile check failed:", profileRes.status, errText.slice(0, 300));
+    return json({ error: "No se pudo verificar el usuario.", detail: errText.slice(0, 200) }, 500, origin);
   }
   const profiles = await profileRes.json();
   if (!Array.isArray(profiles) || !profiles.length) {
