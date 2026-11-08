@@ -8,7 +8,7 @@
   const UI = RS.UI;
 
   // Clave pública VAPID (generada; la privada NUNCA en frontend)
-  const VAPID_PUBLIC_KEY = 'BLTaGBdzBzCgK-msTtvoEvv8AAXk5C4LmxWIY0p_81xiML9b1NEXvQv_MD-mU7u74hbUJ8zEWtIvQrYNmKb0GWw';
+  const VAPID_PUBLIC_KEY = 'BK179WYPSfp26qiP4-BajXafIoRSJSb1F-VPfE3JsT1ZEDKlakReW2MVsw5KpqtNW0U76gvW3dF8qRueD0DWuOw';
 
   RS.Push = RS.Push || {};
 
