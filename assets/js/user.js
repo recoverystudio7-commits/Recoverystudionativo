@@ -399,6 +399,7 @@
     const ui = ensureUi();
     const b = bookingState();
     const services = st().services.filter((s) => s.active && (s.kind === 'Sesión' || s.kind === 'Asesoría'));
+    const plans = st().services.filter((s) => s.active && s.kind === 'Plan');
     const service = RS.data.getService(b.serviceId);
     const slots = RS.data.availableSlots(b.date, b.serviceId);
     const price = service ? Number(service.price) : 0;
@@ -426,8 +427,25 @@
                   <span class="service-option-foot"><span>${UI.icon('clock', 13)} ${s.duration} min</span><b>${U.fmtMoney(s.price)}</b></span>
                 </button>`).join('')}
               </div>
+              ${plans.length ? `<div class="callout callout-blue" style="margin-top:14px">${UI.icon('layers', 16)}<span><strong>¿Buscas un pack con descuento?</strong> Compra un plan primero para cargar sesiones y luego agenda con saldo.</span></div>` : ''}
             </div>
           </section>
+
+          ${plans.length ? `<section class="card">
+            <div class="card-head"><div class="step-head"><span class="step-num">1</span><div><h2 class="card-title">Planes y packs</h2><p class="card-sub">Compra un pack para cargar sesiones y luego agenda con saldo.</p></div></div></div>
+            <div class="card-body">
+              <div class="service-grid">
+                ${plans.map((p) => `<div class="service-option">
+                  <span class="service-option-top"><span class="service-option-icon">${UI.icon('layers', 18)}</span>${p.popular ? '<span class="tag-popular">Popular</span>' : ''}</span>
+                  <strong>${U.esc(p.name)}</strong>
+                  <span class="service-option-desc">${U.esc(p.description)}</span>
+                  <span class="service-option-foot"><span>${U.pluralize(p.sessions, 'sesión', 'sesiones')}</span><b>${U.fmtMoney(p.price)}</b></span>
+                  <button type="button" class="btn ${p.popular ? 'btn-accent' : 'btn-outline'} btn-block btn-sm" style="margin-top:8px" data-action="plan-buy" data-id="${p.id}">Adquirir plan</button>
+                </div>`).join('')}
+              </div>
+              <div style="margin-top:12px;text-align:right"><a class="btn btn-ghost btn-sm" href="#/planes">Ver todos los planes ${UI.icon('arrow-right', 14)}</a></div>
+            </div>
+          </section>` : ''}
 
           <section class="card">
             <div class="card-head"><div class="step-head"><span class="step-num">2</span><div><h2 class="card-title">Elige fecha y hora</h2><p class="card-sub">Disponibilidad actualizada en tiempo real.</p></div></div></div>
