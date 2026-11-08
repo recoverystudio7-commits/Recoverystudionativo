@@ -248,6 +248,34 @@
     return { ok: true };
   }
 
+  async function reserveSession(appointment) {
+    if (!configured()) throw new Error('La conexión con Supabase no está disponible.');
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid) throw new Error('Inicia sesión con Supabase antes de reservar.');
+    if (!appointment || appointment.userId !== user.id) {
+      throw new Error('No pudimos verificar el dueño de la reserva.');
+    }
+    const tk = await freshToken();
+    const serviceId = await resolveServiceId(appointment.serviceId);
+    const startsAt = chileToIso(appointment.date, appointment.time);
+    if (!startsAt) throw new Error('La fecha o la hora de la reserva no es válida.');
+    return RS.Supabase.request('/rest/v1/rpc/create_booking_if_available', {
+      method: 'POST',
+      body: JSON.stringify({
+        p_id: appointment.id,
+        p_user_id: uid,
+        p_service_id: serviceId,
+        p_starts_at: startsAt,
+        p_status: appointment.status === 'confirmada' ? 'confirmada' : 'pendiente',
+        p_payment_status: appointment.payment === 'plan' ? 'plan' : 'pendiente',
+        p_coach: appointment.coach || 'Daniel Barrueto',
+        p_notes: appointment.notes || '',
+        p_created_by: uid,
+      }),
+    }, tk);
+  }
+
   function mergeAppointments(rows, state) {
     let merged = 0;
     rows.forEach((row) => {
@@ -792,6 +820,7 @@
     startAutoSync,
     stopAutoSync,
     pushAppointment,
+    reserveSession,
     supabaseUserId,
     localUserId,
     chileToIso,

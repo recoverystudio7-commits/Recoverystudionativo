@@ -1314,7 +1314,6 @@
       return;
     }
     const useCredit = b.useCredit && user.credits > 0;
-    if (useCredit) user.credits -= 1;
 
     const session = {
       id: U.uid('ses'),
@@ -1328,17 +1327,26 @@
       coach: 'Daniel Barrueto',
       createdAt: new Date().toISOString(),
     };
-    st().sessions.push(session);
-    RS.DB.save();
     let syncWarning = '';
     try {
-      await RS.SupabaseSync.pushAppointment(session);
+      const reservation = await RS.SupabaseSync.reserveSession(session);
+      if (!reservation || !reservation.ok) {
+        UI.toast(reservation && reservation.error === 'slot_taken'
+          ? 'Ese horario se ocupó recién. Elige otro.'
+          : 'No pudimos confirmar la reserva. Intenta de nuevo.', 'error');
+        b.time = null;
+        finish({ clear: false });
+        return;
+      }
     } catch (error) {
       console.error('No se pudo sincronizar la reserva con Supabase:', error);
       syncWarning = 'La reserva quedó guardada en este dispositivo, pero no se pudo compartir con el studio. Usa "Sincronizar" cuando tengas conexión.';
     }
     RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${useCredit ? ' con crédito de plan' : ''}.`);
 
+    if (useCredit) user.credits -= 1;
+    st().sessions.push(session);
+    RS.DB.save();
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     RS.data.bookingNotification(session, user, service, st().settings)
       .then((mail) => {
