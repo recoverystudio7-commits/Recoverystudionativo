@@ -133,6 +133,26 @@
 
 ---
 
+## 8) Flujo de invitación por correo (nuevo, para usuarios no técnicos)
+
+**Objetivo:** el admin envía un correo de invitación; el cliente hace clic, define su contraseña y queda listo. No necesita registrarse manualmente.
+
+### Pasos de aplicación segura
+1. Revisar el borrador en `supabase/review/2026-11-invitation-flow/`.
+2. Verificar que **Site URL** y **Redirect URLs** en Supabase Auth incluyan `https://www.recoverystudio.cl` (ya configurado para Google).
+3. Configurar secreto (ya existe `SUPABASE_SERVICE_ROLE_KEY`).
+4. Desplegar `invite-user` con `--no-verify-jwt` (valida admin internamente).
+5. Probar con correo de prueba: invitar → recibir correo → clic en enlace → definir contraseña → login.
+6. Verificar que el trigger crea perfil + `client_accounts` (créditos 0).
+7. Publicar frontend (callback + UI admin) solo después de pruebas OK.
+8. Admin asigna plan al usuario invitado (flujo existente).
+
+### Nota sobre remitente
+Supabase Auth envía el correo de invitación con su remitente por defecto. Para usar `notificaciones@recoverystudio.cl`, configurar **Custom SMTP** en Supabase Auth (opcional, después).
+
+### Remitente opcional (Custom SMTP)
+- Supabase → Auth → SMTP Settings → configurar con Resend SMTP (host: smtp.resend.com, port: 587, user: resend, password: RESEND_API_KEY).
+
 ## 7) Salud/datos de paciente (EXCLUIDO)
 
 No implementar fichas clínicas, antecedentes médicos, consentimientos clínicos ni cambios de políticas de salud/datos de paciente en este plan.
