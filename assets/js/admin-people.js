@@ -217,6 +217,9 @@
     RS.DB.save();
     RS.data.addAudit(me().name, 'Usuario inscrito', `${user.name} (${user.email}) · ${user.credits} sesiones iniciales.`);
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+    if (user.credits > 0 || (user.planLabel && user.planLabel !== 'Sin plan activo')) {
+      RS.SupabaseSync.pushAccount(user.id).catch((error) => { console.warn('No se pudo sincronizar el plan del usuario:', error && error.message); });
+    }
     UI.closeModal();
     UI.toast('Usuario inscrito correctamente.', 'success');
     RS.App.render(true);
@@ -257,6 +260,7 @@
     RS.DB.save();
     RS.data.addAudit(me().name, 'Usuario actualizado', `${user.name} · saldo ${beforeCredits} → ${user.credits} sesiones.`);
     RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+    RS.SupabaseSync.pushAccount(user.id).catch((error) => { console.warn('No se pudo sincronizar el plan del usuario:', error && error.message); });
     UI.closeModal();
     UI.toast('Usuario actualizado.', 'success');
     RS.App.render(true);
