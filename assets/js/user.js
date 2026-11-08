@@ -454,7 +454,8 @@
                   ${U.esc(s.time)}${s.available ? '' : `<span>${U.esc(s.reason)}</span>`}
                 </button>`).join('') : `<div class="slot-empty">${UI.icon('calendar', 20)} No hay horarios este día. Prueba con otra fecha.</div>`}
               </div>
-              ${slots.length && !slots.some((s) => s.available) ? `<div class="callout callout-orange" style="margin-top:12px">${UI.icon('info', 16)}<span><strong>No hay cupos disponibles en esta fecha.</strong> Puedes elegir otro día o avisarnos por WhatsApp para que te contactemos si se libera un horario. <a href="${RS.data.whatsappUrl(`Hola Recovery Studio, quiero consultar por lista de espera/disponibilidad para ${service ? service.name : 'una sesión'} el ${U.fmtDate(b.date, 'long')}.`)}" target="_blank" rel="noopener noreferrer"><strong>Escribir por WhatsApp</strong></a></span></div>` : ''}
+              ${slots.length && !slots.some((s) => s.available) ? `<div class="callout callout-orange" style="margin-top:12px">${UI.icon('info', 16)}<span><strong>No hay cupos disponibles en esta fecha.</strong> Puedes elegir otro día o avisarnos por WhatsApp para que te contactemos si se libera un horario. <a href="${RS.data.whatsappUrl(`Hola Recovery Studio, quiero consultar por lista de espera/disponibilidad para ${service ? service.name : 'una sesión'} el ${U.fmtDate(b.date, 'long')}.`)}" target="_blank" rel="noopener noreferrer"><strong>Escribir por WhatsApp</strong></a></span></div>
+              <div class="callout callout-blue" style="margin-top:8px">${UI.icon('bell', 16)}<span><strong>Lista de espera.</strong> Si quieres, podemos guardar tu solicitud y avisarte si se libera un cupo en esta fecha. <button class="btn btn-outline btn-sm" data-action="waitlist-join" data-service="${U.esc(service ? service.id : '')}" data-date="${U.esc(b.date)}" ${RS.SupabaseSync.configured() && me() ? '' : 'disabled'}>Avisarme si se libera</button> <span class="muted small">${RS.SupabaseSync.configured() && me() ? 'Guarda tu solicitud en tu cuenta.' : 'Inicia sesión para usar esta opción.'}</span></span></div>` : ''}
               <div class="slot-legend"><span><i class="dot free"></i> Disponible</span><span><i class="dot selected"></i> Seleccionado</span><span><i class="dot busy"></i> Ocupado / fuera de plazo</span></div>
             </div>
           </section>
@@ -647,7 +648,53 @@
         text: ui.apptTab === 'next' ? 'Reserva tu siguiente sesión y sigue avanzando.' : 'Tus sesiones completadas aparecerán aquí.',
         action: ui.apptTab === 'next' ? '<a class="btn btn-accent btn-sm" href="#/agendar">Agendar sesión</a>' : '',
       })}
+
+      <section class="card" style="margin-top:16px" aria-labelledby="waitlist-title">
+        <div class="card-head head-row">
+          <div><span class="eyebrow">Lista de espera</span><h2 class="card-title" id="waitlist-title">Mis avisos</h2><p class="card-sub">Solicitudes guardadas para avisarte si se libera un cupo.</p></div>
+          <button class="btn btn-ghost btn-sm" data-action="waitlist-refresh">${UI.icon('refresh', 15)} Actualizar</button>
+        </div>
+        <div class="card-body" data-waitlist-list>
+          <p class="muted small">Cargando…</p>
+        </div>
+      </section>
     </div>`;
+  }
+
+  async function hydrateWaitlist() {
+    const container = document.querySelector('[data-waitlist-list]');
+    if (!container) return;
+    if (!RS.SupabaseSync.configured()) {
+      container.innerHTML = `<p class="muted small">${UI.icon('info', 14)} Inicia sesión para ver y gestionar tus solicitudes.</p>`;
+      return;
+    }
+    try {
+      const items = await RS.Waitlist.mine();
+      if (!Array.isArray(items) || !items.length) {
+        container.innerHTML = `<p class="muted small">${UI.icon('bell', 14)} No tienes solicitudes activas.</p>`;
+        return;
+      }
+      container.innerHTML = `<div class="list-gap">${items.map((item) => {
+        const serviceName = (item.services && item.services.name) ? item.services.name : (item.service_id || 'Servicio');
+        const date = item.requested_date || '';
+        const time = item.requested_time ? String(item.requested_time).slice(0, 5) : 'Cualquier hora';
+        const status = item.status || 'active';
+        const canCancel = status === 'active' || status === 'notified';
+        return `<div class="payment-card" style="padding:12px">
+          <div class="payment-main">
+            <div class="payment-top">
+              <div>
+                <h3 style="font-size:1rem">${U.esc(serviceName)}</h3>
+                <p>${U.fmtDate(date, 'long')} · ${U.esc(time)} · Estado: ${U.esc(status)}</p>
+              </div>
+              ${canCancel ? `<button class="btn btn-ghost btn-sm" data-action="waitlist-cancel" data-id="${U.esc(item.id)}">${UI.icon('x', 14)} Cancelar</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}</div>`;
+    } catch (e) {
+      container.innerHTML = `<p class="muted small">${UI.icon('alert-circle', 14)} No pudimos cargar tus solicitudes. <button class="btn btn-ghost btn-sm" data-action="waitlist-refresh">Reintentar</button></p>`;
+    }
   }
 
   function openReschedule(session) {
@@ -1521,6 +1568,108 @@
     }
   };
 
+  /* ------------------------------- lista de espera ------------------------- */
+  RS.Waitlist = RS.Waitlist || {};
+  (function initWaitlist() {
+    async function authToken() {
+      const session = RS.Supabase.ensureSession ? await RS.Supabase.ensureSession() : RS.Supabase.readSession();
+      if (!session || !session.access_token) throw new Error('Ingresa a tu cuenta para usar la lista de espera.');
+      return session.access_token;
+    }
+    function mySupabaseId() {
+      const user = me();
+      if (RS.SupabaseSync && RS.SupabaseSync.supabaseUserId) return RS.SupabaseSync.supabaseUserId(user);
+      return user && (user.supabaseUserId || (/^[0-9a-f-]{36}$/i.test(user.id) ? user.id : null));
+    }
+    RS.Waitlist.create = async function create({ serviceId, requestedDate, requestedTime }) {
+      const token = await authToken();
+      const userId = mySupabaseId();
+      if (!userId) throw new Error('No pudimos identificar tu cuenta en el sistema.');
+      try {
+        const rows = await RS.Supabase.request('/rest/v1/waitlist_requests', {
+          method: 'POST',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({
+            user_id: userId,
+            service_id: serviceId,
+            requested_date: requestedDate,
+            requested_time: requestedTime || null,
+            status: 'active',
+            notes: '',
+          }),
+        }, token);
+        return Array.isArray(rows) ? rows[0] : rows;
+      } catch (err) {
+        const msg = String(err && err.message || '');
+        if (/duplicate|unique|23505/i.test(msg)) throw new Error('Ya tienes una solicitud activa para ese servicio y fecha.');
+        if (/42P01|relation.*does not exist|404/i.test(msg)) throw new Error('La lista de espera no está disponible por ahora. Usa WhatsApp.');
+        throw err;
+      }
+    };
+    RS.Waitlist.mine = async function mine() {
+      const token = await authToken();
+      const userId = mySupabaseId();
+      if (!userId) return [];
+      try {
+        return await RS.Supabase.request(
+          `/rest/v1/waitlist_requests?select=*,services(name)&user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc&limit=50`,
+          { method: 'GET' },
+          token
+        );
+      } catch (err) {
+        return [];
+      }
+    };
+    RS.Waitlist.cancel = async function cancel(id) {
+      const token = await authToken();
+      return RS.Supabase.request(`/rest/v1/waitlist_requests?id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ status: 'cancelled', updated_at: new Date().toISOString() }),
+      }, token);
+    };
+  })();
+
+  RS.actions['waitlist-join'] = async (el) => {
+    const serviceId = el.dataset.service;
+    const date = el.dataset.date;
+    if (!serviceId || !date) return UI.toast('No pudimos identificar el servicio/fecha.', 'error');
+    if (!RS.SupabaseSync.configured()) {
+      UI.toast('Inicia sesión para usar la lista de espera.', 'error');
+      return;
+    }
+    el.disabled = true;
+    const original = el.innerHTML;
+    el.innerHTML = `${UI.icon('clock', 14)} Guardando…`;
+    try {
+      await RS.Waitlist.create({ serviceId, requestedDate: date, requestedTime: null });
+      UI.toast('Te agregamos a la lista de espera. Te contactaremos si se libera un cupo.', 'success');
+      RS.App.render();
+    } catch (e) {
+      UI.toast(e && e.message ? e.message : 'No pudimos guardar la solicitud. Puedes escribirnos por WhatsApp.', 'error');
+      el.disabled = false;
+      el.innerHTML = original;
+    }
+  };
+
+  RS.actions['waitlist-refresh'] = () => { if (RS.User.hydrateWaitlist) RS.User.hydrateWaitlist(); };
+
+  RS.actions['waitlist-cancel'] = async (el) => {
+    const id = el.dataset.id;
+    if (!id) return;
+    const ok = await UI.confirm({ title: 'Cancelar solicitud', message: '¿Quieres cancelar tu solicitud de lista de espera?', okText: 'Cancelar solicitud', danger: true });
+    if (!ok) return;
+    el.disabled = true;
+    try {
+      await RS.Waitlist.cancel(id);
+      UI.toast('Solicitud cancelada.', 'info');
+      RS.App.render();
+    } catch (e) {
+      UI.toast(e && e.message ? e.message : 'No pudimos cancelar la solicitud.', 'error');
+      el.disabled = false;
+    }
+  };
+
   RS.User = {
     renderHome,
     renderBooking,
@@ -1529,6 +1678,7 @@
     renderPayments,
     renderTraining,
     renderProfile,
+    hydrateWaitlist,
     refreshCheckout: () => {
       RS.ui.discountFeedback = RS.ui.discountFeedback || '';
       UI.closeModal();

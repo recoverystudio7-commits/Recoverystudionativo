@@ -337,6 +337,11 @@
     } catch (err) {
       console.error(err);
     }
+    try {
+      if (route === 'reservas' && RS.User && typeof RS.User.hydrateWaitlist === 'function') RS.User.hydrateWaitlist();
+    } catch (err) {
+      console.error(err);
+    }
     document.title = `${TITLES[route] || 'Recovery Studio'} · Recovery Studio`;
     document.body.dataset.role = session ? session.role : 'public';
     document.body.classList.remove('sidebar-open');
