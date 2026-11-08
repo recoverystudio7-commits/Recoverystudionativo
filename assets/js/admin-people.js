@@ -841,6 +841,7 @@
     }
     RS.DB.save();
     UI.closeModal();
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     RS.App.render(true);
   };
 

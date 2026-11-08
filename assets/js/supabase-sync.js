@@ -445,6 +445,58 @@
     return merged;
   }
 
+  /* Catálogo de servicios/planes: se comparte entre dispositivos.
+     Admin ve todos (incluye inactivos); el resto solo los activos (RLS). */
+  async function pullServices(tk, isAdmin) {
+    serviceIdsCache = null;
+    let rows;
+    try {
+      rows = await RS.Supabase.request('/rest/v1/services?select=*', { method: 'GET' }, tk);
+    } catch (error) {
+      console.warn('No se pudo traer el catálogo de servicios:', error.message);
+      return 0;
+    }
+    if (!Array.isArray(rows)) return 0;
+    const state = st();
+    state.services = Array.isArray(state.services) ? state.services : [];
+    const byId = new Map(state.services.map((s) => [s.id, s]));
+    let merged = 0;
+    rows.forEach((row) => {
+      if (!row || !row.id) return;
+      const local = byId.get(row.id);
+      const next = {
+        id: row.id,
+        name: row.name || '',
+        kind: row.kind || 'Sesión',
+        price: Number(row.price) || 0,
+        duration: Number(row.duration) || 60,
+        sessions: Number(row.sessions) || 0,
+        companyPrice: Number(row.company_price) || 0,
+        description: row.description || '',
+        features: Array.isArray(row.features) ? row.features : [],
+        active: row.active !== false,
+        popular: !!row.popular,
+      };
+      if (next.kind === 'Plan' && !next.validityDays) next.validityDays = 30;
+      if (local) {
+        const changed = local.name !== next.name || local.kind !== next.kind
+          || local.price !== next.price || local.duration !== next.duration
+          || local.sessions !== next.sessions || local.companyPrice !== next.companyPrice
+          || local.description !== next.description
+          || JSON.stringify(local.features || []) !== JSON.stringify(next.features)
+          || local.active !== next.active || local.popular !== next.popular;
+        Object.assign(local, next);
+        if (local.kind === 'Plan' && !Number(local.validityDays)) local.validityDays = 30;
+        if (changed) merged += 1;
+      } else {
+        if (next.kind === 'Plan' && !next.validityDays) next.validityDays = 30;
+        state.services.push(next);
+        merged += 1;
+      }
+    });
+    return merged;
+  }
+
   /* Saldos y planes: el cliente ve su saldo actualizado en cualquier equipo y
      el admin ve el saldo de todos sus clientes. */
   async function pullAccounts(tk, isAdmin, uid) {
@@ -488,14 +540,15 @@
       console.warn('No se pudieron traer perfiles:', e.message);
       return 0;
     });
-    const [sessions, payments, accounts] = await Promise.all([
+    const [services, sessions, payments, accounts] = await Promise.all([
+      pullServices(tk, isAdmin).catch((e) => { console.warn('No se pudo traer el catálogo:', e.message); return 0; }),
       pullSessions(tk, isAdmin, uid),
       pullPayments(tk, isAdmin, uid),
       pullAccounts(tk, isAdmin, uid).catch((e) => { console.warn('No se pudieron traer los saldos:', e.message); return 0; }),
     ]);
 
     RS.DB.save();
-    return { ok: true, merged: profiles + sessions + payments + accounts };
+    return { ok: true, merged: profiles + services + sessions + payments + accounts };
   }
 
   /* ----------------------------- push ----------------------------------- */
@@ -637,6 +690,35 @@
     return { ok: true };
   }
 
+  async function pushServices(tk, isAdmin) {
+    if (!isAdmin) return 0;
+    const state = st();
+    const candidates = (state.services || []).filter((s) => s && s.id && s.name);
+    let pushed = 0;
+    for (const svc of candidates) {
+      const payload = {
+        name: svc.name,
+        kind: svc.kind || 'Sesión',
+        price: Math.max(0, Number(svc.price) || 0),
+        duration: Math.max(15, Number(svc.duration) || 60),
+        sessions: Math.max(0, Number(svc.sessions) || 0),
+        company_price: Math.max(0, Number(svc.companyPrice) || 0),
+        description: svc.description || '',
+        features: Array.isArray(svc.features) ? svc.features : [],
+        active: svc.active !== false,
+        popular: !!svc.popular,
+        updated_at: new Date().toISOString(),
+      };
+      try {
+        await upsert('services', svc.id, null, null, payload, tk);
+        pushed += 1;
+      } catch (error) {
+        console.warn('No se pudo sincronizar el servicio', svc.id, error.message);
+      }
+    }
+    return pushed;
+  }
+
   async function push() {
     if (!configured()) return { ok: false, reason: 'no-config' };
     const user = me();
@@ -645,8 +727,9 @@
     const tk = await freshToken();
     const isAdmin = user.role === 'admin';
 
-    // Primero perfiles/sesiones; luego pagos para respetar la llave foránea.
+    // Primero catálogo (servicios/planes), luego perfiles/sesiones; pagos al final.
     let pushed = 0;
+    pushed += await pushServices(tk, isAdmin);
     pushed += await pushSessions(tk, user, uid, isAdmin);
     pushed += await pushPayments(tk, user, uid, isAdmin);
     return { ok: true, pushed };
