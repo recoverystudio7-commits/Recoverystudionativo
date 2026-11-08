@@ -1137,12 +1137,36 @@
           }).join('')}
         </div>` : UI.empty({ icon: 'activity', title: 'Aún no tienes maximales registrados', text: 'Tu coach los agregará después de tu evaluación inicial.', action: '<a class="btn btn-accent btn-sm" href="#/agendar">Agendar evaluación</a>' })}
       </div>` : `<div class="view">
-        ${routine ? `<article class="routine card">
+        ${routine ? (() => {
+          const exCard = (it, n) => {
+            const media = it.gifUrl || it.imageUrl || '';
+            const hasDetails = !!(it.description || it.cues || it.commonErrors || it.variants);
+            const hasVideo = !!(it.videoUrl && /^https?:\/\//i.test(it.videoUrl));
+            const chips = [it.category, it.muscleGroup, it.equipment, it.difficulty].filter(Boolean).slice(0, 3);
+            return `<article class="ex-card">
+              <div class="ex-media">${media ? '<img src="' + U.esc(media) + '" alt="' + U.esc(it.name) + '" loading="lazy">' : '<span class="ex-media-placeholder">' + UI.icon('dumbbell', 22) + '</span>'}</div>
+              <div class="ex-body">
+                <div class="ex-top"><span class="ex-num">${String(n).padStart(2, '0')}</span><h3>${U.esc(it.name)}</h3></div>
+                ${chips.length ? '<div class="ex-chips">' + chips.map((c) => '<span class="ex-chip">' + U.esc(c) + '</span>').join('') + '</div>' : ''}
+                <div class="ex-params"><span><em>Series</em><strong>${U.esc(it.sets || '—')}</strong></span><span><em>Reps</em><strong>${U.esc(it.reps || '—')}</strong></span><span><em>Carga</em><strong>${U.esc(it.load || '—')}</strong></span><span><em>Descanso</em><strong>${U.esc(it.rest || '—')}</strong></span></div>
+                ${it.notes ? '<p class="ex-note">' + U.esc(it.notes) + '</p>' : ''}
+                <div class="ex-actions">${hasDetails ? '<button class="btn btn-ghost btn-sm" data-action="ex-details">Ver indicaciones</button>' : ''}${hasVideo ? '<a class="btn btn-outline btn-sm" href="' + U.esc(it.videoUrl) + '" target="_blank" rel="noopener">' + UI.icon('play', 14) + ' Ver video</a>' : ''}</div>
+                ${hasDetails ? '<div class="ex-details" hidden>' + (it.description ? '<p><strong>¿Qué es?</strong> ' + U.esc(it.description) + '</p>' : '') + (it.cues ? '<p><strong>Indicaciones:</strong> ' + U.esc(it.cues) + '</p>' : '') + (it.commonErrors ? '<p><strong>Errores comunes:</strong> ' + U.esc(it.commonErrors) + '</p>' : '') + (it.variants ? '<p><strong>Variantes:</strong> ' + U.esc(it.variants) + '</p>' : '') + '</div>' : ''}
+              </div>
+            </article>`;
+          };
+          const legacyRow = (it, n) => '<div class="ex-legacy-row"><span class="ex-num">' + String(n).padStart(2, '0') + '</span><div><strong>' + U.esc(it.name) + '</strong><span>' + U.esc(it.sets || '') + ' × ' + U.esc(it.reps || '') + (it.load ? ' · ' + U.esc(it.load) : '') + (it.rest ? ' · ' + U.esc(it.rest) : '') + '</span>' + (it.notes ? '<p class="muted small">' + U.esc(it.notes) + '</p>' : '') + '</div></div>';
+          return `<article class="routine routine-branded card">
+          <div class="routine-brand">
+            <div class="routine-brand-left"><img class="routine-brand-logo" src="assets/icon-192.png" alt="Recovery Studio"><div><strong>RECOVERY STUDIO</strong><span>Performance & Recovery</span></div></div>
+            <div class="routine-brand-right"><span>Coach: Daniel Barrueto</span><span>Gorbea, Región de la Araucanía</span></div>
+          </div>
           <div class="routine-head">
             <div>
               <span class="eyebrow">Pauta de entrenamiento</span>
               <h2>${U.esc(routine.title)}</h2>
               <p>${U.esc(routine.objective)}</p>
+              ${routine.coachNotes ? '<p class="routine-coach-notes">' + U.esc(routine.coachNotes) + '</p>' : ''}
             </div>
             <div class="routine-meta">
               <div><span>Semanas</span><strong>${routine.weeks}</strong></div>
@@ -1165,19 +1189,19 @@
                 <span class="routine-day-count">${d.items.length} ejercicios</span>
                 ${UI.icon('chevron-down', 18)}
               </summary>
-              <div class="routine-table-wrap">
-                <table class="table routine-table">
-                  <thead><tr><th>Ejercicio</th><th>Series</th><th>Reps</th><th>Carga</th><th>Descanso</th><th>Notas</th></tr></thead>
-                  <tbody>${d.items.map((it) => `<tr><td><strong>${U.esc(it.name)}</strong></td><td>${U.esc(it.sets)}</td><td>${U.esc(it.reps)}</td><td>${U.esc(it.load)}</td><td>${U.esc(it.rest)}</td><td class="muted">${U.esc(it.notes || '—')}</td></tr>`).join('')}</tbody>
-                </table>
+              <div class="routine-ex-grid">
+                ${d.items.map((it, ii) => (it.exerciseId || it.imageUrl || it.gifUrl || it.description || it.cues) ? exCard(it, ii + 1) : legacyRow(it, ii + 1)).join('')}
               </div>
+              ${d.items.some((it) => !(it.exerciseId || it.imageUrl || it.gifUrl || it.description || it.cues)) ? '<div class="routine-table-wrap routine-table-legacy"><table class="table routine-table"><thead><tr><th>Ejercicio</th><th>Series</th><th>Reps</th><th>Carga</th><th>Descanso</th><th>Notas</th></tr></thead><tbody>' + d.items.filter((it) => !(it.exerciseId || it.imageUrl || it.gifUrl || it.description || it.cues)).map((it) => '<tr><td><strong>' + U.esc(it.name) + '</strong></td><td>' + U.esc(it.sets) + '</td><td>' + U.esc(it.reps) + '</td><td>' + U.esc(it.load) + '</td><td>' + U.esc(it.rest) + '</td><td class="muted">' + U.esc(it.notes || '—') + '</td></tr>').join('') + '</tbody></table></div>' : ''}
             </details>`).join('')}
           </div>
           <div class="routine-foot">
             <span>${UI.icon('user', 14)} Pauta asignada por Daniel Barrueto</span>
             <span>${UI.icon('info', 14)} Ante dolor o molestia, detén el ejercicio y avísale a tu coach.</span>
+            <span>${UI.icon('whatsapp', 14)} ${U.esc(RS.BRAND ? RS.BRAND.whatsappDisplay : '')}</span>
           </div>
-        </article>` : UI.empty({ icon: 'clipboard', title: 'Tu rutina está en camino', text: 'Cuando tu coach asigne tu pauta, aparecerá aquí con series, repeticiones y cargas.', action: '<a class="btn btn-accent btn-sm" href="#/agendar">Agendar evaluación</a>' })}
+        </article>`;
+        })() : UI.empty({ icon: 'clipboard', title: 'Tu rutina está en camino', text: 'Cuando tu coach asigne tu pauta, aparecerá aquí con series, repeticiones y cargas.', action: '<a class="btn btn-accent btn-sm" href="#/agendar">Agendar evaluación</a>' })}
       </div>`}
     </div>`;
   }
@@ -1509,6 +1533,16 @@
   RS.actions['train-tab'] = (el) => {
     ensureUi().trainTab = el.dataset.tab;
     RS.App.render();
+  };
+
+  RS.actions['ex-details'] = (el) => {
+    const card = el.closest('.ex-card');
+    if (!card) return;
+    const box = card.querySelector('.ex-details');
+    if (!box) return;
+    const hidden = box.hidden;
+    box.hidden = !hidden;
+    el.textContent = hidden ? 'Ocultar indicaciones' : 'Ver indicaciones';
   };
 
   RS.actions['print-routine'] = () => {

@@ -376,12 +376,16 @@
 
   /* --------------------------------- rutina -------------------------------- */
 
+  function newRoutineItem() {
+    return { name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '', exerciseId: '', category: '', muscleGroup: '', equipment: '', difficulty: '', description: '', cues: '', commonErrors: '', variants: '', imageUrl: '', gifUrl: '', videoUrl: '' };
+  }
+
   function newRoutineDay(index) {
     return {
       id: U.uid('rday'),
       name: `Día ${index + 1}`,
       focus: '',
-      items: [{ name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '' }],
+      items: [newRoutineItem()],
     };
   }
 
@@ -434,21 +438,67 @@
           <button type="button" class="icon-btn danger" data-r-remove-day="${di}" aria-label="Eliminar día">${UI.icon('trash', 16)}</button>
         </div>
         <div class="re-items">
-          ${day.items.map((it, ii) => `<div class="re-item">
+          ${day.items.map((it, ii) => {
+            const thumb = it.gifUrl || it.imageUrl || '';
+            return `<div class="re-item re-item-lib">
             <span class="re-item-num">${ii + 1}</span>
-            <input class="input" data-r-item="name" data-day="${di}" data-item="${ii}" value="${U.esc(it.name)}" placeholder="Ejercicio">
+            ${thumb ? `<span class="re-item-thumb"><img src="${U.esc(thumb)}" alt="" loading="lazy"></span>` : ''}
+            <input class="input re-name" data-r-item="name" data-day="${di}" data-item="${ii}" value="${U.esc(it.name)}" placeholder="Ejercicio" list="ex-library-names">
+            <button type="button" class="btn btn-outline btn-sm re-lib-btn" data-r-lib="${di}:${ii}" title="Elegir de biblioteca">${UI.icon('search', 14)} Biblioteca</button>
             <input class="input re-small" data-r-item="sets" data-day="${di}" data-item="${ii}" value="${U.esc(it.sets)}" placeholder="Series">
             <input class="input re-small" data-r-item="reps" data-day="${di}" data-item="${ii}" value="${U.esc(it.reps)}" placeholder="Reps">
             <input class="input re-small" data-r-item="load" data-day="${di}" data-item="${ii}" value="${U.esc(it.load)}" placeholder="Carga">
             <input class="input re-small" data-r-item="rest" data-day="${di}" data-item="${ii}" value="${U.esc(it.rest)}" placeholder="Descanso">
-            <input class="input re-notes" data-r-item="notes" data-day="${di}" data-item="${ii}" value="${U.esc(it.notes || '')}" placeholder="Notas">
+            <input class="input re-notes" data-r-item="notes" data-day="${di}" data-item="${ii}" value="${U.esc(it.notes || '')}" placeholder="Notas (opcional)">
             <button type="button" class="icon-btn danger" data-r-remove-item="${di}:${ii}" aria-label="Quitar ejercicio">${UI.icon('x', 15)}</button>
-          </div>`).join('')}
+          </div>`;
+          }).join('')}
+          <datalist id="ex-library-names">${RS.ExerciseLibrary ? RS.ExerciseLibrary.all().slice(0, 220).map((x) => '<option value="' + U.esc(x.name) + '"></option>').join('') : ''}</datalist>
           <button type="button" class="btn btn-ghost btn-sm re-add-item" data-r-add-item="${di}">${UI.icon('plus', 14)} Agregar ejercicio</button>
         </div>
       </div>`).join('');
     };
     render();
+
+    function openLibraryPicker(di, ii) {
+      if (!RS.ExerciseLibrary) return UI.toast('Biblioteca no disponible.', 'error');
+      let q = '';
+      let cat = 'Todas';
+      const body = document.createElement('div');
+      body.innerHTML = '<div class="lib-picker-bar"><select class="input input-sm" data-lib-cat><option value="Todas">Todas</option>'
+        + RS.ExerciseLibrary.categories.map((c) => '<option value="' + U.esc(c) + '">' + U.esc(c) + '</option>').join('') + '</select>'
+        + '<div class="input-icon input-search">' + UI.icon('search', 16) + '<input class="input input-sm" data-lib-q placeholder="Buscar ejercicio…"></div></div>'
+        + '<div class="lib-picker-list" data-lib-list></div>'
+        + '<p class="form-hint" style="margin-top:8px">Al elegir, se rellena nombre + foto/GIF + indicaciones. Luego ajustas series/reps/carga.</p>';
+      const pickerRoot = UI.modal({ title: 'Elegir de biblioteca', subtitle: '181 ejercicios · haz clic para usar', size: 'lg', body: '', footer: '<button class="btn btn-ghost" data-modal-close>Cerrar</button>' });
+      if (!pickerRoot) return;
+      const modalBody = pickerRoot.querySelector('.modal-body');
+      modalBody.innerHTML = '';
+      modalBody.appendChild(body);
+      const listEl = pickerRoot.querySelector('[data-lib-list]');
+      const qEl = pickerRoot.querySelector('[data-lib-q]');
+      const catEl = pickerRoot.querySelector('[data-lib-cat]');
+      const paint = () => {
+        const items = RS.ExerciseLibrary.all({ category: cat, query: q }).slice(0, 80);
+        listEl.innerHTML = items.length ? items.map((x) => {
+          const thumb = x.gifUrl || x.imageUrl || '';
+          return '<button type="button" class="lib-picker-row" data-lib-pick="' + U.esc(x.id) + '"><span class="lib-picker-thumb">' + (thumb ? '<img src="' + U.esc(thumb) + '" alt="">' : UI.icon('image', 18)) + '</span><span class="lib-picker-meta"><strong>' + U.esc(x.name) + '</strong><small>' + U.esc(x.category) + ' · ' + U.esc(x.muscleGroup || '') + ' · ' + U.esc(x.equipment || '') + '</small></span><span class="lib-picker-tag">' + U.esc(x.difficulty || '') + '</span></button>';
+        }).join('') : '<p class="muted" style="padding:12px">Sin resultados.</p>';
+      };
+      paint();
+      qEl.addEventListener('input', () => { q = qEl.value; paint(); });
+      catEl.addEventListener('change', () => { cat = catEl.value; paint(); });
+      listEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-lib-pick]');
+        if (!btn) return;
+        const libItem = RS.ExerciseLibrary.get(btn.dataset.libPick);
+        if (!libItem) return;
+        RS.ExerciseLibrary.applyToItem(draft.days[di].items[ii], libItem);
+        UI.closeModal();
+        render();
+      });
+      qEl.focus();
+    }
 
     root.addEventListener('change', async (e) => {
       const input = e.target.closest('[data-r-photo]');
@@ -495,11 +545,28 @@
       }
       const itemField = e.target.dataset.rItem;
       if (itemField) {
-        draft.days[Number(e.target.dataset.day)].items[Number(e.target.dataset.item)][itemField] = e.target.value;
+        const di = Number(e.target.dataset.day);
+        const ii = Number(e.target.dataset.item);
+        draft.days[di].items[ii][itemField] = e.target.value;
+        if (itemField === 'name' && RS.ExerciseLibrary) {
+          const found = RS.ExerciseLibrary.getByName(e.target.value, draft.days[di].items[ii].category);
+          const current = RS.ExerciseLibrary.get(draft.days[di].items[ii].exerciseId || '');
+          if (found && (!current || current.id !== found.id)) {
+            RS.ExerciseLibrary.applyToItem(draft.days[di].items[ii], found);
+          } else if (!found) {
+            draft.days[di].items[ii].exerciseId = '';
+          }
+        }
       }
     });
 
     container.addEventListener('click', (e) => {
+      const libBtn = e.target.closest('[data-r-lib]');
+      if (libBtn) {
+        const [di, ii] = libBtn.dataset.rLib.split(':').map(Number);
+        openLibraryPicker(di, ii);
+        return;
+      }
       const addDay = e.target.closest('[data-r-add-day]');
       if (addDay) {
         draft.days.push(newRoutineDay(draft.days.length));
@@ -516,7 +583,7 @@
       const addItem = e.target.closest('[data-r-add-item]');
       if (addItem) {
         const di = Number(addItem.dataset.rAddItem);
-        draft.days[di].items.push({ name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '' });
+        draft.days[di].items.push(newRoutineItem());
         render();
         return;
       }
@@ -525,7 +592,7 @@
         const [di, ii] = removeItem.dataset.rRemoveItem.split(':').map(Number);
         draft.days[di].items.splice(ii, 1);
         if (!draft.days[di].items.length) {
-          draft.days[di].items.push({ name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '' });
+          draft.days[di].items.push(newRoutineItem());
         }
         render();
       }

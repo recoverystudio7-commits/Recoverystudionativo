@@ -11,7 +11,7 @@
   const USER_ROUTES = ['inicio', 'agendar', 'reservas', 'planes', 'pagos', 'entrenamiento', 'perfil'];
   const ADMIN_ROUTES = [
     'admin', 'admin/agenda', 'admin/usuarios', 'admin/club', 'admin/alertas', 'admin/planes', 'admin/pagos',
-    'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/resenas',
+    'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/resenas', 'admin/biblioteca',
     'admin/configuracion', 'admin/seguridad', 'admin/contenido',
   ];
   const PUBLIC_ROUTES = ['login', 'cotizar', 'cotizar-gracias', 'resenas', 'sauna', 'capsulas'];
@@ -41,6 +41,7 @@
     'admin/honorarios': 'Honorarios',
     'admin/cotizaciones': 'Cotizaciones',
     'admin/resenas': 'Reseñas',
+    'admin/biblioteca': 'Biblioteca de ejercicios',
     'admin/configuracion': 'Configuración',
     'admin/seguridad': 'Seguridad',
     'admin/contenido': 'Promociones y cápsulas',
@@ -72,6 +73,7 @@
         ] },
         { label: 'Negocio', items: [
           { route: 'admin/planes', icon: 'layers', label: 'Planes y servicios' },
+          { route: 'admin/biblioteca', icon: 'dumbbell', label: 'Biblioteca ejercicios' },
           { route: 'admin/pagos', icon: 'credit-card', label: 'Pagos', badge: pending },
           { route: 'admin/finanzas', icon: 'bar-chart', label: 'Finanzas' },
           { route: 'admin/honorarios', icon: 'receipt', label: 'Honorarios' },
@@ -215,6 +217,7 @@
         return RS.Admin.renderPlanAlerts();
       },
       'admin/planes': () => RS.Admin.renderCatalog(),
+      'admin/biblioteca': () => RS.Admin.renderLibrary(),
       'admin/pagos': () => RS.Admin.renderPayments(),
       'admin/finanzas': () => RS.Admin.renderFinance(),
       'admin/honorarios': () => RS.Admin.renderHonorarios(),
@@ -471,6 +474,9 @@
     if (el) el.disabled = true;
     try {
       const result = await RS.SupabaseSync.syncNow();
+      if (RS.ExerciseLibrary && RS.ExerciseLibrary.load) {
+        try { await RS.ExerciseLibrary.load(); } catch (e) { /* no bloquea */ }
+      }
       render(false);
       if (result && result.ok) {
         UI.toast(result.merged ? `Sincronización completa: ${result.merged} cambio(s).` : 'Todo está al día.', 'success', 3000);
@@ -529,6 +535,9 @@
       await RS.Auth.restoreSession();
       RS.ui = RS.ui || {};
       await RS.TrainingRoutines.load();
+      if (RS.ExerciseLibrary && RS.ExerciseLibrary.load) {
+        try { await RS.ExerciseLibrary.load(); } catch (e) { console.warn('Biblioteca local', e); }
+      }
       await RS.VideoContent.load();
       RS.Auth.initActivity();
       startSync();
