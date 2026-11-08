@@ -450,6 +450,11 @@
         }
         st().sessions = st().sessions.filter((s) => s.id !== existing.id);
         RS.DB.save();
+        if (existing.payment === 'plan') {
+          const pu = RS.data.getUser(existing.userId);
+          if (pu) RS.SupabaseSync.pushAccount(pu.id).catch(() => { /* no bloquea la UI */ });
+        }
+        RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
         RS.data.addAudit(me().name, 'Sesión eliminada', `${RS.data.serviceName(existing.serviceId)} del ${existing.date} ${existing.time}${existing.payment === 'plan' ? ' · sesión devuelta al plan' : ''}.`);
         UI.closeModal();
         UI.toast('Sesión eliminada.', 'info');
@@ -526,12 +531,14 @@
       if (previousPlan) {
         const previousUser = RS.data.getUser(session.userId);
         if (previousUser) previousUser.credits = Math.max(0, Number(previousUser.credits) || 0) + 1;
+        if (previousUser) RS.SupabaseSync.pushAccount(previousUser.id).catch(() => { /* no bloquea la UI */ });
       }
       const previous = { date: session.date, time: session.time };
       Object.assign(session, values, { coach: 'Daniel Barrueto' });
       if (usesPlan) user.credits = Math.max(0, Number(user.credits) || 0) - 1;
       RS.data.addAudit(me().name, 'Sesión modificada', `${RS.data.serviceName(values.serviceId)} de ${user.name} · ${values.date} ${values.time}${usesPlan ? ` · saldo del plan: ${user.credits}` : ''}.`);
       RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+      RS.SupabaseSync.pushAccount(user.id).catch(() => { /* no bloquea la UI */ });
       if (previous.date !== session.date || previous.time !== session.time) {
         RS.data.rescheduleNotification(session, user, RS.data.getService(session.serviceId), st().settings, previous).catch((error) => {
           console.error('No se pudo notificar el reagendamiento:', error);
@@ -567,6 +574,7 @@
 
       // Correo al cliente + notificación al admin (Resend vía Edge Function)
       RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+      if (usesPlan) RS.SupabaseSync.pushAccount(user.id).catch(() => { /* no bloquea la UI */ });
       RS.data.bookingNotification(session, user, RS.data.getService(values.serviceId), st().settings).catch((err) => {
         console.error('No se pudieron enviar los correos de la sesión:', err);
       });
