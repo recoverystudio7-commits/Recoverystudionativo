@@ -153,6 +153,19 @@ Supabase Auth envía el correo de invitación con su remitente por defecto. Para
 ### Remitente opcional (Custom SMTP)
 - Supabase → Auth → SMTP Settings → configurar con Resend SMTP (host: smtp.resend.com, port: 587, user: resend, password: RESEND_API_KEY).
 
+## 9) Eliminación completa de usuario (hard delete)
+
+**Objetivo:** eliminar permanentemente una cuenta (auth + perfil + datos) para que no reaparezca en sincronización. Útil para bajas definitivas y limpieza de pruebas.
+
+### Pasos de aplicación segura
+1. Revisar el borrador en `supabase/review/2026-11-user-deletion/`.
+2. Desplegar `delete-user` con `--no-verify-jwt` (valida admin internamente).
+3. Probar con usuario de prueba: eliminar → verificar que no reaparece.
+4. Publicar frontend (reemplazar `admin-user-delete`) solo después de pruebas OK.
+
+### Interim (sin desplegar)
+Para limpiar datos de prueba ahora mismo, usar SQL manual en Supabase (solo cuentas de prueba). Ver README del borrador.
+
 ## 7) Salud/datos de paciente (EXCLUIDO)
 
 No implementar fichas clínicas, antecedentes médicos, consentimientos clínicos ni cambios de políticas de salud/datos de paciente en este plan.
