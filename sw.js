@@ -1,5 +1,5 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v36';
+const CACHE = 'recovery-studio-v37';
 const ASSETS = [
   './',
   './index.html',
@@ -16,7 +16,7 @@ const ASSETS = [
   './assets/js/data.js?v=10',
   './assets/js/ui.js?v=2',
   './assets/js/auth.js?v=16',
-  './assets/js/user.js?v=19',
+  './assets/js/user.js?v=20',
   './assets/js/admin-base.js?v=9',
   './assets/js/admin-people.js?v=11',
   './assets/js/admin-club.js?v=3',
@@ -62,5 +62,33 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+  );
+});
+
+/* Push notifications */
+self.addEventListener('push', (event) => {
+  let data = { title: 'Recovery Studio', body: 'Tienes una nueva notificación.' };
+  try { data = event.data.json(); } catch (e) { /* usar default */ }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Recovery Studio', {
+      body: data.body || '',
+      icon: '/assets/icon-192.png',
+      badge: '/assets/icon-192.png',
+      tag: data.tag || 'rs-notification',
+      data: { url: data.url || '/' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(url) && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
   );
 });

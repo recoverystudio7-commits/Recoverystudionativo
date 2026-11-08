@@ -1230,6 +1230,14 @@
             </div>
           </section>
 
+          <section class="card">
+            <div class="card-head"><h2 class="card-title">Notificaciones</h2><p class="card-sub">Recibe avisos de reservas y recordatorios en este dispositivo.</p></div>
+            <div class="card-body row-between">
+              <div><p class="muted small" id="push-status">Activa las notificaciones para recibir avisos de reservas, recordatorios y cupos liberados.</p></div>
+              <button class="btn btn-outline" data-action="push-toggle" id="push-toggle-btn">Activar notificaciones</button>
+            </div>
+          </section>
+
           <section class="card danger-zone">
             <div class="card-body row-between">
               <div><h3>Cerrar sesión</h3><p class="muted small">Sal de tu cuenta en este dispositivo.</p></div>
@@ -1738,4 +1746,134 @@
     downloadIcs,
     openPaymentModal,
   };
+
+  /* ----------------------- Push notifications (Web Push / VAPID) ----------------------- */
+  const VAPID_PUBLIC_KEY = 'BK179WYPSfp26qiP4-BajXafIoRSJSb1F-VPfE3JsT1ZEDKlakReW2MVsw5KpqtNW0U76gvW3dF8qRueD0DWuOw';
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+  }
+
+  RS.Push = RS.Push || {};
+
+  RS.Push.subscribe = async function subscribe() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      UI.toast('Tu navegador no soporta notificaciones push.', 'info');
+      return false;
+    }
+    if (!RS.SupabaseSync || !RS.SupabaseSync.configured || !RS.SupabaseSync.configured()) {
+      UI.toast('Inicia sesión para activar notificaciones.', 'info');
+      return false;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        UI.toast('No se activaron las notificaciones. Puedes cambiarlo en la configuración del navegador.', 'info');
+        return false;
+      }
+      const reg = await navigator.serviceWorker.ready;
+      let subscription = await reg.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+      }
+      const token = await RS.Supabase.ensureSession().then((s) => s && s.access_token);
+      const sub = subscription.toJSON();
+      const user = RS.Auth.getUser();
+      const uid = (RS.SupabaseSync.supabaseUserId ? RS.SupabaseSync.supabaseUserId(user) : (user && user.id));
+      await RS.Supabase.request('/rest/v1/push_subscriptions', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({
+          user_id: uid,
+          endpoint: sub.endpoint,
+          p256dh: sub.keys.p256dh,
+          auth: sub.keys.auth,
+          user_agent: navigator.userAgent.slice(0, 200),
+          enabled: true,
+        }),
+      }, token);
+      UI.toast('Notificaciones activadas.', 'success');
+      const btn = document.getElementById('push-toggle-btn');
+      if (btn) btn.textContent = 'Desactivar notificaciones';
+      const status = document.getElementById('push-status');
+      if (status) status.textContent = 'Notificaciones activas en este dispositivo.';
+      return true;
+    } catch (e) {
+      console.error('Push subscribe error:', e);
+      UI.toast(e && e.message ? e.message : 'No se pudo activar las notificaciones.', 'error');
+      return false;
+    }
+  };
+
+  RS.Push.unsubscribe = async function unsubscribe() {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.getSubscription();
+      if (subscription) {
+        await subscription.unsubscribe();
+        const token = await RS.Supabase.ensureSession().then((s) => s && s.access_token);
+        await RS.Supabase.request(`/rest/v1/push_subscriptions?endpoint=eq.${encodeURIComponent(subscription.endpoint)}`, {
+          method: 'DELETE',
+        }, token);
+      }
+      UI.toast('Notificaciones desactivadas.', 'info');
+      const btn = document.getElementById('push-toggle-btn');
+      if (btn) btn.textContent = 'Activar notificaciones';
+      const status = document.getElementById('push-status');
+      if (status) status.textContent = 'Notificaciones desactivadas.';
+      return true;
+    } catch (e) {
+      console.error('Push unsubscribe error:', e);
+      UI.toast('No se pudo desactivar.', 'error');
+      return false;
+    }
+  };
+
+  RS.Push.isSubscribed = async function isSubscribed() {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      return !!sub;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  RS.actions = RS.actions || {};
+  RS.actions['push-toggle'] = async (el) => {
+    const subscribed = await RS.Push.isSubscribed();
+    if (subscribed) {
+      await RS.Push.unsubscribe();
+    } else {
+      await RS.Push.subscribe();
+    }
+    const nowSubscribed = await RS.Push.isSubscribed();
+    el.textContent = nowSubscribed ? 'Desactivar notificaciones' : 'Activar notificaciones';
+    const status = document.getElementById('push-status');
+    if (status) {
+      status.textContent = nowSubscribed
+        ? 'Notificaciones activas en este dispositivo.'
+        : 'Activa las notificaciones para recibir avisos de reservas, recordatorios y cupos liberados.';
+    }
+  };
+
+  // Update button text on profile render
+  (function updatePushButton() {
+    RS.Push.isSubscribed().then((subscribed) => {
+      const btn = document.getElementById('push-toggle-btn');
+      if (btn) btn.textContent = subscribed ? 'Desactivar notificaciones' : 'Activar notificaciones';
+      const status = document.getElementById('push-status');
+      if (status && subscribed) status.textContent = 'Notificaciones activas en este dispositivo.';
+    });
+  })();
 })();
+
