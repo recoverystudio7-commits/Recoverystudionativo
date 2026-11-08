@@ -130,9 +130,11 @@ serve(async (req) => {
   }
 
   try {
-    // 1) Eliminar datos asociados (evitar FK)
-    await del(`/rest/v1/sessions?user_id=eq.${encodeURIComponent(userId)}`);
+    // 1) Eliminar datos asociados (evitar FK y triggers en cascada).
+    //    IMPORTANTE: pagos primero (evita que al borrar sesiones se actualicen
+    //    pagos por FK on delete set null y dispare guard_client_payment).
     await del(`/rest/v1/payments?user_id=eq.${encodeURIComponent(userId)}`);
+    await del(`/rest/v1/sessions?user_id=eq.${encodeURIComponent(userId)}`);
     await del(`/rest/v1/blocked_slots?created_by=eq.${encodeURIComponent(userId)}`);
     await del(`/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(userId)}`);
     await del(`/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}`);
