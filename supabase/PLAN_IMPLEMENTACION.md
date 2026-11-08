@@ -153,6 +153,37 @@ Supabase Auth envía el correo de invitación con su remitente por defecto. Para
 ### Remitente opcional (Custom SMTP)
 - Supabase → Auth → SMTP Settings → configurar con Resend SMTP (host: smtp.resend.com, port: 587, user: resend, password: RESEND_API_KEY).
 
+## 10) Notificaciones Push (Web Push / VAPID)
+
+**Objetivo:** avisos tipo app (reserva confirmada, recordatorio, cupo liberado) incluso sin correo abierto.
+
+### Pasos de aplicación segura
+1. Revisar el borrador en `supabase/review/2026-11-push-notifications/`.
+2. Generar par VAPID (una vez) y guardar: pública en frontend, privada como secreto.
+3. Aplicar SQL 01 (`push_subscriptions` + RLS) en Supabase.
+4. Configurar secretos: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
+5. Desplegar `send-push`.
+6. Publicar frontend (suscripción + SW push handler) solo después de pruebas OK.
+
+### Limitaciones conocidas
+- iOS/PWA: push solo en PWA instalada (iOS 16.4+).
+- Baja tasa de aceptación si se pide permiso muy pronto.
+
+## 11) Cupos y precios autoritativos en servidor
+
+**Objetivo:** la BD/función decide si el cupo está libre y qué precio aplica, evitando race conditions y manipulación de precios.
+
+### Pasos de aplicación segura
+1. Revisar el borrador en `supabase/review/2026-11-server-authoritative-booking/`.
+2. Probar RPC en entorno de prueba/staging.
+3. Actualizar frontend para usar la RPC (book-confirm, admin-session).
+4. Pruebas de concurrencia (dos dispositivos, mismo horario).
+5. Publicar frontend solo después de pruebas OK.
+
+### Riesgos
+- Constraints mal definidas pueden bloquear reservas legítimas.
+- Requiere despliegue coordinado (SQL + app).
+
 ## 9) Eliminación completa de usuario (hard delete)
 
 **Objetivo:** eliminar permanentemente una cuenta (auth + perfil + datos) para que no reaparezca en sincronización. Útil para bajas definitivas y limpieza de pruebas.
