@@ -2065,7 +2065,7 @@
   "variants": "",
   "imageUrl": "",
   "gifUrl": "",
-  "videoUrl": "",
+  "videoUrl": "https://www.youtube.com/results?search_query=heisman+steps+football+drill",
   "isActive": true,
   "sortOrder": 0
  },
@@ -2779,7 +2779,7 @@
   "variants": "",
   "imageUrl": "",
   "gifUrl": "",
-  "videoUrl": "",
+  "videoUrl": "https://www.youtube.com/results?search_query=broad+jump+technique",
   "isActive": true,
   "sortOrder": 0
  },
@@ -2983,7 +2983,7 @@
   "variants": "",
   "imageUrl": "",
   "gifUrl": "",
-  "videoUrl": "",
+  "videoUrl": "https://www.youtube.com/results?search_query=cone+drills+agility",
   "isActive": true,
   "sortOrder": 0
  },
@@ -3017,7 +3017,7 @@
   "variants": "",
   "imageUrl": "",
   "gifUrl": "",
-  "videoUrl": "",
+  "videoUrl": "https://www.youtube.com/results?search_query=backpedal+running+drill",
   "isActive": true,
   "sortOrder": 0
  },
@@ -3034,7 +3034,7 @@
   "variants": "",
   "imageUrl": "",
   "gifUrl": "",
-  "videoUrl": "",
+  "videoUrl": "https://www.youtube.com/results?search_query=deceleration+drill+stop+start",
   "isActive": true,
   "sortOrder": 0
  },
