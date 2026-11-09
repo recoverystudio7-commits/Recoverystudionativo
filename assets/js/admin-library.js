@@ -39,7 +39,7 @@
     (lib ? lib.all({ includeInactive: true }) : []).forEach((x) => { counts[x.category] = (counts[x.category] || 0) + 1; });
     return '<div class="view">'
       + '<div class="page-head"><div><span class="eyebrow">Entrenamiento</span><h1 class="page-title">Biblioteca de ejercicios</h1>'
-      + '<p class="page-sub">Edita cada ejercicio una vez: foto/GIF, descripción e indicaciones. Al armar rutinas eliges de aquí y el usuario lo ve con imágenes y tu marca.</p></div>'
+      + '<p class="page-sub">Edita cada ejercicio una vez: foto/GIF, descripción e indicaciones. Al armar rutinas eliges de aquí y el usuario lo ve con imágenes y tu marca. <small class="muted">Imágenes libres: free-exercise-db (Unlicense) y Exercise data by <a href="https://repdb.co" rel="nofollow" target="_blank" rel="noopener">RepDB</a>.</small></p></div>'
       + '<button class="btn btn-accent" data-action="library-new">' + UI.icon('plus', 17) + ' Nuevo ejercicio</button></div>'
       + '<div class="stats-grid">'
       + UI.kpi({ label: 'Ejercicios totales', value: String(total), icon: 'dumbbell', tone: 'blue', helper: activeCount + ' activos' })

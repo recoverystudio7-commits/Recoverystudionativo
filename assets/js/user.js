@@ -1199,6 +1199,7 @@
             <span>${UI.icon('user', 14)} Pauta asignada por Daniel Barrueto</span>
             <span>${UI.icon('info', 14)} Ante dolor o molestia, detén el ejercicio y avísale a tu coach.</span>
             <span>${UI.icon('whatsapp', 14)} ${U.esc(RS.BRAND ? RS.BRAND.whatsappDisplay : '')}</span>
+            <span class="muted small">Imágenes libres: free-exercise-db y <a href="https://repdb.co" rel="nofollow" target="_blank" rel="noopener">RepDB</a></span>
           </div>
         </article>`;
         })() : UI.empty({ icon: 'clipboard', title: 'Tu rutina está en camino', text: 'Cuando tu coach asigne tu pauta, aparecerá aquí con series, repeticiones y cargas.', action: '<a class="btn btn-accent btn-sm" href="#/agendar">Agendar evaluación</a>' })}
