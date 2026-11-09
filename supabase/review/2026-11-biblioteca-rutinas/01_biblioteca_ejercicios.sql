@@ -73,7 +73,7 @@ grant insert, update, delete on public.exercise_library to authenticated;
 -- --------------------------------------------------------------------------
 
 -- Musculación (25)
-insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, sort_order) values
+insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, common_errors, sort_order) values
 ('ex-mus-01','Sentadilla con barra','Musculación','Cuádriceps / Glúteo','Barra','Intermedio','Fuerza empuje de tren inferior con carga axial.','Barra sobre trapecio, pies ancho cadera, cadera entre talones, pecho arriba.','—',10),
 ('ex-mus-02','Prensa de piernas 45°','Musculación','Cuádriceps / Glúteo','Máquina','Principiante','Alternativa de sentadilla para cargas altas.','Espalda apoyada, pies medio plataforma, rodillas alineadas con punta de pie.','—',20),
 ('ex-mus-03','Sentadilla búlgara con mancuernas','Musculación','Cuádriceps / Glúteo','Mancuernas','Intermedio','Unilateral de fuerza y control.','Pie trasero elevado, torso leve inclinación, baja controlado.','—',30),
@@ -102,7 +102,7 @@ insert into public.exercise_library (id, name, category, muscle_group, equipment
 on conflict (id) do nothing;
 
 -- Peso corporal (20)
-insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, sort_order) values
+insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, common_errors, sort_order) values
 ('ex-pes-01','Flexiones','Peso corporal','Pecho / Tríceps','Sin material','Principiante','Empuje horizontal con peso corporal.','Manos bajo pecho, cuerpo en línea, baja pecho a 5 cm del suelo.','—',10),
 ('ex-pes-02','Flexiones diamante','Peso corporal','Tríceps','Sin material','Intermedio','Énfasis en tríceps.','Manos bajo esternón en forma de diamante, codos pegados.','—',20),
 ('ex-pes-03','Flexiones inclinadas','Peso corporal','Pecho','Banca / Silla','Principiante','Regresión de flexiones.','Manos elevadas, cuerpo en línea, baja controlado.','—',30),
@@ -126,7 +126,7 @@ insert into public.exercise_library (id, name, category, muscle_group, equipment
 on conflict (id) do nothing;
 
 -- CrossFit (25)
-insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, sort_order) values
+insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, common_errors, sort_order) values
 ('ex-cf-01','Burpees','CrossFit','Cuerpo completo','Sin material','Intermedio','Acondicionamiento de cuerpo completo.','Baja a plancha, pecho a suelo, salta de pie.','—',10),
 ('ex-cf-02','Thrusters','CrossFit','Cuerpo completo','Barra / Mancuernas','Avanzado','Front squat + push press.','Desde rack, sentadilla completa y empuje vertical.','—',20),
 ('ex-cf-03','Wall balls','CrossFit','Pierna / Hombros','Balón medicinal','Intermedio','Sentadilla con lanzamiento.','Sentadilla completa, lanza a objetivo alto.','—',30),
@@ -155,7 +155,7 @@ insert into public.exercise_library (id, name, category, muscle_group, equipment
 on conflict (id) do nothing;
 
 -- Kettlebell (18)
-insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, sort_order) values
+insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, common_errors, sort_order) values
 ('ex-kb-01','Swing a dos manos','Kettlebell','Cadera / Glúteo','Kettlebell','Intermedio','Balanceo de cadera con KB.','Bisagra, KB flota a pecho sin agacharse.','—',10),
 ('ex-kb-02','Swing a una mano','Kettlebell','Cadera','Kettlebell','Intermedio','Swing unilateral.','Mismo patrón, cambia de mano en el aire.','—',20),
 ('ex-kb-03','Goblet squat con kettlebell','Kettlebell','Pierna','Kettlebell','Principiante','Sentadilla copa.','KB a pecho, codos entre rodillas.','—',30),
@@ -177,7 +177,7 @@ insert into public.exercise_library (id, name, category, muscle_group, equipment
 on conflict (id) do nothing;
 
 -- Halterofilia (15)
-insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, sort_order) values
+insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, common_errors, sort_order) values
 ('ex-hal-01','Snatch completo','Halterofilia','Cuerpo completo','Barra','Avanzado','Arranque completo.','Tirón explosivo, recepción overhead en sentadilla.','—',10),
 ('ex-hal-02','Power snatch','Halterofilia','Cuerpo completo','Barra','Avanzado','Arranque de potencia.','Recepción alta sin sentadilla completa.','—',20),
 ('ex-hal-03','Hang snatch','Halterofilia','Cuerpo completo','Barra','Avanzado','Arranque desde colgado.','Barra sobre rodillas, tirón y recepción.','—',30),
@@ -196,7 +196,7 @@ insert into public.exercise_library (id, name, category, muscle_group, equipment
 on conflict (id) do nothing;
 
 -- Cardio (20)
-insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, sort_order) values
+insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, common_errors, sort_order) values
 ('ex-car-01','Jumping jacks','Cardio','Cuerpo completo','Sin material','Principiante','Cardio de impacto bajo-medio.','Salta abriendo piernas y brazos, cierra en centro.','—',10),
 ('ex-car-02','Trote en el lugar','Cardio','Cardio','Sin material','Principiante','Trote estacionario.','Rodillas a media altura, braceo suave.','—',20),
 ('ex-car-03','High knees','Cardio','Cardio / Pierna','Sin material','Principiante','Rodillas altas.','Rodilla a cadera, ritmo rápido.','—',30),
@@ -220,7 +220,7 @@ insert into public.exercise_library (id, name, category, muscle_group, equipment
 on conflict (id) do nothing;
 
 -- Movilidad (20)
-insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, sort_order) values
+insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, common_errors, sort_order) values
 ('ex-mov-01','Rotación 90/90 cadera','Movilidad','Cadera','Sin material','Principiante','Movilidad rotacional de cadera.','Siéntate, gira cadera sin mover torso.','—',10),
 ('ex-mov-02','Greatest stretch','Movilidad','Cuerpo completo','Sin material','Principiante','Estiramiento global.','Zancada con giro torácico.','—',20),
 ('ex-mov-03','Cat-cow','Movilidad','Columna','Sin material','Principiante','Movilidad espinal.','Alterna flexión y extensión suave.','—',30),
@@ -244,7 +244,7 @@ insert into public.exercise_library (id, name, category, muscle_group, equipment
 on conflict (id) do nothing;
 
 -- Core (18)
-insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, sort_order) values
+insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, common_errors, sort_order) values
 ('ex-cor-01','Plancha frontal','Core','Core','Sin material','Principiante','Estabilidad anterior.','Codos bajo hombros, cuerpo en línea.','—',10),
 ('ex-cor-02','Plancha lateral','Core','Oblicuos','Sin material','Principiante','Estabilidad lateral.','Codo bajo hombro, cadera alta.','—',20),
 ('ex-cor-03','Dead bug','Core','Core','Sin material','Principiante','Control anti-extensión.','Parte baja pegada, exhala al extender.','—',30),
@@ -266,7 +266,7 @@ insert into public.exercise_library (id, name, category, muscle_group, equipment
 on conflict (id) do nothing;
 
 -- Agilidad (20)
-insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, sort_order) values
+insert into public.exercise_library (id, name, category, muscle_group, equipment, difficulty, description, cues, common_errors, sort_order) values
 ('ex-agi-01','Tuck jumps','Agilidad','Potencia','Sin material','Intermedio','Salto con rodillas a pecho.','Aterriza suave, explota arriba.','—',10),
 ('ex-agi-02','Broad jump','Agilidad','Potencia','Sin material','Principiante','Salto horizontal.','Impulsa con brazos, aterriza en ambos pies.','—',20),
 ('ex-agi-03','Split jumps','Agilidad','Potencia','Sin material','Intermedio','Salto en tijera.','Alterna piernas en aire.','—',30),
