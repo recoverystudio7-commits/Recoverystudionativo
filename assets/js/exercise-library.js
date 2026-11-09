@@ -27,7 +27,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Full_Squat/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Full_Squat/1.jpg"
  },
  {
   "id": "ex-mus-02",
@@ -44,7 +46,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Press/1.jpg"
  },
  {
   "id": "ex-mus-03",
@@ -61,7 +65,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Squat_with_Dumbbells/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Squat_with_Dumbbells/1.jpg"
  },
  {
   "id": "ex-mus-04",
@@ -78,7 +84,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/1.jpg"
  },
  {
   "id": "ex-mus-05",
@@ -95,7 +103,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Deadlift/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Deadlift/1.jpg"
  },
  {
   "id": "ex-mus-06",
@@ -112,7 +122,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Hip_Thrust/1.jpg"
  },
  {
   "id": "ex-mus-07",
@@ -129,7 +141,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curls/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curls/1.jpg"
  },
  {
   "id": "ex-mus-08",
@@ -146,7 +160,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Extensions/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Leg_Extensions/1.jpg"
  },
  {
   "id": "ex-mus-09",
@@ -163,7 +179,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Calf_Raise/1.jpg"
  },
  {
   "id": "ex-mus-10",
@@ -180,7 +198,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Bench_Press_-_Medium_Grip/1.jpg"
  },
  {
   "id": "ex-mus-11",
@@ -197,7 +217,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bench_Press/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Bench_Press/1.jpg"
  },
  {
   "id": "ex-mus-12",
@@ -214,7 +236,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Incline_Bench_Press_-_Medium_Grip/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Incline_Bench_Press_-_Medium_Grip/1.jpg"
  },
  {
   "id": "ex-mus-13",
@@ -231,7 +255,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dips_-_Chest_Version/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dips_-_Chest_Version/1.jpg"
  },
  {
   "id": "ex-mus-14",
@@ -248,7 +274,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Barbell_Row/1.jpg"
  },
  {
   "id": "ex-mus-15",
@@ -265,7 +293,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Dumbbell_Row/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Dumbbell_Row/1.jpg"
  },
  {
   "id": "ex-mus-16",
@@ -282,7 +312,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Cable_Rows/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Cable_Rows/1.jpg"
  },
  {
   "id": "ex-mus-17",
@@ -299,7 +331,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Assisted_Pull-Up/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Assisted_Pull-Up/1.jpg"
  },
  {
   "id": "ex-mus-18",
@@ -316,7 +350,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Dumbbell_Curl/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Dumbbell_Curl/1.jpg"
  },
  {
   "id": "ex-mus-19",
@@ -333,7 +369,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Preacher_Curl/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Preacher_Curl/1.jpg"
  },
  {
   "id": "ex-mus-20",
@@ -350,7 +388,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Triceps_Pushdown/1.jpg"
  },
  {
   "id": "ex-mus-21",
@@ -367,7 +407,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Shoulder_Press/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Shoulder_Press/1.jpg"
  },
  {
   "id": "ex-mus-22",
@@ -384,7 +426,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Side_Lateral_Raise/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Side_Lateral_Raise/1.jpg"
  },
  {
   "id": "ex-mus-23",
@@ -401,7 +445,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench/1.jpg"
  },
  {
   "id": "ex-mus-24",
@@ -418,7 +464,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wide-Grip_Lat_Pulldown/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wide-Grip_Lat_Pulldown/1.jpg"
  },
  {
   "id": "ex-mus-25",
@@ -435,7 +483,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Face_Pull/1.jpg"
  },
  {
   "id": "ex-pes-01",
@@ -452,7 +502,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plyo_Push-up/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plyo_Push-up/1.jpg"
  },
  {
   "id": "ex-pes-02",
@@ -469,7 +521,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Close-Grip_Push-Up_off_of_a_Dumbbell/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Close-Grip_Push-Up_off_of_a_Dumbbell/1.jpg"
  },
  {
   "id": "ex-pes-03",
@@ -486,7 +540,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Push-Up/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Incline_Push-Up/1.jpg"
  },
  {
   "id": "ex-pes-04",
@@ -503,7 +559,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bodyweight_Squat/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bodyweight_Squat/1.jpg"
  },
  {
   "id": "ex-pes-05",
@@ -520,7 +578,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunges/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Lunges/1.jpg"
  },
  {
   "id": "ex-pes-06",
@@ -537,7 +597,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bodyweight_Walking_Lunge/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bodyweight_Walking_Lunge/1.jpg"
  },
  {
   "id": "ex-pes-07",
@@ -554,7 +616,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single_Leg_Glute_Bridge/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single_Leg_Glute_Bridge/1.jpg"
  },
  {
   "id": "ex-pes-08",
@@ -571,7 +635,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/wall-sit-main.webp"
  },
  {
   "id": "ex-pes-09",
@@ -588,7 +653,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Inverted_Row/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Inverted_Row/1.jpg"
  },
  {
   "id": "ex-pes-10",
@@ -605,7 +672,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wide-Grip_Rear_Pull-Up/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wide-Grip_Rear_Pull-Up/1.jpg"
  },
  {
   "id": "ex-pes-11",
@@ -622,7 +691,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Handstand_Push-Ups/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Handstand_Push-Ups/1.jpg"
  },
  {
   "id": "ex-pes-12",
@@ -639,7 +710,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bench_Dips/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bench_Dips/1.jpg"
  },
  {
   "id": "ex-pes-13",
@@ -656,7 +729,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/1.jpg"
  },
  {
   "id": "ex-pes-14",
@@ -673,7 +748,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Superman/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Superman/1.jpg"
  },
  {
   "id": "ex-pes-15",
@@ -690,7 +767,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/hollow-body-hold-main.webp"
  },
  {
   "id": "ex-pes-16",
@@ -707,7 +785,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Freehand_Jump_Squat/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Freehand_Jump_Squat/1.jpg"
  },
  {
   "id": "ex-pes-17",
@@ -724,7 +804,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/side-lunge-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/side-lunge-peak.webp"
  },
  {
   "id": "ex-pes-18",
@@ -741,7 +823,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Crossover_Reverse_Lunge/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Crossover_Reverse_Lunge/1.jpg"
  },
  {
   "id": "ex-pes-19",
@@ -758,7 +842,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/1.jpg"
  },
  {
   "id": "ex-pes-20",
@@ -775,7 +861,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Mountain_Climbers/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Mountain_Climbers/1.jpg"
  },
  {
   "id": "ex-cf-01",
@@ -792,7 +880,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/burpees-main.webp"
  },
  {
   "id": "ex-cf-02",
@@ -809,7 +898,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Thruster/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Thruster/1.jpg"
  },
  {
   "id": "ex-cf-03",
@@ -826,7 +917,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/wall-ball-main.webp"
  },
  {
   "id": "ex-cf-04",
@@ -843,7 +935,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Box_Jump/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Box_Jump/1.jpg"
  },
  {
   "id": "ex-cf-05",
@@ -860,7 +954,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Leg_Raise/1.jpg"
  },
  {
   "id": "ex-cf-06",
@@ -877,7 +973,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kipping_Muscle_Up/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kipping_Muscle_Up/1.jpg"
  },
  {
   "id": "ex-cf-07",
@@ -894,7 +992,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/jump-rope-main.webp"
  },
  {
   "id": "ex-cf-08",
@@ -911,7 +1010,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/jump-rope-main.webp"
  },
  {
   "id": "ex-cf-09",
@@ -928,7 +1028,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rowing_Stationary/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rowing_Stationary/1.jpg"
  },
  {
   "id": "ex-cf-10",
@@ -945,7 +1047,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rowing_Stationary/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rowing_Stationary/1.jpg"
  },
  {
   "id": "ex-cf-11",
@@ -962,7 +1066,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push_Press/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push_Press/1.jpg"
  },
  {
   "id": "ex-cf-12",
@@ -979,7 +1085,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/push-jerk-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/push-jerk-peak.webp"
  },
  {
   "id": "ex-cf-13",
@@ -996,7 +1104,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Smith_Machine_Hang_Power_Clean/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Smith_Machine_Hang_Power_Clean/1.jpg"
  },
  {
   "id": "ex-cf-14",
@@ -1013,7 +1123,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/treadmill-running-main.webp"
  },
  {
   "id": "ex-cf-15",
@@ -1030,7 +1141,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Farmers_Walk/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Farmers_Walk/1.jpg"
  },
  {
   "id": "ex-cf-16",
@@ -1047,7 +1160,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sled_Push/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sled_Push/1.jpg"
  },
  {
   "id": "ex-cf-17",
@@ -1064,7 +1179,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/sled-push-main.webp"
  },
  {
   "id": "ex-cf-18",
@@ -1081,7 +1197,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rope_Climb/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Rope_Climb/1.jpg"
  },
  {
   "id": "ex-cf-19",
@@ -1098,7 +1216,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Pistol_Squat/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Pistol_Squat/1.jpg"
  },
  {
   "id": "ex-cf-20",
@@ -1115,7 +1235,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sumo_Deadlift/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sumo_Deadlift/1.jpg"
  },
  {
   "id": "ex-cf-21",
@@ -1132,7 +1254,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Handstand_Push-Ups/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Handstand_Push-Ups/1.jpg"
  },
  {
   "id": "ex-cf-22",
@@ -1149,7 +1273,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Overhead_Squat/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Overhead_Squat/1.jpg"
  },
  {
   "id": "ex-cf-23",
@@ -1166,7 +1292,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Muscle_Up/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Muscle_Up/1.jpg"
  },
  {
   "id": "ex-cf-24",
@@ -1183,7 +1311,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/ski-erg-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/ski-erg-peak.webp"
  },
  {
   "id": "ex-cf-25",
@@ -1200,7 +1330,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Turkish_Get-Up_Squat_style/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Turkish_Get-Up_Squat_style/1.jpg"
  },
  {
   "id": "ex-kb-01",
@@ -1217,7 +1349,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Swings/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Swings/1.jpg"
  },
  {
   "id": "ex-kb-02",
@@ -1234,7 +1368,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Swings/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Swings/1.jpg"
  },
  {
   "id": "ex-kb-03",
@@ -1251,7 +1387,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Goblet_Squat/1.jpg"
  },
  {
   "id": "ex-kb-04",
@@ -1268,7 +1406,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Clean/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Clean/1.jpg"
  },
  {
   "id": "ex-kb-05",
@@ -1285,7 +1425,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Snatch/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Snatch/1.jpg"
  },
  {
   "id": "ex-kb-06",
@@ -1302,7 +1444,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Alternating_Kettlebell_Press/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Alternating_Kettlebell_Press/1.jpg"
  },
  {
   "id": "ex-kb-07",
@@ -1319,7 +1463,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Push_Press/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Push_Press/1.jpg"
  },
  {
   "id": "ex-kb-08",
@@ -1336,7 +1482,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Clean_and_Jerk/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/One-Arm_Kettlebell_Clean_and_Jerk/1.jpg"
  },
  {
   "id": "ex-kb-09",
@@ -1353,7 +1501,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Sumo_High_Pull/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Sumo_High_Pull/1.jpg"
  },
  {
   "id": "ex-kb-10",
@@ -1370,7 +1520,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/kettlebell-deadlift-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/kettlebell-deadlift-peak.webp"
  },
  {
   "id": "ex-kb-11",
@@ -1387,7 +1539,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/kettlebell-halo-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/kettlebell-halo-peak.webp"
  },
  {
   "id": "ex-kb-12",
@@ -1404,7 +1558,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Windmill/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Windmill/1.jpg"
  },
  {
   "id": "ex-kb-13",
@@ -1421,7 +1577,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Turkish_Get-Up_Squat_style/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kettlebell_Turkish_Get-Up_Squat_style/1.jpg"
  },
  {
   "id": "ex-kb-14",
@@ -1438,7 +1596,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/kettlebell-bottoms-up-hold-main.webp"
  },
  {
   "id": "ex-kb-15",
@@ -1455,7 +1614,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Farmers_Walk/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Farmers_Walk/1.jpg"
  },
  {
   "id": "ex-kb-16",
@@ -1472,7 +1633,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sumo_Deadlift/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Sumo_Deadlift/1.jpg"
  },
  {
   "id": "ex-kb-17",
@@ -1489,7 +1652,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Russian_Twist/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Russian_Twist/1.jpg"
  },
  {
   "id": "ex-kb-18",
@@ -1506,7 +1671,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Alternating_Renegade_Row/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Alternating_Renegade_Row/1.jpg"
  },
  {
   "id": "ex-hal-01",
@@ -1523,7 +1690,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Snatch/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Snatch/1.jpg"
  },
  {
   "id": "ex-hal-02",
@@ -1540,7 +1709,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Power_Snatch/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Power_Snatch/1.jpg"
  },
  {
   "id": "ex-hal-03",
@@ -1557,7 +1728,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hang_Snatch/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hang_Snatch/1.jpg"
  },
  {
   "id": "ex-hal-04",
@@ -1574,7 +1747,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/hang-snatch-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/hang-snatch-peak.webp"
  },
  {
   "id": "ex-hal-05",
@@ -1591,7 +1766,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Clean/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Clean/1.jpg"
  },
  {
   "id": "ex-hal-06",
@@ -1608,7 +1785,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Power_Clean/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Power_Clean/1.jpg"
  },
  {
   "id": "ex-hal-07",
@@ -1625,7 +1804,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hang_Clean/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hang_Clean/1.jpg"
  },
  {
   "id": "ex-hal-08",
@@ -1642,7 +1823,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Clean_and_Jerk/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Clean_and_Jerk/1.jpg"
  },
  {
   "id": "ex-hal-09",
@@ -1659,7 +1842,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Squat_Clean_Grip/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Front_Squat_Clean_Grip/1.jpg"
  },
  {
   "id": "ex-hal-10",
@@ -1676,7 +1861,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Overhead_Squat/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Overhead_Squat/1.jpg"
  },
  {
   "id": "ex-hal-11",
@@ -1693,7 +1880,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Jerk/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Jerk/1.jpg"
  },
  {
   "id": "ex-hal-12",
@@ -1710,7 +1899,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/push-jerk-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/push-jerk-peak.webp"
  },
  {
   "id": "ex-hal-13",
@@ -1727,7 +1918,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Snatch_Balance/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Snatch_Balance/1.jpg"
  },
  {
   "id": "ex-hal-14",
@@ -1744,7 +1937,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Clean_Pull/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Clean_Pull/1.jpg"
  },
  {
   "id": "ex-hal-15",
@@ -1761,7 +1956,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/split-jerk-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/split-jerk-peak.webp"
  },
  {
   "id": "ex-car-01",
@@ -1778,7 +1975,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/jumping-jacks-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/jumping-jacks-peak.webp"
  },
  {
   "id": "ex-car-02",
@@ -1795,7 +1994,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Jogging_Treadmill/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Jogging_Treadmill/1.jpg"
  },
  {
   "id": "ex-car-03",
@@ -1812,7 +2013,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/high-knees-main.webp"
  },
  {
   "id": "ex-car-04",
@@ -1829,7 +2031,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Mountain_Climbers/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Mountain_Climbers/1.jpg"
  },
  {
   "id": "ex-car-05",
@@ -1846,7 +2050,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/stationary-bike-main.webp"
  },
  {
   "id": "ex-car-06",
@@ -1863,7 +2068,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/incline-treadmill-walk-main.webp"
  },
  {
   "id": "ex-car-07",
@@ -1880,7 +2086,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Elliptical_Trainer/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Elliptical_Trainer/1.jpg"
  },
  {
   "id": "ex-car-08",
@@ -1897,7 +2105,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/box-jump-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/box-jump-peak.webp"
  },
  {
   "id": "ex-car-09",
@@ -1914,7 +2124,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single_Leg_Butt_Kick/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single_Leg_Butt_Kick/1.jpg"
  },
  {
   "id": "ex-car-10",
@@ -1931,7 +2143,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/balance-dome-step-up-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/balance-dome-step-up-peak.webp"
  },
  {
   "id": "ex-car-11",
@@ -1948,7 +2162,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/banded-lateral-walk-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/banded-lateral-walk-peak.webp"
  },
  {
   "id": "ex-car-12",
@@ -1965,7 +2181,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/banded-lateral-walk-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/banded-lateral-walk-peak.webp"
  },
  {
   "id": "ex-car-13",
@@ -1982,7 +2200,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/barbell-box-squat-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/barbell-box-squat-peak.webp"
  },
  {
   "id": "ex-car-14",
@@ -1999,7 +2219,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/jump-rope-main.webp"
  },
  {
   "id": "ex-car-15",
@@ -2016,7 +2237,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/heel-to-toe-walk-main.webp"
  },
  {
   "id": "ex-car-16",
@@ -2033,7 +2255,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/knee-to-chest-stretch-main.webp"
  },
  {
   "id": "ex-car-17",
@@ -2050,7 +2273,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/banded-lateral-walk-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/banded-lateral-walk-peak.webp"
  },
  {
   "id": "ex-car-18",
@@ -2084,7 +2309,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/banded-lateral-walk-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/banded-lateral-walk-peak.webp"
  },
  {
   "id": "ex-car-20",
@@ -2101,7 +2328,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Jogging_Treadmill/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Jogging_Treadmill/1.jpg"
  },
  {
   "id": "ex-mov-01",
@@ -2118,7 +2347,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/90-90-hold-main.webp"
  },
  {
   "id": "ex-mov-02",
@@ -2135,7 +2365,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/worlds-greatest-stretch-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/worlds-greatest-stretch-peak.webp"
  },
  {
   "id": "ex-mov-03",
@@ -2152,7 +2384,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/cat-cow-main.webp"
  },
  {
   "id": "ex-mov-04",
@@ -2169,7 +2402,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/thoracic-bridge-main.webp"
  },
  {
   "id": "ex-mov-05",
@@ -2186,7 +2420,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/ball-pike-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/ball-pike-peak.webp"
  },
  {
   "id": "ex-mov-06",
@@ -2203,7 +2439,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/bench-couch-stretch-main.webp"
  },
  {
   "id": "ex-mov-07",
@@ -2220,7 +2457,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/deep-squat-hold-main.webp"
  },
  {
   "id": "ex-mov-08",
@@ -2237,7 +2475,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/bench-ankle-stretch-main.webp"
  },
  {
   "id": "ex-mov-09",
@@ -2254,7 +2493,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/banded-shoulder-stretch-main.webp"
  },
  {
   "id": "ex-mov-10",
@@ -2271,7 +2511,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Pull_Apart/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Band_Pull_Apart/1.jpg"
  },
  {
   "id": "ex-mov-11",
@@ -2288,7 +2530,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/legs-up-the-wall-main.webp"
  },
  {
   "id": "ex-mov-12",
@@ -2305,7 +2548,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/kneeling-hip-flexor-stretch-main.webp"
  },
  {
   "id": "ex-mov-13",
@@ -2322,7 +2566,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/pigeon-stretch-main.webp"
  },
  {
   "id": "ex-mov-14",
@@ -2339,7 +2584,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Butterfly/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Butterfly/1.jpg"
  },
  {
   "id": "ex-mov-15",
@@ -2356,7 +2603,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/standing-calf-stretch-main.webp"
  },
  {
   "id": "ex-mov-16",
@@ -2373,7 +2621,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kneeling_Forearm_Stretch/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Kneeling_Forearm_Stretch/1.jpg"
  },
  {
   "id": "ex-mov-17",
@@ -2390,7 +2640,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Neck_Stretch/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Side_Neck_Stretch/1.jpg"
  },
  {
   "id": "ex-mov-18",
@@ -2407,7 +2659,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wrist_Circles/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wrist_Circles/1.jpg"
  },
  {
   "id": "ex-mov-19",
@@ -2424,7 +2678,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/cable-external-rotation-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/cable-external-rotation-peak.webp"
  },
  {
   "id": "ex-mov-20",
@@ -2441,7 +2697,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Hip_Circles/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Hip_Circles/1.jpg"
  },
  {
   "id": "ex-cor-01",
@@ -2458,7 +2716,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/1.jpg"
  },
  {
   "id": "ex-cor-02",
@@ -2475,7 +2735,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push_Up_to_Side_Plank/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push_Up_to_Side_Plank/1.jpg"
  },
  {
   "id": "ex-cor-03",
@@ -2492,7 +2754,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dead_Bug/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dead_Bug/1.jpg"
  },
  {
   "id": "ex-cor-04",
@@ -2509,7 +2773,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/bird-dog-hold-main.webp"
  },
  {
   "id": "ex-cor-05",
@@ -2526,7 +2791,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/hollow-body-hold-main.webp"
  },
  {
   "id": "ex-cor-06",
@@ -2543,7 +2809,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/v-ups-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/v-ups-peak.webp"
  },
  {
   "id": "ex-cor-07",
@@ -2560,7 +2828,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Russian_Twist/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Russian_Twist/1.jpg"
  },
  {
   "id": "ex-cor-08",
@@ -2577,7 +2847,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pallof_Press/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Pallof_Press/1.jpg"
  },
  {
   "id": "ex-cor-09",
@@ -2594,7 +2866,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Farmers_Walk/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Farmers_Walk/1.jpg"
  },
  {
   "id": "ex-cor-10",
@@ -2611,7 +2885,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/banded-shoulder-stretch-main.webp"
  },
  {
   "id": "ex-cor-11",
@@ -2628,7 +2903,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Reverse_Crunch/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Reverse_Crunch/1.jpg"
  },
  {
   "id": "ex-cor-12",
@@ -2645,7 +2922,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Crunches/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Crunches/1.jpg"
  },
  {
   "id": "ex-cor-13",
@@ -2662,7 +2941,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Pike/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hanging_Pike/1.jpg"
  },
  {
   "id": "ex-cor-14",
@@ -2679,7 +2960,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push_Up_to_Side_Plank/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push_Up_to_Side_Plank/1.jpg"
  },
  {
   "id": "ex-cor-15",
@@ -2696,7 +2979,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/1.jpg"
  },
  {
   "id": "ex-cor-16",
@@ -2713,7 +2998,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/ball-leg-curl-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/ball-leg-curl-peak.webp"
  },
  {
   "id": "ex-cor-17",
@@ -2730,7 +3017,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/hanging-knee-raise-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/hanging-knee-raise-peak.webp"
  },
  {
   "id": "ex-cor-18",
@@ -2747,7 +3036,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Farmers_Walk/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Farmers_Walk/1.jpg"
  },
  {
   "id": "ex-agi-01",
@@ -2764,7 +3055,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Knee_Tuck_Jump/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Knee_Tuck_Jump/1.jpg"
  },
  {
   "id": "ex-agi-02",
@@ -2798,7 +3091,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Jump/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Split_Jump/1.jpg"
  },
  {
   "id": "ex-agi-04",
@@ -2815,7 +3110,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/barbell-lunge-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/barbell-lunge-peak.webp"
  },
  {
   "id": "ex-agi-05",
@@ -2832,7 +3129,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Freehand_Jump_Squat/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Freehand_Jump_Squat/1.jpg"
  },
  {
   "id": "ex-agi-06",
@@ -2849,7 +3148,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Depth_Jump_Leap/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Depth_Jump_Leap/1.jpg"
  },
  {
   "id": "ex-agi-07",
@@ -2866,7 +3167,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lateral_Bound/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lateral_Bound/1.jpg"
  },
  {
   "id": "ex-agi-08",
@@ -2883,7 +3186,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single-Leg_Lateral_Hop/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Single-Leg_Lateral_Hop/1.jpg"
  },
  {
   "id": "ex-agi-09",
@@ -2900,7 +3205,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Medicine_Ball_Scoop_Throw/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Medicine_Ball_Scoop_Throw/1.jpg"
  },
  {
   "id": "ex-agi-10",
@@ -2917,7 +3224,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Medicine_Ball_Chest_Pass/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Medicine_Ball_Chest_Pass/1.jpg"
  },
  {
   "id": "ex-agi-11",
@@ -2934,7 +3243,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/medicine-ball-slam-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/medicine-ball-slam-peak.webp"
  },
  {
   "id": "ex-agi-12",
@@ -2951,7 +3262,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Medicine_Ball_Full_Twist/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Medicine_Ball_Full_Twist/1.jpg"
  },
  {
   "id": "ex-agi-13",
@@ -2968,7 +3281,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/stair-climber-main.webp"
  },
  {
   "id": "ex-agi-14",
@@ -3002,7 +3316,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wind_Sprints/0.jpg",
+  "imageEnd": "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Wind_Sprints/1.jpg"
  },
  {
   "id": "ex-agi-16",
@@ -3053,7 +3369,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/deep-squat-hold-main.webp"
  },
  {
   "id": "ex-agi-19",
@@ -3070,7 +3387,9 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/balance-dome-crunch-start.webp",
+  "imageEnd": "https://exercise-dataset.com/images/flat/balance-dome-crunch-peak.webp"
  },
  {
   "id": "ex-agi-20",
@@ -3087,7 +3406,8 @@
   "gifUrl": "",
   "videoUrl": "",
   "isActive": true,
-  "sortOrder": 0
+  "sortOrder": 0,
+  "imageStart": "https://exercise-dataset.com/images/flat/kettlebell-overhead-carry-main.webp"
  }
 
 ];
@@ -3114,6 +3434,8 @@
       commonErrors: row.common_errors || '',
       variants: row.variants || '',
       imageUrl: row.image_url || '',
+      imageStart: row.image_start_url || row.image_url || '',
+      imageEnd: row.image_end_url || '',
       gifUrl: row.gif_url || '',
       videoUrl: row.video_url || '',
       isActive: row.is_active !== false,
@@ -3133,7 +3455,9 @@
       cues: item.cues || '',
       common_errors: item.commonErrors || '',
       variants: item.variants || '',
-      image_url: item.imageUrl || '',
+      image_url: item.imageUrl || item.imageStart || '',
+      image_start_url: item.imageStart || item.imageUrl || '',
+      image_end_url: item.imageEnd || '',
       gif_url: item.gifUrl || '',
       video_url: item.videoUrl || '',
       is_active: item.isActive !== false,
@@ -3260,6 +3584,8 @@
       commonErrors: item.commonErrors || '',
       variants: item.variants || '',
       imageUrl: item.imageUrl || '',
+      imageStart: item.imageStart || '',
+      imageEnd: item.imageEnd || '',
       gifUrl: item.gifUrl || '',
       videoUrl: item.videoUrl || '',
     };

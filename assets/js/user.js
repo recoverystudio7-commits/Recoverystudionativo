@@ -1141,6 +1141,9 @@
           const exCard = (it, n) => {
             const libEx = RS.ExerciseLibrary ? RS.ExerciseLibrary.get(it.exerciseId) : null;
             const media = it.gifUrl || it.imageUrl || (libEx ? (libEx.gifUrl || libEx.imageUrl || '') : '');
+            const startImg = it.imageStart || (libEx && libEx.imageStart) || (libEx && libEx.imageUrl) || it.imageUrl || '';
+            const endImg = it.imageEnd || (libEx && libEx.imageEnd) || '';
+            const showDual = !!(startImg && endImg);
             const hasDetails = !!(it.description || it.cues || it.commonErrors || it.variants || (libEx && (libEx.description || libEx.cues)));
             const videoSrc = it.videoUrl || (libEx ? libEx.videoUrl : '');
             const hasVideo = !!(videoSrc && /^https?:\/\//i.test(videoSrc));
@@ -1150,7 +1153,7 @@
             const errs = it.commonErrors || (libEx && libEx.commonErrors) || '';
             const vars = it.variants || (libEx && libEx.variants) || '';
             return `<article class="ex-card">
-              <div class="ex-media">${media ? '<img src="' + U.esc(media) + '" alt="' + U.esc(it.name) + '" loading="lazy">' : '<span class="ex-media-placeholder">' + UI.icon('dumbbell', 22) + '</span>'}</div>
+              <div class="ex-media${showDual ? ' dual' : ''}">${showDual ? '<figure class="ex-frame"><img src="' + U.esc(startImg) + '" alt="' + U.esc(it.name) + ' inicio" loading="lazy"><figcaption>Inicio</figcaption></figure><span class="ex-arrow">→</span><figure class="ex-frame"><img src="' + U.esc(endImg) + '" alt="' + U.esc(it.name) + ' final" loading="lazy"><figcaption>Final</figcaption></figure>' : (media ? '<img src="' + U.esc(media) + '" alt="' + U.esc(it.name) + '" loading="lazy">' : '<span class="ex-media-placeholder">' + UI.icon('dumbbell', 22) + '</span>')}</div>
               <div class="ex-body">
                 <div class="ex-top"><span class="ex-num">${String(n).padStart(2, '0')}</span><h3>${U.esc(it.name)}</h3></div>
                 ${chips.length ? '<div class="ex-chips">' + chips.map((c) => '<span class="ex-chip">' + U.esc(c) + '</span>').join('') + '</div>' : ''}

@@ -70,11 +70,15 @@
       commonErrors: '',
       variants: '',
       imageUrl: '',
+      imageStart: '',
+      imageEnd: '',
       gifUrl: '',
       videoUrl: '',
       isActive: true,
       sortOrder: 0,
     };
+    if (!ex.imageStart && ex.imageUrl) ex.imageStart = ex.imageUrl;
+    if (!ex.imageUrl && ex.imageStart) ex.imageUrl = ex.imageStart;
     UI.modal({
       title: existing ? 'Editar ejercicio' : 'Nuevo ejercicio',
       subtitle: 'Esto se usa al armar rutinas y lo ve el usuario con tu marca.',
@@ -89,8 +93,9 @@
         + '<div class="field"><label>Orden</label><input class="input" name="sortOrder" type="number" value="' + (ex.sortOrder || 0) + '"></div>'
         + '</div>'
         + '<div class="grid grid-2 gap-sm" style="margin-top:10px">'
-        + '<div class="field"><label>Foto (URL)</label><input class="input" name="imageUrl" type="url" value="' + U.esc(ex.imageUrl || '') + '" placeholder="https://…"></div>'
-        + '<div class="field"><label>GIF animado (URL)</label><input class="input" name="gifUrl" type="url" value="' + U.esc(ex.gifUrl || '') + '" placeholder="https://… (si hay GIF, se prioriza)"></div>'
+        + '<div class="field"><label>Foto inicial (URL)</label><input class="input" name="imageStart" type="url" value="' + U.esc(ex.imageStart || ex.imageUrl || '') + '" placeholder="https://… (inicio)"></div>'
+        + '<div class="field"><label>Foto final (URL)</label><input class="input" name="imageEnd" type="url" value="' + U.esc(ex.imageEnd || '') + '" placeholder="https://… (final)"></div>'
+        + '<div class="field"><label>GIF animado (URL, opcional)</label><input class="input" name="gifUrl" type="url" value="' + U.esc(ex.gifUrl || '') + '" placeholder="https://… (si hay GIF, se prioriza)"></div>'
         + '<div class="field"><label>Video YouTube (URL)</label><input class="input" name="videoUrl" type="url" value="' + U.esc(ex.videoUrl || '') + '" placeholder="https://www.youtube.com/…"></div>'
         + '<div class="field" style="display:flex;align-items:center;gap:8px"><label class="check check-boxed" style="flex:1"><input type="checkbox" name="isActive" ' + (ex.isActive ? 'checked' : '') + '><span>Activo / visible</span></label></div>'
         + '</div>'
@@ -111,6 +116,8 @@
       err.classList.add('show');
       return;
     }
+    const startUrl = form.imageStart ? form.imageStart.value.trim() : '';
+    const endUrl = form.imageEnd ? form.imageEnd.value.trim() : '';
     const item = {
       id: form.id.value,
       name,
@@ -119,7 +126,9 @@
       equipment: form.equipment.value.trim() || 'Sin material',
       difficulty: form.difficulty.value,
       sortOrder: Number(form.sortOrder.value) || 0,
-      imageUrl: form.imageUrl.value.trim(),
+      imageStart: startUrl,
+      imageEnd: endUrl,
+      imageUrl: startUrl,
       gifUrl: form.gifUrl.value.trim(),
       videoUrl: form.videoUrl.value.trim(),
       description: form.description.value.trim(),
