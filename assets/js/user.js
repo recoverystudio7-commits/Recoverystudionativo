@@ -1139,10 +1139,16 @@
       </div>` : `<div class="view">
         ${routine ? (() => {
           const exCard = (it, n) => {
-            const media = it.gifUrl || it.imageUrl || '';
-            const hasDetails = !!(it.description || it.cues || it.commonErrors || it.variants);
-            const hasVideo = !!(it.videoUrl && /^https?:\/\//i.test(it.videoUrl));
-            const chips = [it.category, it.muscleGroup, it.equipment, it.difficulty].filter(Boolean).slice(0, 3);
+            const libEx = RS.ExerciseLibrary ? RS.ExerciseLibrary.get(it.exerciseId) : null;
+            const media = it.gifUrl || it.imageUrl || (libEx ? (libEx.gifUrl || libEx.imageUrl || '') : '');
+            const hasDetails = !!(it.description || it.cues || it.commonErrors || it.variants || (libEx && (libEx.description || libEx.cues)));
+            const videoSrc = it.videoUrl || (libEx ? libEx.videoUrl : '');
+            const hasVideo = !!(videoSrc && /^https?:\/\//i.test(videoSrc));
+            const chips = [it.category || (libEx && libEx.category), it.muscleGroup || (libEx && libEx.muscleGroup), it.equipment || (libEx && libEx.equipment), it.difficulty || (libEx && libEx.difficulty)].filter(Boolean).slice(0, 3);
+            const desc = it.description || (libEx && libEx.description) || '';
+            const cues = it.cues || (libEx && libEx.cues) || '';
+            const errs = it.commonErrors || (libEx && libEx.commonErrors) || '';
+            const vars = it.variants || (libEx && libEx.variants) || '';
             return `<article class="ex-card">
               <div class="ex-media">${media ? '<img src="' + U.esc(media) + '" alt="' + U.esc(it.name) + '" loading="lazy">' : '<span class="ex-media-placeholder">' + UI.icon('dumbbell', 22) + '</span>'}</div>
               <div class="ex-body">
@@ -1150,8 +1156,8 @@
                 ${chips.length ? '<div class="ex-chips">' + chips.map((c) => '<span class="ex-chip">' + U.esc(c) + '</span>').join('') + '</div>' : ''}
                 <div class="ex-params"><span><em>Series</em><strong>${U.esc(it.sets || '—')}</strong></span><span><em>Reps</em><strong>${U.esc(it.reps || '—')}</strong></span><span><em>Carga</em><strong>${U.esc(it.load || '—')}</strong></span><span><em>Descanso</em><strong>${U.esc(it.rest || '—')}</strong></span></div>
                 ${it.notes ? '<p class="ex-note">' + U.esc(it.notes) + '</p>' : ''}
-                <div class="ex-actions">${hasDetails ? '<button class="btn btn-ghost btn-sm" data-action="ex-details">Ver indicaciones</button>' : ''}${hasVideo ? '<a class="btn btn-outline btn-sm" href="' + U.esc(it.videoUrl) + '" target="_blank" rel="noopener">' + UI.icon('play', 14) + ' Ver video</a>' : ''}</div>
-                ${hasDetails ? '<div class="ex-details" hidden>' + (it.description ? '<p><strong>¿Qué es?</strong> ' + U.esc(it.description) + '</p>' : '') + (it.cues ? '<p><strong>Indicaciones:</strong> ' + U.esc(it.cues) + '</p>' : '') + (it.commonErrors ? '<p><strong>Errores comunes:</strong> ' + U.esc(it.commonErrors) + '</p>' : '') + (it.variants ? '<p><strong>Variantes:</strong> ' + U.esc(it.variants) + '</p>' : '') + '</div>' : ''}
+                <div class="ex-actions">${hasDetails ? '<button class="btn btn-ghost btn-sm" data-action="ex-details">Ver indicaciones</button>' : ''}${hasVideo ? '<a class="btn btn-outline btn-sm" href="' + U.esc(videoSrc) + '" target="_blank" rel="noopener">' + UI.icon('play', 14) + ' Ver video</a>' : ''}</div>
+                ${hasDetails ? '<div class="ex-details" hidden>' + (desc ? '<p><strong>¿Qué es?</strong> ' + U.esc(desc) + '</p>' : '') + (cues ? '<p><strong>Indicaciones:</strong> ' + U.esc(cues) + '</p>' : '') + (errs ? '<p><strong>Errores comunes:</strong> ' + U.esc(errs) + '</p>' : '') + (vars ? '<p><strong>Variantes:</strong> ' + U.esc(vars) + '</p>' : '') + '</div>' : ''}
               </div>
             </article>`;
           };
