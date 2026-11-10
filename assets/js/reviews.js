@@ -240,6 +240,7 @@
           <span class="hero-eyebrow">${UI.icon('star', 14)} Comunidad Recovery Studio</span>
           <h1>Lo que dicen<br><em>nuestros clientes.</em></h1>
           <p>Opiniones reales de personas que entrenan, se recuperan y vuelven más fuertes con nosotros. Tu experiencia también ayuda a otros.</p>
+          <a class="btn btn-outline reviews-google-cta" href="https://g.page/r/CZxVsgDhqJElEBM/review" target="_blank" rel="noopener">${UI.icon('star', 16)} Dejar reseña en Google</a>
           <div data-reviews-score>${scoreCard([])}</div>
         </section>
 

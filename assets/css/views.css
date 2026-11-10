@@ -6999,6 +6999,10 @@
   color: var(--muted);
 }
 
+.reviews-google-cta {
+  margin-top: 18px;
+}
+
 .reviews-score-card {
   display: flex;
   align-items: center;
