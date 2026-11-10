@@ -1,181 +1,179 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-CL">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gracias · Recovery Studio</title>
-<meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="assets/css/styles.css">
-<style>
-  body { font-family: Inter, system-ui, sans-serif; margin:0; background:#eef1f6; color:#1a1a1a; }
-  .wrap { max-width:680px; margin:40px auto; padding:20px; }
-  .card { background:#fff; border-radius:16px; padding:28px; box-shadow:0 6px 20px rgba(0,0,0,.06); }
-  .icon { font-size:44px; text-align:center; }
-  h1 { color:#0A2342; margin:10px 0 6px; text-align:center; }
-  p { color:#555; line-height:1.5; }
-  .steps { display:grid; gap:10px; margin:18px 0; }
-  .step { display:flex; gap:12px; align-items:flex-start; background:#f4f6f9; padding:12px; border-radius:10px; }
-  .step .n { background:#0A2342; color:#fff; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex:0 0 26px; }
-  .step strong { color:#0A2342; }
-  .bank { background:#f4f6f9; padding:14px; border-radius:10px; font-size:14px; line-height:1.7; margin:14px 0; }
-  .bank .row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid #e2e6ee; }
-  .bank .row:last-child { border-bottom:none; }
-  .bank .label { color:#666; font-size:12px; }
-  .bank .value { font-weight:600; color:#0A2342; word-break:break-all; }
-  .copy { background:#fff; border:1px solid #ccc; border-radius:6px; padding:2px 8px; font-size:12px; cursor:pointer; }
-  .copy:hover { background:#eef3fa; }
-  .btn { display:inline-block; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; margin:6px 4px; }
-  .btn.wa { background:#25D366; color:#fff; }
-  .btn.review { background:#f5a623; color:#1a1a1a; }
-  .btn.ghost { background:#f4f6f9; color:#0A2342; }
-  .center { text-align:center; }
-  .count { font-size:13px; color:#888; margin-top:14px; text-align:center; }
-  .refbox { background:#fff7e6; border:1px solid #f5a623; padding:10px 12px; border-radius:8px; font-size:13px; margin:10px 0; }
-  @media (max-width:520px){ .bank .row { flex-direction:column; align-items:flex-start; } }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reserva confirmada | Recovery Studio</title>
+  <meta name="description" content="Confirmación de reserva en Recovery Studio, Gorbea.">
+  <meta name="robots" content="noindex, follow">
+  <meta name="theme-color" content="#0A2342">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css">
+  <script src="assets/js/analytics.js"></script>
+  <style>
+    .confirm-wrap { max-width: 720px; margin: 0 auto; padding: 56px 20px 72px; }
+    .confirm-card {
+      background: #FFFFFF; border: 1px solid #E4E9F0; border-radius: 20px;
+      padding: 40px 32px; box-shadow: 0 18px 40px -28px rgba(10, 35, 66, .45); text-align: center;
+    }
+    .confirm-icon {
+      width: 72px; height: 72px; margin: 0 auto 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: #E8F7EE; color: #1E9E5A;
+    }
+    .confirm-icon svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+    .confirm-card h1 { font-size: clamp(1.7rem, 4vw, 2.2rem); line-height: 1.15; margin: 0 0 12px; color: #0A2342; letter-spacing: -.02em; }
+    .confirm-card > p { color: #4A5C74; font-size: 1.02rem; line-height: 1.6; margin: 0 0 24px; }
+    .confirm-details { display: none; text-align: left; background: #F6F8FB; border-radius: 14px; padding: 6px 20px; margin: 0 0 24px; }
+    .confirm-details.is-visible { display: block; }
+    .confirm-details div { display: flex; justify-content: space-between; gap: 16px; padding: 13px 0; border-bottom: 1px solid #E4E9F0; font-size: .95rem; }
+    .confirm-details div:last-child { border-bottom: 0; }
+    .confirm-details span { color: #6B7C93; }
+    .confirm-details strong { color: #0A2342; text-align: right; }
+    .confirm-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 8px; }
+    .confirm-next { text-align: left; margin-top: 32px; padding-top: 28px; border-top: 1px solid #E4E9F0; }
+    .confirm-next h2 { font-size: 1.05rem; color: #0A2342; margin: 0 0 14px; }
+    .confirm-next ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+    .confirm-next li { position: relative; padding-left: 28px; color: #4A5C74; font-size: .95rem; line-height: 1.5; }
+    .confirm-next li::before { content: "✓"; position: absolute; left: 0; top: 0; color: #1E9E5A; font-weight: 700; }
+    .confirm-note { margin-top: 22px; font-size: .86rem; color: #6B7C93; }
+    .confirm-note a { color: #123F70; }
+    .pending .confirm-icon { background: #FFF3E6; color: #E56A00; }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <div class="icon">✅</div>
-    <h1>¡Gracias por tu pago!</h1>
-    <p class="center">Tu pago quedó registrado y está en revisión. Sigue estos pasos para confirmar tu reserva o activar tus sesiones.</p>
-
-    <div id="refbox" class="refbox" style="display:none;"></div>
-
-    <div class="steps">
-      <div class="step"><div class="n">1</div><div><strong>Transfiere</strong><br>Usa los datos bancarios de abajo. Puedes copiar cada dato con el botón.</div></div>
-      <div class="step"><div class="n">2</div><div><strong>Envía el comprobante</strong><br>Por WhatsApp al +56 9 6505 8439, indicando tu nombre y la referencia.</div></div>
-      <div class="step"><div class="n">3</div><div><strong>Espera confirmación</strong><br>Te contactaremos para validar el pago y activar tu reserva o sesiones.</div></div>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="./index.html" aria-label="Recovery Studio — inicio">
+        <img src="assets/icon.svg" alt="" width="42" height="42">
+        <span><strong>Recovery Studio</strong><small>Kinesiología y movimiento</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Servicios">
+        <a href="kinesiologia.html">Kinesiología</a>
+        <a href="masajes.html">Masajes</a>
+        <a href="sauna.html">Sauna</a>
+        <a href="asesorias.html">Asesorías</a>
+        <a href="precios.html">Precios</a>
+      </nav>
+      <div class="header-actions">
+        <a class="btn btn-ghost btn-sm" href="https://wa.me/56965058439?text=Hola%20Recovery%20Studio." target="_blank" rel="noopener">WhatsApp</a>
+        <a class="btn btn-primary btn-sm" href="./index.html#/agendar">Agendar</a>
+      </div>
     </div>
+  </header>
 
-    <div class="bank" id="bank">
-      <div class="row"><span class="label">Titular</span><span class="value" data-copy="DANIEL ESTEBAN BARRUETO">DANIEL ESTEBAN BARRUETO <button class="copy" data-field="holder">Copiar</button></span></div>
-      <div class="row"><span class="label">RUT</span><span class="value" data-copy="17.375.282-2">17.375.282-2 <button class="copy" data-field="rut">Copiar</button></span></div>
-      <div class="row"><span class="label">Banco</span><span class="value" data-copy="BCI">BCI <button class="copy" data-field="bank">Copiar</button></span></div>
-      <div class="row"><span class="label">Tipo de cuenta</span><span class="value" data-copy="Cuenta Corriente">Cuenta Corriente <button class="copy" data-field="type">Copiar</button></span></div>
-      <div class="row"><span class="label">Nº de cuenta</span><span class="value" data-copy="72771619">72771619 <button class="copy" data-field="account">Copiar</button></span></div>
-      <div class="row"><span class="label">Email</span><span class="value" data-copy="recoverystudio7@gmail.com">recoverystudio7@gmail.com <button class="copy" data-field="email">Copiar</button></span></div>
-      <div class="row" id="row-amount" style="display:none;"><span class="label">Monto a transferir</span><span class="value" id="val-amount"></span></div>
-      <div class="row" id="row-ref" style="display:none;"><span class="label">Referencia</span><span class="value" id="val-ref"></span></div>
+  <main class="confirm-wrap">
+    <div class="confirm-card" id="confirmCard">
+      <div class="confirm-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg>
+      </div>
+
+      <h1 id="confirmTitle">Reserva confirmada</h1>
+      <p id="confirmMessage">Te esperamos en Recovery Studio. Guarda estos datos y llega 10 minutos antes.</p>
+
+      <div class="confirm-details" id="confirmDetails">
+        <div><span>Servicio</span><strong id="detailService">—</strong></div>
+        <div><span>Fecha</span><strong id="detailDate">—</strong></div>
+        <div><span>Hora</span><strong id="detailTime">—</strong></div>
+        <div><span>Duración</span><strong id="detailDuration">—</strong></div>
+        <div><span>Dirección</span><strong>Pasaje Uno #4, Los Notros, Gorbea</strong></div>
+      </div>
+
+      <div class="confirm-actions">
+        <a class="btn btn-accent" id="calendarBtn" href="#" target="_blank" rel="noopener" hidden>Agregar al calendario</a>
+        <a class="btn btn-outline" href="https://wa.me/56965058439?text=Hola%20Recovery%20Studio%2C%20acabo%20de%20reservar%20una%20sesi%C3%B3n." target="_blank" rel="noopener">Escribir por WhatsApp</a>
+      </div>
+
+      <div class="confirm-next">
+        <h2>Qué sigue</h2>
+        <ul>
+          <li>Recibirás la confirmación por WhatsApp al número que registraste.</li>
+          <li>Llega 10 minutos antes con ropa cómoda y, si tienes, tus exámenes o antecedentes.</li>
+          <li>Puedes reagendar o cancelar sin costo hasta 12 horas antes.</li>
+        </ul>
+      </div>
+
+      <p class="confirm-note">
+        <a href="./index.html#/reservas">Ver mis reservas</a> ·
+        <a href="./index.html">Volver al inicio</a>
+      </p>
     </div>
+  </main>
 
-    <div style="margin:16px 0;border-radius:10px;overflow:hidden;">
-      <iframe src="https://www.google.com/maps?q=Pasaje+uno,+Gorbea,+Regi%C3%B3n+de+la+Araucan%C3%ADa&output=embed" width="100%" height="220" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación Recovery Studio"></iframe>
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-bottom">
+        <span>© 2026 Recovery Studio · Gorbea, La Araucanía</span>
+        <span>Entrena. Recupera. Rinde.</span>
+      </div>
     </div>
-    <div class="center">
-      <a class="btn mp" href="https://link.mercadopago.cl/recoverystudiogorbea" target="_blank" rel="noopener" style="background:#009EE3;color:#fff;">💳 Pagar con MercadoPago (recomendado)</a>
-      <button class="btn ghost" id="copy-all" type="button">📋 Copiar todos los datos</button>
-      <a class="btn wa" id="wa-btn" href="https://wa.me/56965058439?text=Hola,%20acabo%20de%20pagar%20en%20Recovery%20Studio" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
-      <a class="btn review" href="https://g.page/r/CZxVsgDhqJElEBM/review" target="_blank" rel="noopener">Dejar reseña en Google</a>
-      <a class="btn ghost" href="index.html">Volver ahora</a>
-    </div>
+  </footer>
 
-    <p class="count">Serás redirigido a la página principal en <span id="counter">10</span> segundos.</p>
-    <p style="text-align:center;font-size:12px;color:#888;">Recovery Studio · Pasaje uno, Gorbea, Región de la Araucanía · +56 9 6505 8439</p>
-  </div>
-</div>
+  <script>
+  (function () {
+    'use strict';
 
-<script>
-  // Leer parámetros de la URL
-  const params = new URLSearchParams(window.location.search);
-  const ref = params.get('ref');
-  const amount = params.get('amount');
-  const concept = params.get('concept');
+    var params = new URLSearchParams(window.location.search);
+    var estado = params.get('estado') === 'pendiente' ? 'pendiente' : 'confirmada';
+    var servicio = params.get('servicio') || '';
+    var fecha = params.get('fecha') || '';
+    var hora = params.get('hora') || '';
+    var duracion = params.get('duracion') || '';
+    var ref = params.get('ref') || '';
 
-  const refbox = document.getElementById('refbox');
-  if (ref || amount || concept) {
-    refbox.style.display = 'block';
-    refbox.innerHTML = (concept ? `<strong>${concept}</strong><br>` : '') +
-      (amount ? `Monto: <strong>$${Number(amount).toLocaleString('es-CL')}</strong><br>` : '') +
-      (ref ? `Referencia: <strong>${ref}</strong>` : '');
-  }
-  if (amount) {
-    const ra = document.getElementById('row-amount');
-    const va = document.getElementById('val-amount');
-    ra.style.display = 'flex';
-    va.innerHTML = '$' + Number(amount).toLocaleString('es-CL') + ' <button class="copy" data-field="amount">Copiar</button>';
-    va.setAttribute('data-copy', amount);
-  }
-  if (ref) {
-    const rr = document.getElementById('row-ref');
-    const vr = document.getElementById('val-ref');
-    rr.style.display = 'flex';
-    vr.innerHTML = ref + ' <button class="copy" data-field="ref">Copiar</button>';
-    vr.setAttribute('data-copy', ref);
-  }
-
-  // Actualizar enlace de WhatsApp con referencia
-  const wa = document.getElementById('wa-btn');
-  let msg = 'Hola, acabo de pagar en Recovery Studio';
-  if (ref) msg += ` (ref ${ref})`;
-  if (amount) msg += ` por $${Number(amount).toLocaleString('es-CL')}`;
-  wa.href = 'https://wa.me/56965058439?text=' + encodeURIComponent(msg);
-
-  // Copiar al portapapeles
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.copy');
-    if (!btn) return;
-    const field = btn.getAttribute('data-field');
-    const parent = btn.parentElement;
-    const text = parent.getAttribute('data-copy');
-    if (!text) return;
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(() => toast('Copiado: ' + text)).catch(() => fallback(text));
-    } else {
-      fallback(text);
+    /* ---------- Textos según el estado ---------- */
+    if (estado === 'pendiente') {
+      document.getElementById('confirmCard').classList.add('pending');
+      document.getElementById('confirmTitle').textContent = 'Reserva registrada';
+      document.getElementById('confirmMessage').textContent =
+        'Tu horario quedó apartado. Envía el comprobante de transferencia por WhatsApp para dejarlo confirmado.';
     }
-  });
-  function fallback(text) {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); toast('Copiado: ' + text); } catch(err){ toast('No se pudo copiar'); }
-    ta.remove();
-  }
-  function toast(t) {
-    const el = document.createElement('div');
-    el.textContent = t;
-    el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0A2342;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;z-index:9999;';
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1800);
-  }
 
-  // Copiar todo
-  document.getElementById('copy-all').addEventListener('click', () => {
-    const lines = [
-      'Titular: DANIEL ESTEBAN BARRUETO',
-      'RUT: 17.375.282-2',
-      'Banco: BCI',
-      'Tipo de cuenta: Cuenta Corriente',
-      'Nº de cuenta: 72771619',
-      'Email: recoverystudio7@gmail.com',
-    ];
-    if (amount) lines.push('Monto: $' + Number(amount).toLocaleString('es-CL'));
-    if (ref) lines.push('Referencia: ' + ref);
-    const text = lines.join('\\n');
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(() => toast('Todos los datos copiados')).catch(() => fallbackAll(text));
-    } else {
-      fallbackAll(text);
+    /* ---------- Detalle de la reserva ---------- */
+    if (servicio || fecha || hora) {
+      document.getElementById('confirmDetails').classList.add('is-visible');
+      if (servicio) document.getElementById('detailService').textContent = servicio;
+      if (fecha) {
+        var d = new Date(fecha + 'T12:00:00');
+        document.getElementById('detailDate').textContent = isNaN(d)
+          ? fecha
+          : d.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      if (hora) document.getElementById('detailTime').textContent = hora + ' h';
+      if (duracion) document.getElementById('detailDuration').textContent = duracion + ' min';
+
+      /* ---------- Agregar al calendario (Google Calendar) ---------- */
+      if (fecha && hora) {
+        var start = new Date(fecha + 'T' + hora + ':00');
+        var mins = parseInt(duracion, 10) || 60;
+        var end = new Date(start.getTime() + mins * 60000);
+        if (!isNaN(start)) {
+          var fmt = function (dt) { return dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'; };
+          var link = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+            '&text=' + encodeURIComponent('Recovery Studio · ' + (servicio || 'Sesión')) +
+            '&dates=' + fmt(start) + '/' + fmt(end) +
+            '&details=' + encodeURIComponent('Reserva en Recovery Studio' + (ref ? ' · ' + ref : '')) +
+            '&location=' + encodeURIComponent('Pasaje Uno #4, Los Notros, Gorbea, La Araucanía');
+          var btn = document.getElementById('calendarBtn');
+          btn.href = link;
+          btn.hidden = false;
+        }
+      }
     }
-  });
-  function fallbackAll(text) {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); toast('Todos los datos copiados'); } catch(err){ toast('No se pudo copiar'); }
-    ta.remove();
-  }
 
-  // Contador de redirección
-  let n = 10;
-  const el = document.getElementById('counter');
-  const timer = setInterval(() => {
-    n -= 1;
-    if (el) el.textContent = n;
-    if (n <= 0) { clearInterval(timer); window.location.href = 'index.html'; }
-  }, 1000);
-</script>
+    /* ---------- Conversión para Google Ads / GA4 ---------- */
+    if (typeof window.rsTrack === 'function') {
+      window.rsTrack('reserva_confirmada', 'agendar', {
+        estado: estado,
+        servicio: servicio,
+        valor: 0,
+        moneda: 'CLP'
+      });
+    }
+  })();
+  </script>
 </body>
 </html>

@@ -3,6 +3,7 @@ const CACHE = 'recovery-studio-v47';
 const ASSETS = [
   './',
   './index.html',
+  './gracias.html',
   './manifest.webmanifest',
   './sitemap.xml',
   './robots.txt',
@@ -14,6 +15,7 @@ const ASSETS = [
   './assets/css/landing.css',
   './assets/css/legal.css',
   './assets/js/data.js?v=11',
+  './assets/js/analytics.js?v=1',
   './assets/js/ui.js?v=2',
   './assets/js/auth.js?v=17',
   './assets/js/user.js?v=28',
@@ -30,7 +32,7 @@ const ASSETS = [
   './assets/js/supabase-client.js?v=5',
   './assets/js/supabase-sync.js?v=7',
   './assets/js/routine-sync.js?v=2',
-  './assets/js/app.js?v=11',
+  './assets/js/app.js?v=12',
   './kinesiologia.html',
   './masajes.html',
   './sauna.html',
@@ -38,7 +40,6 @@ const ASSETS = [
   './precios.html',
   './privacidad.html',
   './terminos.html',
-  './gracias.html',
 ];
 
 self.addEventListener('install', (event) => {

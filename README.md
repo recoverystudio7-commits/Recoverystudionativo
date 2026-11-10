@@ -202,7 +202,7 @@ Es un sitio estático: puede publicarse en Netlify, Vercel, GitHub Pages, Cloudf
 
 **Publicación actual:** GitHub Pages en `https://recoverystudio7-commits.github.io/Recoverystudionativo/` (repositorio `recoverystudio7-commits/Recoverystudionativo`, rama `main`).
 
-1. Sube `index.html`, `manifest.webmanifest`, `sw.js` y la carpeta `assets/`.
+1. Sube `index.html`, `gracias.html`, `manifest.webmanifest`, `sw.js`, `sitemap.xml`, `robots.txt` y las carpetas `assets/` y `supabase/`.
 2. Sirve todo por **HTTPS**.
 3. Verifica que `sw.js` quede en la raíz del sitio y que las rutas relativas se mantengan.
 4. Si cambias archivos, el service worker usa estrategia **red primero**, por lo que las actualizaciones se ven al recargar; si cambias el nombre de la caché, actualiza `CACHE` en `sw.js`.
@@ -223,6 +223,18 @@ El DNS se administra en **Cloudflare** (nameservers `clara.ns.cloudflare.com` y 
 No modifiques los registros **MX** de Microsoft 365.
 
 Después, en **GitHub → Settings → Pages → Custom domain**, escribe `www.recoverystudio.cl`, guarda y activa **Enforce HTTPS** cuando el certificado esté emitido.
+
+### Trabajar desde dos computadores
+
+El repositorio es la fuente de verdad: lo que está en GitHub es lo que se publica.
+
+- **Al sentarse a trabajar** (en cualquiera de los dos equipos): `git pull`
+- **Al terminar**: `git add -A`, `git commit -m "..."` y `git push origin main`
+- GitHub Pages publica solo, 1–2 minutos después del push.
+
+Si se edita el mismo archivo en los dos equipos sin hacer `pull` antes, git pedirá resolver el conflicto. Regla simple: **pull al llegar, push al salir**.
+
+La carpeta `marketing/` (documentos internos, métricas y sistema de captación) está excluida del repositorio a propósito: el sitio es público y no debe exponer esa información. Vive solo en el computador que la tenga.
 
 ---
 

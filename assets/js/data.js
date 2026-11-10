@@ -27,7 +27,7 @@
     whatsapp: '56965058439',
     whatsappDisplay: '+56 9 6505 8439',
     adminEmail: 'recoverystudio7@gmail.com',
-    city: 'Gorbea, Región de la Araucanía',
+    city: 'Gorbea, Chile',
   };
 
   const MONTHS = [

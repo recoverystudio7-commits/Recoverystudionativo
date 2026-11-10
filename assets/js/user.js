@@ -79,7 +79,7 @@
       `DTEND:${fmt(end)}Z`,
       `SUMMARY:${service ? service.name : 'Sesión'} · Recovery Studio`,
       `DESCRIPTION:${desc.replace(/[,;]/g, ' ')}`,
-      'LOCATION:Recovery Studio · Gorbea, Región de la Araucanía',
+      'LOCATION:Recovery Studio · Gorbea',
       'STATUS:CONFIRMED',
       `BEGIN:VALARM`,
       'TRIGGER:-PT2H',
@@ -548,6 +548,24 @@
     </div>`;
   }
 
+  /**
+   * Arma la URL de la página de confirmación (gracias.html).
+   * Es el destino que se configura como conversión en Google Ads.
+   */
+  function confirmationUrl(session, estado) {
+    const service = RS.data.getService(session.serviceId);
+    const params = new URLSearchParams();
+    params.set('estado', estado || 'confirmada');
+    if (service) {
+      params.set('servicio', service.name);
+      params.set('duracion', String(service.duration || 60));
+    }
+    if (session.date) params.set('fecha', session.date);
+    if (session.time) params.set('hora', session.time);
+    if (session.id) params.set('ref', session.id);
+    return `gracias.html?${params.toString()}`;
+  }
+
   function showBookingSuccess(session) {
     const service = RS.data.getService(session.serviceId);
     UI.modal({
@@ -625,8 +643,9 @@
       </div>
       <div class="callout callout-blue">${UI.icon('clock', 17)}<span>Tu pago quedará <strong>en revisión</strong>. Al aprobarlo, ${payment.creditsToAdd ? `se activarán ${payment.creditsToAdd} sesiones en tu plan` : 'tu reserva quedará confirmada'} y recibirás una notificación.</span></div>`,
       footer: `<a class="btn btn-ghost" href="#/pagos" data-modal-close>Ver mis pagos</a>
-        <a class="btn btn-primary" href="#/reservas" data-modal-close>Ir a mis reservas ${UI.icon('arrow-right', 16)}</a>
-        <a class="btn btn-ghost" href="gracias.html?ref=${encodeURIComponent(payment.ref)}&amount=${encodeURIComponent(payment.amount)}&concept=${encodeURIComponent(payment.concept)}" target="_blank" rel="noopener">Página de gracias</a>`,
+        ${o.session
+          ? `<a class="btn btn-primary" href="${confirmationUrl(o.session, 'pendiente')}">Continuar ${UI.icon('arrow-right', 16)}</a>`
+          : `<a class="btn btn-primary" href="#/reservas" data-modal-close>Ir a mis reservas ${UI.icon('arrow-right', 16)}</a>`}`,
     });
   }
 
@@ -1414,8 +1433,8 @@
     if (syncWarning) UI.toast(syncWarning, 'warning', 9000);
 
     if (useCredit) {
-      showBookingSuccess(session);
       finish();
+      window.location.href = confirmationUrl(session, 'confirmada');
       return;
     }
 
