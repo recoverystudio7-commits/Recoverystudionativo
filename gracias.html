@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reserva confirmada | Recovery Studio</title>
+  <meta name="description" content="Confirmación de reserva en Recovery Studio, Gorbea.">
+  <meta name="robots" content="noindex, follow">
+  <meta name="theme-color" content="#0A2342">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/landing.css">
+  <script src="assets/js/analytics.js"></script>
+  <style>
+    .confirm-wrap { max-width: 720px; margin: 0 auto; padding: 56px 20px 72px; }
+    .confirm-card {
+      background: #FFFFFF; border: 1px solid #E4E9F0; border-radius: 20px;
+      padding: 40px 32px; box-shadow: 0 18px 40px -28px rgba(10, 35, 66, .45); text-align: center;
+    }
+    .confirm-icon {
+      width: 72px; height: 72px; margin: 0 auto 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: #E8F7EE; color: #1E9E5A;
+    }
+    .confirm-icon svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+    .confirm-card h1 { font-size: clamp(1.7rem, 4vw, 2.2rem); line-height: 1.15; margin: 0 0 12px; color: #0A2342; letter-spacing: -.02em; }
+    .confirm-card > p { color: #4A5C74; font-size: 1.02rem; line-height: 1.6; margin: 0 0 24px; }
+    .confirm-details { display: none; text-align: left; background: #F6F8FB; border-radius: 14px; padding: 6px 20px; margin: 0 0 24px; }
+    .confirm-details.is-visible { display: block; }
+    .confirm-details div { display: flex; justify-content: space-between; gap: 16px; padding: 13px 0; border-bottom: 1px solid #E4E9F0; font-size: .95rem; }
+    .confirm-details div:last-child { border-bottom: 0; }
+    .confirm-details span { color: #6B7C93; }
+    .confirm-details strong { color: #0A2342; text-align: right; }
+    .confirm-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 8px; }
+    .confirm-next { text-align: left; margin-top: 32px; padding-top: 28px; border-top: 1px solid #E4E9F0; }
+    .confirm-next h2 { font-size: 1.05rem; color: #0A2342; margin: 0 0 14px; }
+    .confirm-next ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+    .confirm-next li { position: relative; padding-left: 28px; color: #4A5C74; font-size: .95rem; line-height: 1.5; }
+    .confirm-next li::before { content: "✓"; position: absolute; left: 0; top: 0; color: #1E9E5A; font-weight: 700; }
+    .confirm-note { margin-top: 22px; font-size: .86rem; color: #6B7C93; }
+    .confirm-note a { color: #123F70; }
+    .pending .confirm-icon { background: #FFF3E6; color: #E56A00; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="./index.html" aria-label="Recovery Studio — inicio">
+        <img src="assets/icon.svg" alt="" width="42" height="42">
+        <span><strong>Recovery Studio</strong><small>Kinesiología y movimiento</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Servicios">
+        <a href="kinesiologia.html">Kinesiología</a>
+        <a href="masajes.html">Masajes</a>
+        <a href="sauna.html">Sauna</a>
+        <a href="asesorias.html">Asesorías</a>
+        <a href="precios.html">Precios</a>
+      </nav>
+      <div class="header-actions">
+        <a class="btn btn-ghost btn-sm" href="https://wa.me/56965058439?text=Hola%20Recovery%20Studio." target="_blank" rel="noopener">WhatsApp</a>
+        <a class="btn btn-primary btn-sm" href="./index.html#/agendar">Agendar</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="confirm-wrap">
+    <div class="confirm-card" id="confirmCard">
+      <div class="confirm-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg>
+      </div>
+
+      <h1 id="confirmTitle">Reserva confirmada</h1>
+      <p id="confirmMessage">Te esperamos en Recovery Studio. Guarda estos datos y llega 10 minutos antes.</p>
+
+      <div class="confirm-details" id="confirmDetails">
+        <div><span>Servicio</span><strong id="detailService">—</strong></div>
+        <div><span>Fecha</span><strong id="detailDate">—</strong></div>
+        <div><span>Hora</span><strong id="detailTime">—</strong></div>
+        <div><span>Duración</span><strong id="detailDuration">—</strong></div>
+        <div><span>Dirección</span><strong>Pasaje Uno #4, Los Notros, Gorbea</strong></div>
+      </div>
+
+      <div class="confirm-actions">
+        <a class="btn btn-accent" id="calendarBtn" href="#" target="_blank" rel="noopener" hidden>Agregar al calendario</a>
+        <a class="btn btn-outline" href="https://wa.me/56965058439?text=Hola%20Recovery%20Studio%2C%20acabo%20de%20reservar%20una%20sesi%C3%B3n." target="_blank" rel="noopener">Escribir por WhatsApp</a>
+      </div>
+
+      <div class="confirm-next">
+        <h2>Qué sigue</h2>
+        <ul>
+          <li>Recibirás la confirmación por WhatsApp al número que registraste.</li>
+          <li>Llega 10 minutos antes con ropa cómoda y, si tienes, tus exámenes o antecedentes.</li>
+          <li>Puedes reagendar o cancelar sin costo hasta 12 horas antes.</li>
+        </ul>
+      </div>
+
+      <p class="confirm-note">
+        <a href="./index.html#/reservas">Ver mis reservas</a> ·
+        <a href="./index.html">Volver al inicio</a>
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-bottom">
+        <span>© 2026 Recovery Studio · Gorbea, La Araucanía</span>
+        <span>Entrena. Recupera. Rinde.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var params = new URLSearchParams(window.location.search);
+    var estado = params.get('estado') === 'pendiente' ? 'pendiente' : 'confirmada';
+    var servicio = params.get('servicio') || '';
+    var fecha = params.get('fecha') || '';
+    var hora = params.get('hora') || '';
+    var duracion = params.get('duracion') || '';
+    var ref = params.get('ref') || '';
+
+    /* ---------- Textos según el estado ---------- */
+    if (estado === 'pendiente') {
+      document.getElementById('confirmCard').classList.add('pending');
+      document.getElementById('confirmTitle').textContent = 'Reserva registrada';
+      document.getElementById('confirmMessage').textContent =
+        'Tu horario quedó apartado. Envía el comprobante de transferencia por WhatsApp para dejarlo confirmado.';
+    }
+
+    /* ---------- Detalle de la reserva ---------- */
+    if (servicio || fecha || hora) {
+      document.getElementById('confirmDetails').classList.add('is-visible');
+      if (servicio) document.getElementById('detailService').textContent = servicio;
+      if (fecha) {
+        var d = new Date(fecha + 'T12:00:00');
+        document.getElementById('detailDate').textContent = isNaN(d)
+          ? fecha
+          : d.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      if (hora) document.getElementById('detailTime').textContent = hora + ' h';
+      if (duracion) document.getElementById('detailDuration').textContent = duracion + ' min';
+
+      /* ---------- Agregar al calendario (Google Calendar) ---------- */
+      if (fecha && hora) {
+        var start = new Date(fecha + 'T' + hora + ':00');
+        var mins = parseInt(duracion, 10) || 60;
+        var end = new Date(start.getTime() + mins * 60000);
+        if (!isNaN(start)) {
+          var fmt = function (dt) { return dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'; };
+          var link = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+            '&text=' + encodeURIComponent('Recovery Studio · ' + (servicio || 'Sesión')) +
+            '&dates=' + fmt(start) + '/' + fmt(end) +
+            '&details=' + encodeURIComponent('Reserva en Recovery Studio' + (ref ? ' · ' + ref : '')) +
+            '&location=' + encodeURIComponent('Pasaje Uno #4, Los Notros, Gorbea, La Araucanía');
+          var btn = document.getElementById('calendarBtn');
+          btn.href = link;
+          btn.hidden = false;
+        }
+      }
+    }
+
+    /* ---------- Conversión para Google Ads / GA4 ---------- */
+    if (typeof window.rsTrack === 'function') {
+      window.rsTrack('reserva_confirmada', 'agendar', {
+        estado: estado,
+        servicio: servicio,
+        valor: 0,
+        moneda: 'CLP'
+      });
+    }
+  })();
+  </script>
+</body>
+</html>

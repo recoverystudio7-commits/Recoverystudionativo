@@ -345,7 +345,10 @@
     } catch (err) {
       console.error(err);
     }
-    document.title = `${TITLES[route] || 'Recovery Studio'} · Recovery Studio`;
+    // La portada pública conserva el título SEO de index.html
+    document.title = (route === 'login' || route === 'inicio')
+      ? 'Kinesiólogo en Gorbea y recuperación deportiva | Recovery Studio'
+      : `${TITLES[route] || 'Recovery Studio'} · Recovery Studio`;
     document.body.dataset.role = session ? session.role : 'public';
     document.body.classList.remove('sidebar-open');
 

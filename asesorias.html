@@ -23,20 +23,25 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "Recovery Studio",
+    "@type": ["MedicalBusiness", "Physiotherapy"],
+    "@id": "https://www.recoverystudio.cl/#studio",
+    "name": "Recovery Studio · Kinesiología Gorbea",
+    "medicalSpecialty": "Physiotherapy",
     "url": "https://www.recoverystudio.cl/",
     "image": "https://www.recoverystudio.cl/assets/icon-512.png",
     "telephone": "+56965058439",
     "email": "recoverystudio7@gmail.com",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Gorbea, Regi?n de la Araucan?a",
+      "streetAddress": "Pasaje Uno #4, Los Notros",
       "addressLocality": "Gorbea",
-      "addressRegion": "Regi?n de la Araucan?a",
+      "addressRegion": "Región de La Araucanía",
       "addressCountry": "CL"
     },
-    "areaServed": "Gorbea, Regi?n de la Araucan?a",
+    "areaServed": [
+      { "@type": "City", "name": "Gorbea" },
+      { "@type": "AdministrativeArea", "name": "Región de La Araucanía" }
+    ],
     "priceRange": "$$",
     "openingHours": "Mo-Sa 08:00-20:00"
   }
@@ -47,11 +52,7 @@
     "@type": "Service",
     "name": "Asesoría online de entrenamiento y recuperación",
     "serviceType": "Asesoría online",
-    "provider": {
-      "@type": "LocalBusiness",
-      "name": "Recovery Studio",
-      "url": "https://www.recoverystudio.cl/"
-    },
+    "provider": { "@id": "https://www.recoverystudio.cl/#studio" },
     "areaServed": "Chile",
     "description": "Videollamada de 30 minutos para revisar entrenamiento, cargas, recuperación y próximos pasos."
   }
@@ -96,6 +97,7 @@
     ]
   }
   </script>
+  <script src="assets/js/analytics.js?v=1"></script>
 </head>
 <body>
   <a class="skip-link" href="#contenido">Ir al contenido</a>
@@ -329,12 +331,13 @@
           <h3>Contacto</h3>
           <a href="https://wa.me/56965058439" target="_blank" rel="noopener">WhatsApp +56 9 6505 8439</a>
           <a href="mailto:recoverystudio7@gmail.com">recoverystudio7@gmail.com</a>
-          <span>Gorbea, Regi?n de la Araucan?a</span>
+          <span>Pasaje Uno #4, Los Notros</span>
+          <span>Gorbea, Región de La Araucanía</span>
           <span>Lun a Sáb · 08:00–20:00</span>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 Recovery Studio · Gorbea, Regi?n de la Araucan?a</span>
+        <span>© 2026 Recovery Studio · Gorbea, Región de La Araucanía</span>
         <span>Entrena. Recupera. Rinde.</span>
         <a href="./index.html#/login">Acceder a mi cuenta</a>
       </div>
