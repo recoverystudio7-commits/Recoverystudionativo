@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gracias · Recovery Studio</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="assets/css/styles.css">
+<style>
+  body { font-family: Inter, system-ui, sans-serif; margin:0; background:#eef1f6; color:#1a1a1a; }
+  .wrap { max-width:680px; margin:40px auto; padding:20px; }
+  .card { background:#fff; border-radius:16px; padding:28px; box-shadow:0 6px 20px rgba(0,0,0,.06); }
+  .icon { font-size:44px; text-align:center; }
+  h1 { color:#0A2342; margin:10px 0 6px; text-align:center; }
+  p { color:#555; line-height:1.5; }
+  .steps { display:grid; gap:10px; margin:18px 0; }
+  .step { display:flex; gap:12px; align-items:flex-start; background:#f4f6f9; padding:12px; border-radius:10px; }
+  .step .n { background:#0A2342; color:#fff; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex:0 0 26px; }
+  .step strong { color:#0A2342; }
+  .bank { background:#f4f6f9; padding:14px; border-radius:10px; font-size:14px; line-height:1.7; margin:14px 0; }
+  .bank .row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid #e2e6ee; }
+  .bank .row:last-child { border-bottom:none; }
+  .bank .label { color:#666; font-size:12px; }
+  .bank .value { font-weight:600; color:#0A2342; word-break:break-all; }
+  .copy { background:#fff; border:1px solid #ccc; border-radius:6px; padding:2px 8px; font-size:12px; cursor:pointer; }
+  .copy:hover { background:#eef3fa; }
+  .btn { display:inline-block; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; margin:6px 4px; }
+  .btn.wa { background:#25D366; color:#fff; }
+  .btn.review { background:#f5a623; color:#1a1a1a; }
+  .btn.ghost { background:#f4f6f9; color:#0A2342; }
+  .center { text-align:center; }
+  .count { font-size:13px; color:#888; margin-top:14px; text-align:center; }
+  .refbox { background:#fff7e6; border:1px solid #f5a623; padding:10px 12px; border-radius:8px; font-size:13px; margin:10px 0; }
+  @media (max-width:520px){ .bank .row { flex-direction:column; align-items:flex-start; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="icon">✅</div>
+    <h1>¡Gracias por tu pago!</h1>
+    <p class="center">Tu pago quedó registrado y está en revisión. Sigue estos pasos para confirmar tu reserva o activar tus sesiones.</p>
+
+    <div id="refbox" class="refbox" style="display:none;"></div>
+
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><strong>Transfiere</strong><br>Usa los datos bancarios de abajo. Puedes copiar cada dato con el botón.</div></div>
+      <div class="step"><div class="n">2</div><div><strong>Envía el comprobante</strong><br>Por WhatsApp al +56 9 6505 8439, indicando tu nombre y la referencia.</div></div>
+      <div class="step"><div class="n">3</div><div><strong>Espera confirmación</strong><br>Te contactaremos para validar el pago y activar tu reserva o sesiones.</div></div>
+    </div>
+
+    <div class="bank" id="bank">
+      <div class="row"><span class="label">Titular</span><span class="value" data-copy="DANIEL ESTEBAN BARRUETO">DANIEL ESTEBAN BARRUETO <button class="copy" data-field="holder">Copiar</button></span></div>
+      <div class="row"><span class="label">RUT</span><span class="value" data-copy="17.375.282-2">17.375.282-2 <button class="copy" data-field="rut">Copiar</button></span></div>
+      <div class="row"><span class="label">Banco</span><span class="value" data-copy="BCI">BCI <button class="copy" data-field="bank">Copiar</button></span></div>
+      <div class="row"><span class="label">Tipo de cuenta</span><span class="value" data-copy="Cuenta Corriente">Cuenta Corriente <button class="copy" data-field="type">Copiar</button></span></div>
+      <div class="row"><span class="label">Nº de cuenta</span><span class="value" data-copy="72771619">72771619 <button class="copy" data-field="account">Copiar</button></span></div>
+      <div class="row"><span class="label">Email</span><span class="value" data-copy="recoverystudio7@gmail.com">recoverystudio7@gmail.com <button class="copy" data-field="email">Copiar</button></span></div>
+      <div class="row" id="row-amount" style="display:none;"><span class="label">Monto a transferir</span><span class="value" id="val-amount"></span></div>
+      <div class="row" id="row-ref" style="display:none;"><span class="label">Referencia</span><span class="value" id="val-ref"></span></div>
+    </div>
+
+    <div style="margin:16px 0;border-radius:10px;overflow:hidden;">
+      <iframe src="https://www.google.com/maps?q=Pasaje+uno,+Gorbea,+Regi%C3%B3n+de+la+Araucan%C3%ADa&output=embed" width="100%" height="220" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación Recovery Studio"></iframe>
+    </div>
+    <div class="center">
+      <a class="btn mp" href="https://link.mercadopago.cl/recoverystudiogorbea" target="_blank" rel="noopener" style="background:#009EE3;color:#fff;">💳 Pagar con MercadoPago (recomendado)</a>
+      <button class="btn ghost" id="copy-all" type="button">📋 Copiar todos los datos</button>
+      <a class="btn wa" id="wa-btn" href="https://wa.me/56965058439?text=Hola,%20acabo%20de%20pagar%20en%20Recovery%20Studio" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
+      <a class="btn review" href="https://g.page/r/CZxVsgDhqJElEBM/review" target="_blank" rel="noopener">Dejar reseña en Google</a>
+      <a class="btn ghost" href="index.html">Volver ahora</a>
+    </div>
+
+    <p class="count">Serás redirigido a la página principal en <span id="counter">10</span> segundos.</p>
+    <p style="text-align:center;font-size:12px;color:#888;">Recovery Studio · Pasaje uno, Gorbea, Región de la Araucanía · +56 9 6505 8439</p>
+  </div>
+</div>
+
+<script>
+  // Leer parámetros de la URL
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('ref');
+  const amount = params.get('amount');
+  const concept = params.get('concept');
+
+  const refbox = document.getElementById('refbox');
+  if (ref || amount || concept) {
+    refbox.style.display = 'block';
+    refbox.innerHTML = (concept ? `<strong>${concept}</strong><br>` : '') +
+      (amount ? `Monto: <strong>$${Number(amount).toLocaleString('es-CL')}</strong><br>` : '') +
+      (ref ? `Referencia: <strong>${ref}</strong>` : '');
+  }
+  if (amount) {
+    const ra = document.getElementById('row-amount');
+    const va = document.getElementById('val-amount');
+    ra.style.display = 'flex';
+    va.innerHTML = '$' + Number(amount).toLocaleString('es-CL') + ' <button class="copy" data-field="amount">Copiar</button>';
+    va.setAttribute('data-copy', amount);
+  }
+  if (ref) {
+    const rr = document.getElementById('row-ref');
+    const vr = document.getElementById('val-ref');
+    rr.style.display = 'flex';
+    vr.innerHTML = ref + ' <button class="copy" data-field="ref">Copiar</button>';
+    vr.setAttribute('data-copy', ref);
+  }
+
+  // Actualizar enlace de WhatsApp con referencia
+  const wa = document.getElementById('wa-btn');
+  let msg = 'Hola, acabo de pagar en Recovery Studio';
+  if (ref) msg += ` (ref ${ref})`;
+  if (amount) msg += ` por $${Number(amount).toLocaleString('es-CL')}`;
+  wa.href = 'https://wa.me/56965058439?text=' + encodeURIComponent(msg);
+
+  // Copiar al portapapeles
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.copy');
+    if (!btn) return;
+    const field = btn.getAttribute('data-field');
+    const parent = btn.parentElement;
+    const text = parent.getAttribute('data-copy');
+    if (!text) return;
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => toast('Copiado: ' + text)).catch(() => fallback(text));
+    } else {
+      fallback(text);
+    }
+  });
+  function fallback(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Copiado: ' + text); } catch(err){ toast('No se pudo copiar'); }
+    ta.remove();
+  }
+  function toast(t) {
+    const el = document.createElement('div');
+    el.textContent = t;
+    el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0A2342;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;z-index:9999;';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1800);
+  }
+
+  // Copiar todo
+  document.getElementById('copy-all').addEventListener('click', () => {
+    const lines = [
+      'Titular: DANIEL ESTEBAN BARRUETO',
+      'RUT: 17.375.282-2',
+      'Banco: BCI',
+      'Tipo de cuenta: Cuenta Corriente',
+      'Nº de cuenta: 72771619',
+      'Email: recoverystudio7@gmail.com',
+    ];
+    if (amount) lines.push('Monto: $' + Number(amount).toLocaleString('es-CL'));
+    if (ref) lines.push('Referencia: ' + ref);
+    const text = lines.join('\\n');
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => toast('Todos los datos copiados')).catch(() => fallbackAll(text));
+    } else {
+      fallbackAll(text);
+    }
+  });
+  function fallbackAll(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Todos los datos copiados'); } catch(err){ toast('No se pudo copiar'); }
+    ta.remove();
+  }
+
+  // Contador de redirección
+  let n = 10;
+  const el = document.getElementById('counter');
+  const timer = setInterval(() => {
+    n -= 1;
+    if (el) el.textContent = n;
+    if (n <= 0) { clearInterval(timer); window.location.href = 'index.html'; }
+  }, 1000);
+</script>
+</body>
+</html>

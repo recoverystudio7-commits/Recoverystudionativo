@@ -137,7 +137,7 @@
 
   function publicFoot() {
     return `<footer class="public-foot">
-      <span>© ${new Date().getFullYear()} Recovery Studio · Santiago, Chile</span>
+      <span>© ${new Date().getFullYear()} Recovery Studio · Gorbea, Región de la Araucanía</span>
       <span class="public-foot-links">
         <a href="kinesiologia.html">Kinesiología</a>
         <a href="masajes.html">Masajes</a>

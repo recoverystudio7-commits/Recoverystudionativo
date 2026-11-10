@@ -79,7 +79,7 @@
       `DTEND:${fmt(end)}Z`,
       `SUMMARY:${service ? service.name : 'Sesión'} · Recovery Studio`,
       `DESCRIPTION:${desc.replace(/[,;]/g, ' ')}`,
-      'LOCATION:Recovery Studio · Santiago',
+      'LOCATION:Recovery Studio · Gorbea, Región de la Araucanía',
       'STATUS:CONFIRMED',
       `BEGIN:VALARM`,
       'TRIGGER:-PT2H',
@@ -625,7 +625,8 @@
       </div>
       <div class="callout callout-blue">${UI.icon('clock', 17)}<span>Tu pago quedará <strong>en revisión</strong>. Al aprobarlo, ${payment.creditsToAdd ? `se activarán ${payment.creditsToAdd} sesiones en tu plan` : 'tu reserva quedará confirmada'} y recibirás una notificación.</span></div>`,
       footer: `<a class="btn btn-ghost" href="#/pagos" data-modal-close>Ver mis pagos</a>
-        <a class="btn btn-primary" href="#/reservas" data-modal-close>Ir a mis reservas ${UI.icon('arrow-right', 16)}</a>`,
+        <a class="btn btn-primary" href="#/reservas" data-modal-close>Ir a mis reservas ${UI.icon('arrow-right', 16)}</a>
+        <a class="btn btn-ghost" href="gracias.html?ref=${encodeURIComponent(payment.ref)}&amount=${encodeURIComponent(payment.amount)}&concept=${encodeURIComponent(payment.concept)}" target="_blank" rel="noopener">Página de gracias</a>`,
     });
   }
 

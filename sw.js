@@ -1,5 +1,5 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v46';
+const CACHE = 'recovery-studio-v47';
 const ASSETS = [
   './',
   './index.html',
@@ -13,10 +13,10 @@ const ASSETS = [
   './assets/css/views.css?v=7',
   './assets/css/landing.css',
   './assets/css/legal.css',
-  './assets/js/data.js?v=10',
+  './assets/js/data.js?v=11',
   './assets/js/ui.js?v=2',
-  './assets/js/auth.js?v=16',
-  './assets/js/user.js?v=27',
+  './assets/js/auth.js?v=17',
+  './assets/js/user.js?v=28',
   './assets/js/admin-base.js?v=9',
   './assets/js/admin-people.js?v=12',
   './assets/js/exercise-library.js?v=6',
@@ -26,7 +26,7 @@ const ASSETS = [
   './assets/js/admin-money.js?v=7',
   './assets/js/admin-system.js?v=3',
   './assets/js/content.js?v=4',
-  './assets/js/reviews.js?v=3',
+  './assets/js/reviews.js?v=4',
   './assets/js/supabase-client.js?v=5',
   './assets/js/supabase-sync.js?v=7',
   './assets/js/routine-sync.js?v=2',
@@ -38,6 +38,7 @@ const ASSETS = [
   './precios.html',
   './privacidad.html',
   './terminos.html',
+  './gracias.html',
 ];
 
 self.addEventListener('install', (event) => {

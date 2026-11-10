@@ -27,7 +27,7 @@
     whatsapp: '56965058439',
     whatsappDisplay: '+56 9 6505 8439',
     adminEmail: 'recoverystudio7@gmail.com',
-    city: 'Santiago, Chile',
+    city: 'Gorbea, Región de la Araucanía',
   };
 
   const MONTHS = [
@@ -444,7 +444,7 @@
         hoursByDay,
         start: '17:30',
         end: '22:30',
-        slot: 60,
+        slot: 30,
         leadHours: 2,
         policyHours: 12,
         horizonDays: 45,
@@ -539,6 +539,10 @@
             // Dirección oficial: corrige datos antiguos guardados en el navegador.
             if (!state.settings.address || /providencia/i.test(String(state.settings.address))) {
               state.settings.address = 'Gorbea, Región de la Araucanía';
+            }
+            // Bloques de agenda en 30 minutos.
+            if (!state.settings.slot || Number(state.settings.slot) === 60) {
+              state.settings.slot = 30;
             }
             state.videoCapsules = Array.isArray(parsed.videoCapsules) ? parsed.videoCapsules : [];
             if (normalizePlanData()) DB.save();

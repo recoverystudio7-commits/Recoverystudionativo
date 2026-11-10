@@ -641,7 +641,7 @@
               <span>${UI.icon('whatsapp', 14)} +56 9 6505 8439</span>
             </div>
           </div>
-          <p class="hero-foot">Recovery Studio · Santiago, Chile · ${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</p>
+          <p class="hero-foot">Recovery Studio · Gorbea, Región de la Araucanía · ${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</p>
         </div>
       </section>
 
@@ -942,7 +942,7 @@
         </div>
       </main>
       <footer class="public-foot">
-        <span>© ${new Date().getFullYear()} Recovery Studio · Santiago, Chile</span>
+        <span>© ${new Date().getFullYear()} Recovery Studio · Gorbea, Región de la Araucanía</span>
         <span>${UI.icon('map-pin', 14)} ${U.esc(state().settings.address)}</span>
       </footer>
     </div>`;
