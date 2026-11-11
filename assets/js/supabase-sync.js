@@ -394,9 +394,14 @@
         time: when.time,
         status: mapSessionStatus(row.status),
         payment: mapPaymentStatus(row.payment_status),
+        attendanceStatus: row.attendance_status || 'pendiente',
+        attendanceUpdatedAt: row.attendance_updated_at || null,
+        createdBy: row.created_by || '',
+        createdByName: (localUserBySupabaseId(row.created_by) || {}).name || '',
         coach: row.coach || 'Daniel Barrueto',
         notes: row.notes || '',
         createdAt: row.created_at || new Date().toISOString(),
+        updatedAt: row.updated_at || row.created_at || null,
         remoteUpdatedAt: row.updated_at || row.created_at || null,
         source: 'supabase',
       };
@@ -566,6 +571,38 @@
     return merged;
   }
 
+  /* Bloqueos recurrentes: horarios que se repiten cada semana.
+     Son públicos para leer (la agenda y la disponibilidad los necesitan). */
+  async function pullRecurringBlocks(tk) {
+    let rows;
+    try {
+      rows = await RS.Supabase.request(
+        '/rest/v1/recurring_blocks?select=*&order=weekday.asc.nullslast,start_time.asc',
+        { method: 'GET' },
+        tk
+      );
+    } catch (error) {
+      console.warn('No se pudieron traer los bloqueos recurrentes:', error.message);
+      return 0;
+    }
+    if (!Array.isArray(rows)) return 0;
+    const state = st();
+    const next = rows
+      .filter((row) => row && row.id)
+      .map((row) => ({
+        id: row.id,
+        weekday: row.weekday === null || row.weekday === undefined ? null : Number(row.weekday),
+        startTime: String(row.start_time || '').slice(0, 5),
+        endTime: String(row.end_time || '').slice(0, 5),
+        reason: row.reason || '',
+        active: row.active !== false,
+        createdAt: row.created_at || null,
+      }));
+    const before = JSON.stringify(state.recurringBlocks || []);
+    state.recurringBlocks = next;
+    return before === JSON.stringify(next) ? 0 : 1;
+  }
+
   async function pull() {
     if (!configured()) return { ok: false, reason: 'no-config' };
     const user = me();
@@ -580,15 +617,16 @@
       console.warn('No se pudieron traer perfiles:', e.message);
       return 0;
     });
-    const [services, sessions, payments, accounts] = await Promise.all([
+    const [services, sessions, payments, accounts, recurring] = await Promise.all([
       pullServices(tk, isAdmin).catch((e) => { console.warn('No se pudo traer el catálogo:', e.message); return 0; }),
       pullSessions(tk, isAdmin, uid),
       pullPayments(tk, isAdmin, uid),
       pullAccounts(tk, isAdmin, uid).catch((e) => { console.warn('No se pudieron traer los saldos:', e.message); return 0; }),
+      pullRecurringBlocks(tk),
     ]);
 
     RS.DB.save();
-    return { ok: true, merged: profiles + services + sessions + payments + accounts };
+    return { ok: true, merged: profiles + services + sessions + payments + accounts + recurring };
   }
 
   /* ----------------------------- push ----------------------------------- */
@@ -648,8 +686,13 @@
         coach: app.coach || 'Daniel Barrueto',
         notes: app.notes || '',
         updated_at: new Date().toISOString(),
-        created_by: uid,
       };
+      // Conserva quién creó la sesión: solo se envía al insertar una nueva.
+      if (!app.remoteUpdatedAt) payload.created_by = uid;
+      if (app.attendanceStatus) {
+        payload.attendance_status = app.attendanceStatus;
+        if (app.attendanceUpdatedAt) payload.attendance_updated_at = app.attendanceUpdatedAt;
+      }
       try {
         const saved = await upsert('sessions', app.id, isAdmin ? null : 'user_id', ownerId, payload, tk);
         app.remoteUpdatedAt = (saved && saved.updated_at) || payload.updated_at;
@@ -679,6 +722,63 @@
       headers: { Prefer: 'return=minimal' },
     }, tk);
     return { ok: true };
+  }
+
+  async function saveRecurringBlock(block) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    const tk = await freshToken();
+    const id = (block && block.id) || U.uid('rec');
+    const payload = {
+      weekday: block && block.weekday !== null && block.weekday !== '' && block.weekday !== undefined
+        ? Number(block.weekday)
+        : null,
+      start_time: block && block.startTime,
+      end_time: block && block.endTime,
+      reason: (block && block.reason) || '',
+      active: !(block && block.active === false),
+    };
+    if (!payload.start_time || !payload.end_time) {
+      return { ok: false, reason: 'invalid' };
+    }
+    const saved = await upsert('recurring_blocks', id, null, null, payload, tk);
+    return { ok: true, id, row: saved };
+  }
+
+  async function deleteRecurringBlock(id) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    if (!id) return { ok: false, reason: 'no-id' };
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    const tk = await freshToken();
+    await RS.Supabase.request(`/rest/v1/recurring_blocks?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { Prefer: 'return=minimal' },
+    }, tk);
+    return { ok: true };
+  }
+
+  /* Avisa a la lista de espera cuando un cupo queda libre.
+     La función del servidor verifica que quien llama sea el dueño o un admin. */
+  async function notifyWaitlist(payload) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid) return { ok: false, reason: 'no-user' };
+    const tk = await freshToken();
+    try {
+      const result = await RS.Supabase.request('/functions/v1/notify-waitlist', {
+        method: 'POST',
+        body: JSON.stringify(payload || {}),
+      }, tk);
+      return { ok: true, result };
+    } catch (error) {
+      console.warn('No se pudo avisar a la lista de espera:', error.message);
+      return { ok: false, error: error.message };
+    }
   }
 
   async function pushPayments(tk, user, uid, isAdmin) {
@@ -852,6 +952,9 @@
     push,
     pushAccount,
     deleteSession,
+    saveRecurringBlock,
+    deleteRecurringBlock,
+    notifyWaitlist,
     syncNow,
     startAutoSync,
     stopAutoSync,

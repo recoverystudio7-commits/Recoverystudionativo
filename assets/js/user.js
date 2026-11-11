@@ -108,6 +108,10 @@
     const o = options || {};
     const service = RS.data.getService(session.serviceId);
     const pay = pendingPaymentForSession(session.id);
+    const attendance = session.attendanceStatus || 'pendiente';
+    const showAttendance = session.status === 'pendiente' || session.status === 'confirmada';
+    const canConfirmAttendance = showAttendance && attendance !== 'confirmada';
+    const canDeclineAttendance = showAttendance && attendance !== 'declinada';
     return `<article class="session-card ${o.compact ? 'session-compact' : ''}">
       ${dateBadge(session.date)}
       <div class="session-main">
@@ -121,11 +125,14 @@
         ${session.notes ? `<p class="session-note">${UI.icon('info', 13)} ${U.esc(session.notes)}</p>` : ''}
         <div class="session-foot">
           <span class="session-pay">${UI.icon('credit-card', 14)} ${session.payment === 'plan' ? 'Incluida en tu plan' : session.payment === 'pagado' ? 'Pagada' : session.payment === 'cortesia' ? 'Cortesía' : 'Pago por validar'}</span>
+          ${showAttendance ? UI.statusPill(attendance, 'attendance') : ''}
           ${pay && pay.status === 'pendiente' ? `<span class="tiny-pill">${UI.icon(pay.proof ? 'clock' : 'alert-circle', 12)} ${pay.proof ? 'Comprobante en revisión' : 'Falta comprobante'}</span>` : ''}
         </div>
       </div>
       <div class="session-actions">
         ${o.showActions === false ? '' : `
+          ${canConfirmAttendance ? `<button class="btn btn-outline btn-sm" data-action="attendance-yes" data-id="${session.id}">${UI.icon('check', 15)} Asistiré</button>` : ''}
+          ${canDeclineAttendance ? `<button class="btn btn-ghost btn-sm" data-action="attendance-no" data-id="${session.id}">${UI.icon('x', 15)} No podré ir</button>` : ''}
           <button class="btn btn-ghost btn-sm" data-action="session-detail" data-id="${session.id}">${UI.icon('file-text', 15)} Detalle</button>
           ${session.status !== 'completada' && session.status !== 'cancelada' ? `<button class="btn btn-outline btn-sm" data-action="reschedule-open" data-id="${session.id}">${UI.icon('refresh', 15)} Reagendar</button>` : ''}
           ${session.status !== 'cancelada' ? `<button class="icon-btn danger" title="Cancelar sesión" aria-label="Cancelar sesión" data-action="cancel-session" data-id="${session.id}">${UI.icon('x', 16)}</button>` : ''}
@@ -866,7 +873,22 @@
       }
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión cancelada', `${RS.data.serviceName(session.serviceId)} del ${U.fmtDate(session.date, 'long')} ${session.time} h.`);
-      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+      try {
+        await RS.SupabaseSync.push();
+      } catch (err) {
+        console.warn('No se pudo sincronizar la cancelación:', err && err.message);
+      }
+      RS.SupabaseSync.notifyWaitlist({
+        sessionId: session.id,
+        userId: session.userId,
+        serviceId: session.serviceId,
+        serviceName: RS.data.serviceName(session.serviceId),
+        date: session.date,
+        time: session.time,
+      }).then((res) => {
+        const count = res && res.result ? Number(res.result.notified) || 0 : 0;
+        if (count > 0) UI.toast(`Avisamos a ${count} ${count === 1 ? 'persona' : 'personas'} de la lista de espera.`, 'info', 6000);
+      }).catch(() => { /* no bloquea la UI */ });
       try {
         const user = RS.data.getUser(session.userId);
         if (user) {
@@ -887,6 +909,11 @@
     const canChange = hours >= st().settings.policyHours && session.status !== 'cancelada' && session.status !== 'completada';
     const deadline = canChange ? policyDeadlineText(session.date, session.time) : '';
     const location = (st().settings && st().settings.address) ? st().settings.address : 'Recovery Studio';
+    const attendance = session.attendanceStatus || 'pendiente';
+    const showAttendance = session.status === 'pendiente' || session.status === 'confirmada';
+    const attendanceMeta = UI.ATTENDANCE_STATUS[attendance] || UI.ATTENDANCE_STATUS.pendiente;
+    const canConfirmAttendance = showAttendance && attendance !== 'confirmada';
+    const canDeclineAttendance = showAttendance && attendance !== 'declinada';
     UI.modal({
       title: 'Detalle de la sesión',
       subtitle: U.fmtDate(session.date, 'long'),
@@ -902,12 +929,39 @@
         ${UI.detailRow('Horario', `${session.time} h`)}
         ${UI.detailRow('Ubicación', location)}
         ${UI.detailRow('Pago', session.payment === 'plan' ? 'Incluida en tu plan' : session.payment === 'pagado' ? 'Pagada' : session.payment === 'cortesia' ? 'Cortesía' : 'Pendiente de validación')}
+        ${showAttendance ? UI.detailRow('Asistencia', attendanceMeta.label) : ''}
         ${payment ? UI.detailRow('Comprobante', payment.proof ? 'Recibido, en revisión' : 'Pendiente de subir') : ''}
         ${session.notes ? UI.detailRow('Notas', session.notes) : ''}
       </div>
+      ${attendance === 'declinada' ? `<div class="callout callout-orange">${UI.icon('alert-triangle', 17)}<span>Avisaste que no podrás asistir. Si quieres liberar el cupo para otra persona, cancela o reagenda la sesión.</span></div>` : ''}
       <div class="callout ${canChange ? 'callout-green' : 'callout-orange'}">${UI.icon(canChange ? 'check-circle' : 'clock', 17)}<span>${canChange ? `Puedes reagendar o cancelar hasta ${st().settings.policyHours} h antes${deadline ? ` (antes de <strong>${U.esc(deadline)}</strong>)` : ''}.` : (session.status === 'cancelada' || session.status === 'completada' ? 'Esta sesión ya no permite cambios desde la app.' : `Ya no aplica el plazo de ${st().settings.policyHours} h para cambios.`)}</span></div>`,
-      footer: `<button class="btn btn-ghost" data-action="download-ics" data-id="${session.id}">${UI.icon('calendar', 16)} Archivo</button><button class="btn btn-ghost" data-action="calendar-subscribe">${UI.icon('calendar', 16)} Mi calendario</button>${canChange ? `<button class="btn btn-outline" data-action="reschedule-open" data-id="${session.id}">${UI.icon('refresh', 15)} Reagendar</button>` : ''}<button class="btn btn-primary" data-modal-close>Cerrar</button>`,
+      footer: `${canConfirmAttendance ? `<button class="btn btn-accent" data-action="attendance-yes" data-id="${session.id}">${UI.icon('check', 16)} Asistiré</button>` : ''}${canDeclineAttendance ? `<button class="btn btn-outline" data-action="attendance-no" data-id="${session.id}">${UI.icon('x', 16)} No podré ir</button>` : ''}<button class="btn btn-ghost" data-action="download-ics" data-id="${session.id}">${UI.icon('calendar', 16)} Archivo</button><button class="btn btn-ghost" data-action="calendar-subscribe">${UI.icon('calendar', 16)} Mi calendario</button>${canChange ? `<button class="btn btn-outline" data-action="reschedule-open" data-id="${session.id}">${UI.icon('refresh', 15)} Reagendar</button>` : ''}<button class="btn btn-primary" data-modal-close>Cerrar</button>`,
     });
+  }
+
+  /* Confirma o declina la asistencia desde “Mis reservas”. */
+  function setAttendance(session, status) {
+    if (!session) return;
+    if (session.status === 'cancelada' || session.status === 'completada' || session.status === 'no_asistio') {
+      UI.toast('Esta sesión ya no permite confirmar asistencia.', 'info');
+      return;
+    }
+    session.attendanceStatus = status;
+    session.attendanceUpdatedAt = new Date().toISOString();
+    session.dirty = true;
+    RS.DB.save();
+    const label = status === 'confirmada' ? 'Asistencia confirmada' : 'Avisó que no podrá asistir';
+    RS.data.addAudit(me().name, label, `${RS.data.serviceName(session.serviceId)} · ${session.date} ${session.time}.`);
+    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+    UI.closeModal();
+    UI.toast(
+      status === 'confirmada'
+        ? '¡Listo! Confirmamos tu asistencia.'
+        : 'Aviso registrado. Si necesitas liberar el cupo, cancela o reagenda desde la sesión.',
+      status === 'confirmada' ? 'success' : 'info',
+      6000
+    );
+    RS.App.render(true);
   }
 
   /* -------------------------------- planes -------------------------------- */
@@ -1467,6 +1521,24 @@
   RS.actions['session-detail'] = (el) => {
     const session = st().sessions.find((s) => s.id === el.dataset.id);
     if (session) openSessionDetail(session);
+  };
+
+  RS.actions['attendance-yes'] = (el) => {
+    const session = st().sessions.find((s) => s.id === el.dataset.id);
+    if (session) setAttendance(session, 'confirmada');
+  };
+
+  RS.actions['attendance-no'] = (el) => {
+    const session = st().sessions.find((s) => s.id === el.dataset.id);
+    if (!session) return;
+    UI.confirm({
+      title: 'No podré ir',
+      message: `Registraremos que no podrás asistir a tu sesión del ${U.fmtDate(session.date, 'long')} a las ${session.time} h. El cupo seguirá reservado hasta que la canceles o reagendes.`,
+      okText: 'Avisar que no iré',
+      cancelText: 'Volver',
+    }).then((ok) => {
+      if (ok) setAttendance(session, 'declinada');
+    });
   };
 
   RS.actions['reschedule-open'] = (el) => {

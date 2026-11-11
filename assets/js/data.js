@@ -433,6 +433,7 @@
       videoCapsules: [],
       sessions: [],
       blockedSlots: [],
+      recurringBlocks: [],
       payments: [],
       expenses: [],
       boletas: [],
@@ -545,6 +546,7 @@
               state.settings.slot = 30;
             }
             state.videoCapsules = Array.isArray(parsed.videoCapsules) ? parsed.videoCapsules : [];
+            state.recurringBlocks = Array.isArray(parsed.recurringBlocks) ? parsed.recurringBlocks : [];
             if (normalizePlanData()) DB.save();
             return state;
           }
@@ -850,6 +852,7 @@
     const sameDay = sessionsOn(date).filter((s) => s.id !== options.ignoreSessionId
       && s.status !== 'completada' && s.status !== 'no_asistio');
     const blocks = (state.blockedSlots || []).filter((block) => block.date === date);
+    const recurring = recurringBlocksFor(date);
     const now = new Date();
     const list = [];
     for (let minute = startMin; minute + duration <= endMin; minute += step) {
@@ -863,15 +866,20 @@
         const blockEnd = blockStart + (Number(block.duration) || step);
         return minute < blockEnd && minute + duration > blockStart;
       });
+      const recurringBlock = recurring.find((block) => {
+        const blockStart = timeToMin(block.startTime);
+        const blockEnd = timeToMin(block.endTime);
+        return minute < blockEnd && minute + duration > blockStart;
+      });
       let reason = '';
       if (overlap) reason = 'Ocupado';
-      else if (blocked) reason = 'Bloqueado por administrador';
+      else if (blocked || recurringBlock) reason = 'Bloqueado por administrador';
       const dt = dateTime(date, minToTime(minute));
       const lead = Number(settings.leadHours) || 0;
       if (dt.getTime() - now.getTime() < lead * 3600000) {
         reason = reason || 'Fuera de plazo';
       }
-      if (options.ignoreRules) reason = overlap ? 'Ocupado' : blocked ? 'Bloqueado por administrador' : '';
+      if (options.ignoreRules) reason = overlap ? 'Ocupado' : (blocked || recurringBlock) ? 'Bloqueado por administrador' : '';
       list.push({ time: minToTime(minute), available: !reason, reason });
     }
     return list;
@@ -909,6 +917,16 @@
     return (state.blockedSlots || [])
       .filter((block) => block.date === date)
       .sort((a, b) => a.time.localeCompare(b.time));
+  }
+
+  /* Bloqueos recurrentes: se repiten cada semana (0 = domingo).
+     Un bloqueo con weekday null aplica todos los días. */
+  function recurringBlocksFor(date) {
+    const day = parseISO(date).getDay();
+    return (state.recurringBlocks || [])
+      .filter((block) => block && block.active !== false
+        && (block.weekday === null || block.weekday === undefined || Number(block.weekday) === day))
+      .sort((a, b) => String(a.startTime || '').localeCompare(String(b.startTime || '')));
   }
 
   function userMaxes(userId) {
@@ -1012,7 +1030,7 @@
   };
   RS.data = {
     getUser, getService, serviceName, servicePrice, userSessions, upcomingSessions,
-    nextSession, sessionsOn, availableSlots, hoursForDay, blockSlot, unblockSlot, blockedSlotsOn, userMaxes, userRoutine, approvalsInMonth,
+    nextSession, sessionsOn, availableSlots, hoursForDay, blockSlot, unblockSlot, blockedSlotsOn, recurringBlocksFor, userMaxes, userRoutine, approvalsInMonth,
     loyaltyProgress,
     planService, isPlanLabel, planValidityDays, planStatus, planAlerts, planAlertCounts,
     startPlan, clearPlanDates, normalizePhone, whatsappUrlTo, contactWhatsappUrl,

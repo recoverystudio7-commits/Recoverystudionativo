@@ -1,5 +1,5 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v49';
+const CACHE = 'recovery-studio-v50';
 const ASSETS = [
   './',
   './index.html',
@@ -11,15 +11,15 @@ const ASSETS = [
   './assets/icon-512.png',
   './assets/apple-touch-icon.png',
   './assets/css/styles.css?v=2',
-  './assets/css/views.css?v=8',
+  './assets/css/views.css?v=9',
   './assets/css/landing.css',
   './assets/css/legal.css',
-  './assets/js/data.js?v=11',
+  './assets/js/data.js?v=13',
   './assets/js/analytics.js?v=1',
-  './assets/js/ui.js?v=2',
+  './assets/js/ui.js?v=3',
   './assets/js/auth.js?v=17',
-  './assets/js/user.js?v=28',
-  './assets/js/admin-base.js?v=9',
+  './assets/js/user.js?v=30',
+  './assets/js/admin-base.js?v=11',
   './assets/js/admin-people.js?v=12',
   './assets/js/exercise-library.js?v=6',
   './assets/js/admin-library.js?v=3',
@@ -30,7 +30,7 @@ const ASSETS = [
   './assets/js/content.js?v=4',
   './assets/js/reviews.js?v=5',
   './assets/js/supabase-client.js?v=5',
-  './assets/js/supabase-sync.js?v=7',
+  './assets/js/supabase-sync.js?v=9',
   './assets/js/routine-sync.js?v=2',
   './assets/js/app.js?v=12',
   './kinesiologia.html',

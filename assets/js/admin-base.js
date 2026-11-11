@@ -134,10 +134,12 @@
   function upcomingRow(session) {
     const user = RS.data.getUser(session.userId);
     const service = RS.data.getService(session.serviceId);
+    const showAttendance = session.status === 'pendiente' || session.status === 'confirmada';
     return `<div class="admin-session-row">
       <div class="admin-session-date"><strong>${String(U.parseISO(session.date).getDate()).padStart(2, '0')}</strong><span>${U.MONTHS_SHORT[U.parseISO(session.date).getMonth()]}</span><em>${session.time}</em></div>
       ${UI.avatar(user ? user.name : 'Usuario', 38)}
       <div class="admin-session-info"><strong>${U.esc(user ? user.name : 'Usuario')}</strong><span>${U.esc(service ? service.name : 'Sesión')} · ${service ? service.duration : 60} min</span></div>
+      ${showAttendance ? UI.statusPill(session.attendanceStatus || 'pendiente', 'attendance') : ''}
       ${UI.statusPill(session.status)}
       <button class="icon-btn" data-action="admin-edit-session" data-id="${session.id}" title="Editar sesión" aria-label="Editar sesión">${UI.icon('edit', 16)}</button>
     </div>`;
@@ -263,6 +265,7 @@
     const user = RS.data.getUser(session.userId);
     const service = RS.data.getService(session.serviceId);
     const canComplete = session.status === 'confirmada' || session.status === 'pendiente';
+    const showAttendance = session.status === 'pendiente' || session.status === 'confirmada';
     return `<div class="agenda-item ${session.status === 'cancelada' ? 'is-cancelled' : ''}">
       <div class="agenda-time"><strong>${U.esc(session.time)}</strong><span>${service ? service.duration : 60} min</span></div>
       <div class="agenda-card">
@@ -270,7 +273,7 @@
         <div class="agenda-main">
           ${UI.avatar(user ? user.name : 'Usuario', 42)}
           <div class="agenda-info">
-            <div class="agenda-name"><strong>${U.esc(user ? user.name : 'Usuario')}</strong>${UI.statusPill(session.status)}</div>
+            <div class="agenda-name"><strong>${U.esc(user ? user.name : 'Usuario')}</strong>${UI.statusPill(session.status)}${showAttendance ? UI.statusPill(session.attendanceStatus || 'pendiente', 'attendance') : ''}</div>
             <p>${U.esc(service ? service.name : 'Sesión')} · ${U.esc(session.coach || 'Daniel Barrueto')}</p>
             ${session.notes ? `<span class="agenda-note">${UI.icon('info', 13)} ${U.esc(session.notes)}</span>` : ''}
             <span class="agenda-pay">${UI.icon('credit-card', 13)} ${session.payment === 'plan' ? 'Sesión del plan' : session.payment === 'pagado' ? 'Pagada' : session.payment === 'cortesia' ? 'Cortesía' : 'Pago pendiente'}</span>
@@ -300,6 +303,11 @@
     const allSlots = RS.data.availableSlots(selected, 'srv-recovery', { ignoreRules: true });
     const freeSlots = allSlots.filter((s) => s.available);
     const blockedSlots = RS.data.blockedSlotsOn(selected);
+    const recurringBlocks = (st().recurringBlocks || []).slice().sort((a, b) => {
+      const wa = a.weekday === null || a.weekday === undefined ? 7 : Number(a.weekday);
+      const wb = b.weekday === null || b.weekday === undefined ? 7 : Number(b.weekday);
+      return wa - wb || String(a.startTime || '').localeCompare(String(b.startTime || ''));
+    });
     const dayHours = RS.data.hoursForDay(selected);
 
     return `<div class="view">
@@ -352,6 +360,22 @@
             </div>
           </section>
           <section class="card">
+            <div class="card-head head-row">
+              <div><h2 class="card-title">Bloqueos recurrentes</h2><p class="card-sub">Se repiten cada semana</p></div>
+              <button class="btn btn-ghost btn-sm" data-action="admin-recurring-new">${UI.icon('plus', 15)} Agregar</button>
+            </div>
+            <div class="card-body">
+              ${recurringBlocks.length ? `<div class="recurring-list">${recurringBlocks.map((block) => {
+                const weekday = block.weekday === null || block.weekday === undefined ? 'Todos los días' : (U.DAYS[Number(block.weekday)] || '');
+                const label = weekday ? weekday.charAt(0).toUpperCase() + weekday.slice(1) : '';
+                return `<div class="recurring-row">
+                  <div><strong>${U.esc(label)}</strong><span>${U.esc(block.startTime)} – ${U.esc(block.endTime)}${block.reason ? ` · ${U.esc(block.reason)}` : ''}</span></div>
+                  <button class="icon-btn danger" title="Eliminar bloqueo" aria-label="Eliminar bloqueo" data-action="admin-recurring-delete" data-id="${U.esc(block.id)}">${UI.icon('trash', 15)}</button>
+                </div>`;
+              }).join('')}</div>` : '<p class="muted small">Sin bloqueos recurrentes. Úsalos para almuerzos, días cerrados o horarios fijos no disponibles.</p>'}
+            </div>
+          </section>
+          <section class="card">
             <div class="card-head"><h2 class="card-title">Resumen del día</h2></div>
             <div class="card-body">
               <div class="day-summary">
@@ -386,6 +410,7 @@
       notes: (existing && existing.notes) || '',
       coach: (existing && existing.coach) || 'Daniel Barrueto',
     };
+    const attendanceMeta = UI.ATTENDANCE_STATUS[(existing && existing.attendanceStatus) || 'pendiente'] || UI.ATTENDANCE_STATUS.pendiente;
     const root = UI.modal({
       title: existing ? 'Editar sesión' : 'Nueva sesión',
       subtitle: existing ? 'Modifica el horario, el usuario o el estado de la reserva.' : 'Asigna una sesión a un usuario inscrito.',
@@ -408,6 +433,15 @@
           </select></div>
         </div>
         <div id="as-plan-info"></div>
+        ${existing ? `<div class="session-history">
+          <span class="eyebrow">Historial de la sesión</span>
+          <div class="history-grid">
+            <div><span>Creada por</span><strong>${U.esc(existing.createdByName || 'Sistema')}</strong></div>
+            <div><span>Creada el</span><strong>${U.esc(U.fmtDateTime(existing.createdAt))}</strong></div>
+            <div><span>Última modificación</span><strong>${U.esc(U.fmtDateTime(existing.updatedAt || existing.remoteUpdatedAt))}</strong></div>
+            <div><span>Asistencia del cliente</span><strong>${U.esc(attendanceMeta.label)}${existing.attendanceUpdatedAt ? ` · ${U.esc(U.fmtDateTime(existing.attendanceUpdatedAt))}` : ''}</strong></div>
+          </div>
+        </div>` : ''}
         <div class="field"><label for="as-notes">Notas internas</label><textarea class="input" id="as-notes" name="notes" rows="2" placeholder="Indicaciones para la sesión…">${U.esc(defaults.notes)}</textarea></div>
         <p class="form-hint">${UI.icon('info', 14)} Al agendar con el plan se descuenta 1 sesión del saldo del cliente. También puedes ajustar el saldo desde Usuarios.</p>
         <p class="form-error" id="session-error" role="alert"></p>
@@ -462,6 +496,18 @@
           if (pu) RS.SupabaseSync.pushAccount(pu.id).catch(() => { /* no bloquea la UI */ });
         }
         RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+        const deletedOwner = RS.data.getUser(existing.userId) || {};
+        RS.SupabaseSync.notifyWaitlist({
+          sessionId: existing.id,
+          userId: deletedOwner.supabaseUserId || existing.userId,
+          serviceId: existing.serviceId,
+          serviceName: RS.data.serviceName(existing.serviceId),
+          date: existing.date,
+          time: existing.time,
+        }).then((res) => {
+          const count = res && res.result ? Number(res.result.notified) || 0 : 0;
+          if (count > 0) UI.toast(`Avisamos a ${count} ${count === 1 ? 'persona' : 'personas'} de la lista de espera.`, 'info', 6000);
+        }).catch(() => { /* no bloquea la UI */ });
         RS.data.addAudit(me().name, 'Sesión eliminada', `${RS.data.serviceName(existing.serviceId)} del ${existing.date} ${existing.time}${existing.payment === 'plan' ? ' · sesión devuelta al plan' : ''}.`);
         UI.closeModal();
         UI.toast('Sesión eliminada.', 'info');
@@ -593,6 +639,42 @@
     RS.App.render(true);
   };
 
+  RS.forms['admin-recurring'] = async (form) => {
+    const err = document.getElementById('recurring-error');
+    if (err) err.classList.remove('show');
+    const values = {
+      weekday: form.weekday.value === '' ? null : Number(form.weekday.value),
+      startTime: form.startTime.value,
+      endTime: form.endTime.value,
+      reason: form.reason.value.trim(),
+      active: true,
+    };
+    if (!values.startTime || !values.endTime || values.endTime <= values.startTime) {
+      if (err) {
+        err.textContent = 'La hora de término debe ser posterior a la hora de inicio.';
+        err.classList.add('show');
+      }
+      return;
+    }
+    try {
+      const saved = await RS.SupabaseSync.saveRecurringBlock(values);
+      if (!saved.ok) throw new Error(saved.reason === 'no-admin' ? 'Solo el administrador puede crear bloqueos.' : 'No se pudo guardar el bloqueo en la nube.');
+      st().recurringBlocks = (st().recurringBlocks || []).filter((b) => b.id !== saved.id);
+      st().recurringBlocks.push(Object.assign({ id: saved.id }, values));
+      RS.DB.save();
+      const dayLabel = values.weekday === null ? 'Todos los días' : U.DAYS[values.weekday];
+      RS.data.addAudit(me().name, 'Bloqueo recurrente creado', `${dayLabel} · ${values.startTime}–${values.endTime}${values.reason ? ` · ${values.reason}` : ''}.`);
+      UI.closeModal();
+      UI.toast('Bloqueo recurrente guardado.', 'success');
+      RS.App.render(true);
+    } catch (error) {
+      if (err) {
+        err.textContent = error.message;
+        err.classList.add('show');
+      }
+    }
+  };
+
   /* -------------------------------- acciones ------------------------------- */
 
   RS.actions['admin-block-slot'] = async (el) => {
@@ -615,6 +697,51 @@
     if (!slot) return;
     RS.data.addAudit(me().name, 'Horario desbloqueado', `${slot.date} ${slot.time}.`);
     UI.toast(`Horario ${slot.time} disponible nuevamente.`, 'success');
+    RS.App.render(true);
+  };
+
+  RS.actions['admin-recurring-new'] = () => {
+    UI.modal({
+      title: 'Nuevo bloqueo recurrente',
+      subtitle: 'Se repetirá cada semana en el horario indicado.',
+      size: 'sm',
+      body: `<form data-form="admin-recurring" id="recurring-form">
+        <div class="grid grid-2 gap-sm">
+          <div class="field"><label for="rb-weekday">Día</label><select class="input" id="rb-weekday" name="weekday">
+            <option value="">Todos los días</option>
+            ${U.DAYS.map((day, index) => `<option value="${index}">${day.charAt(0).toUpperCase() + day.slice(1)}</option>`).join('')}
+          </select></div>
+          <div class="field"><label for="rb-reason">Motivo</label><input class="input" id="rb-reason" name="reason" placeholder="Almuerzo, día cerrado…"></div>
+          <div class="field"><label for="rb-start">Desde</label><input class="input" id="rb-start" name="startTime" type="time" value="13:00" required></div>
+          <div class="field"><label for="rb-end">Hasta</label><input class="input" id="rb-end" name="endTime" type="time" value="14:00" required></div>
+        </div>
+        <p class="form-hint">${UI.icon('info', 14)} Los bloqueos recurrentes se aplican a todas las fechas futuras, incluida la agenda de hoy.</p>
+        <p class="form-error" id="recurring-error" role="alert"></p>
+      </form>`,
+      footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" type="submit" form="recurring-form">Guardar bloqueo</button>`,
+    });
+  };
+
+  RS.actions['admin-recurring-delete'] = async (el) => {
+    const block = (st().recurringBlocks || []).find((b) => b.id === el.dataset.id);
+    if (!block) return;
+    const ok = await UI.confirm({
+      title: 'Eliminar bloqueo recurrente',
+      message: 'Este horario volverá a estar disponible todas las semanas en que se aplicaba.',
+      okText: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      await RS.SupabaseSync.deleteRecurringBlock(block.id);
+    } catch (error) {
+      UI.toast(`No se pudo eliminar el bloqueo: ${error.message}`, 'error', 6000);
+      return;
+    }
+    st().recurringBlocks = (st().recurringBlocks || []).filter((b) => b.id !== block.id);
+    RS.DB.save();
+    RS.data.addAudit(me().name, 'Bloqueo recurrente eliminado', `${block.startTime}–${block.endTime}.`);
+    UI.toast('Bloqueo recurrente eliminado.', 'success');
     RS.App.render(true);
   };
 
@@ -678,7 +805,22 @@
       }
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión cancelada (admin)', `${RS.data.serviceName(session.serviceId)} · ${session.date} ${session.time}${refundsPlan ? ' · sesión devuelta al plan' : ''}.`);
-      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+      try {
+        await RS.SupabaseSync.push();
+      } catch (err) {
+        console.warn('No se pudo sincronizar la cancelación:', err && err.message);
+      }
+      RS.SupabaseSync.notifyWaitlist({
+        sessionId: session.id,
+        userId: session.userId,
+        serviceId: session.serviceId,
+        serviceName: RS.data.serviceName(session.serviceId),
+        date: session.date,
+        time: session.time,
+      }).then((res) => {
+        const count = res && res.result ? Number(res.result.notified) || 0 : 0;
+        if (count > 0) UI.toast(`Avisamos a ${count} ${count === 1 ? 'persona' : 'personas'} de la lista de espera.`, 'info', 6000);
+      }).catch(() => { /* no bloquea la UI */ });
       try {
         const planUser = RS.data.getUser(session.userId);
         if (planUser) {

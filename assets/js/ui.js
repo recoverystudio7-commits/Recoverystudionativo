@@ -143,6 +143,11 @@
     cancelada: { label: 'Cancelada', tone: 'danger' },
     no_asistio: { label: 'No asistió', tone: 'neutral' },
   };
+  const ATTENDANCE_STATUS = {
+    pendiente: { label: 'Sin confirmar', tone: 'warning' },
+    confirmada: { label: 'Asistencia confirmada', tone: 'success' },
+    declinada: { label: 'No podrá ir', tone: 'danger' },
+  };
   const PAYMENT_STATUS = {
     pendiente: { label: 'Por validar', tone: 'warning' },
     aprobado: { label: 'Pagado', tone: 'success' },
@@ -160,7 +165,10 @@
   }
 
   function statusPill(status, kind) {
-    const map = kind === 'payment' ? PAYMENT_STATUS : kind === 'quote' ? QUOTE_STATUS : SESSION_STATUS;
+    const map = kind === 'payment' ? PAYMENT_STATUS
+      : kind === 'quote' ? QUOTE_STATUS
+      : kind === 'attendance' ? ATTENDANCE_STATUS
+      : SESSION_STATUS;
     const meta = map[status] || { label: status || '—', tone: 'neutral' };
     return pill(meta.label, meta.tone);
   }
@@ -386,6 +394,6 @@
   RS.UI = {
     icon, logoMark, logoLockup, avatar, pill, statusPill, toast, modal, closeModal, confirm,
     kpi, empty, monthSelect, bankCard, sectionHead, uploader, progress, detailRow,
-    SESSION_STATUS, PAYMENT_STATUS, QUOTE_STATUS,
+    SESSION_STATUS, PAYMENT_STATUS, QUOTE_STATUS, ATTENDANCE_STATUS,
   };
 })();
