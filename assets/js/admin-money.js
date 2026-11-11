@@ -173,7 +173,7 @@
       ${payment.proof ? `<div class="proof-preview large"><img src="${payment.proof}" alt="Comprobante de ${U.esc(payment.userName)}"><a class="btn btn-ghost btn-sm" href="${payment.proof}" target="_blank" rel="noopener">${UI.icon('external-link', 15)} Abrir comprobante</a></div>` : `<div class="callout callout-orange">${UI.icon('alert-circle', 17)}<span>Este pago no tiene comprobante adjunto. Verifica la transferencia antes de aprobarlo.</span></div>`}
       ${payment.status === 'pendiente' ? `<div class="callout callout-blue">${UI.icon('shield-check', 17)}<span>Al aprobar, ${payment.creditsToAdd ? `se sumarán <strong>${payment.creditsToAdd} sesiones</strong> al plan del usuario` : 'la reserva asociada quedará confirmada'} automáticamente.</span></div>` : ''}`,
       footer: `<a class="btn btn-ghost" href="${RS.data.whatsappUrl(message)}" target="_blank" rel="noopener">${UI.icon('whatsapp', 16)} Contactar</a>
-        ${payment.status === 'pendiente' ? `<button class="btn btn-ghost danger-text" data-action="admin-payment-reject" data-id="${payment.id}">Rechazar</button><button class="btn btn-accent" data-action="admin-payment-approve" data-id="${payment.id}">${UI.icon('check', 16)} Aprobar pago</button>` : '<button class="btn btn-primary" data-modal-close>Cerrar</button>'}`,
+        ${payment.status === 'pendiente' ? `<button class="btn btn-ghost danger-text" data-action="admin-payment-reject" data-id="${payment.id}">Rechazar</button><button class="btn btn-accent" data-action="admin-payment-approve" data-id="${payment.id}">${UI.icon('check', 16)} Aprobar pago</button>` : `${payment.status === 'aprobado' ? `<button class="btn btn-ghost" data-action="admin-edit-payment" data-id="${payment.id}">${UI.icon('edit', 16)} Editar ingreso</button>` : ''}<button class="btn btn-primary" data-modal-close>Cerrar</button>`}`,
     });
   }
 
@@ -196,47 +196,103 @@
     });
   }
 
-  function openManualPayment() {
+  function openManualPayment(payment) {
+    const editing = Boolean(payment && payment.id);
+    const credits = editing ? Math.max(0, Number(payment.creditsAdded != null ? payment.creditsAdded : payment.creditsToAdd) || 0) : 0;
+    const formId = editing ? 'manual-form-edit' : 'manual-form';
+    const selectedOwner = editing ? RS.data.getUser(payment.userId) : null;
+    const ownerFallback = editing && !selectedOwner
+      ? `<option value="${U.esc(payment.userId)}" selected>${U.esc(payment.userName || 'Usuario')}</option>`
+      : '';
+    const methods = ['Transferencia', 'Efectivo', 'Débito', 'Cortesía'];
     UI.modal({
-      title: 'Registrar ingreso manual',
-      subtitle: 'Para pagos en efectivo, cortesías o transferencias ya verificadas.',
+      title: editing ? 'Editar ingreso' : 'Registrar ingreso manual',
+      subtitle: editing
+        ? `${payment.ref} · ${U.fmtMoney(payment.amount)} · ${U.fmtDate(payment.date, 'long')}`
+        : 'Para pagos en efectivo, cortesías o transferencias ya verificadas.',
       size: 'md',
-      body: `<form data-form="admin-manual-payment" id="manual-form">
+      body: `<form data-form="admin-manual-payment" data-payment-id="${editing ? U.esc(payment.id) : ''}" id="${formId}">
         <div class="grid grid-2 gap-sm">
-          <div class="field"><label for="mp-user">Usuario *</label><select class="input" id="mp-user" name="userId" required>${Admin.userOptions()}</select></div>
-          <div class="field"><label for="mp-date">Fecha *</label><input class="input" id="mp-date" name="date" type="date" value="${U.todayISO()}" required></div>
-          <div class="field"><label for="mp-concept">Concepto *</label><input class="input" id="mp-concept" name="concept" placeholder="Ej: Plan Recovery 8" required></div>
-          <div class="field"><label for="mp-category">Categoría</label><select class="input" id="mp-category" name="category">${Admin.INCOME_CATEGORIES.map((c) => `<option>${c}</option>`).join('')}</select></div>
-          <div class="field"><label for="mp-amount">Monto *</label><input class="input" id="mp-amount" name="amount" type="number" min="0" step="500" required placeholder="0"></div>
-          <div class="field"><label for="mp-method">Método</label><select class="input" id="mp-method" name="method"><option>Transferencia</option><option>Efectivo</option><option>Débito</option><option>Cortesía</option></select></div>
-          <div class="field"><label for="mp-credits">Sesiones a activar</label><input class="input" id="mp-credits" name="credits" type="number" min="0" step="1" value="0"><span class="field-hint">Se suman al saldo del usuario.</span></div>
+          <div class="field"><label for="mp-user">Usuario *</label><select class="input" id="mp-user" name="userId" required>${ownerFallback}${Admin.userOptions(editing ? payment.userId : '')}</select></div>
+          <div class="field"><label for="mp-date">Fecha *</label><input class="input" id="mp-date" name="date" type="date" value="${editing ? U.esc(payment.date) : U.todayISO()}" required></div>
+          <div class="field"><label for="mp-concept">Concepto *</label><input class="input" id="mp-concept" name="concept" value="${editing ? U.esc(payment.concept) : ''}" placeholder="Ej: Plan Recovery 8" required></div>
+          <div class="field"><label for="mp-category">Categoría</label><select class="input" id="mp-category" name="category">${Admin.INCOME_CATEGORIES.map((c) => `<option ${editing && (payment.category || 'Otros') === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+          <div class="field"><label for="mp-amount">Monto *</label><input class="input" id="mp-amount" name="amount" type="number" min="0" step="500" value="${editing ? Number(payment.amount) || 0 : ''}" required placeholder="0"></div>
+          <div class="field"><label for="mp-method">Método</label><select class="input" id="mp-method" name="method">${methods.map((m) => `<option ${editing && payment.method === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
+          <div class="field"><label for="mp-credits">Sesiones a activar</label><input class="input" id="mp-credits" name="credits" type="number" min="0" step="1" value="${credits}"><span class="field-hint">Se suman al saldo del usuario.</span></div>
         </div>
-        <div class="field"><label for="mp-note">Nota</label><input class="input" id="mp-note" name="note" placeholder="Detalle opcional"></div>
-        <p class="form-error" id="manual-error" role="alert"></p>
+        <div class="field"><label for="mp-note">Nota</label><input class="input" id="mp-note" name="note" value="${editing ? U.esc(payment.note || '') : ''}" placeholder="Detalle opcional"></div>
+        ${editing ? `<div class="callout callout-blue">${UI.icon('info', 17)}<span>Al guardar se ajustará el saldo del cliente: se devuelven las sesiones anteriores y se aplican las nuevas.</span></div>` : ''}
+        <p class="form-error" id="${formId}-error" role="alert"></p>
       </form>`,
-      footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" type="submit" form="manual-form">Registrar ingreso</button>`,
+      footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" type="submit" form="${formId}">${editing ? 'Guardar cambios' : 'Registrar ingreso'}</button>`,
     });
   }
 
   RS.forms['admin-manual-payment'] = (form) => {
+    const paymentId = form.dataset.paymentId;
+    const existing = paymentId ? st().payments.find((p) => p.id === paymentId) : null;
     const user = RS.data.getUser(form.userId.value);
     const amount = Number(form.amount.value);
-    const err = document.getElementById('manual-error');
-    if (!user || !amount || amount <= 0) {
+    const err = form.querySelector('.form-error');
+    const fail = (message) => {
       if (err) {
-        err.textContent = 'Selecciona un usuario e ingresa un monto válido.';
+        err.textContent = message;
         err.classList.add('show');
       }
+    };
+    if (!user || !amount || amount <= 0) {
+      fail('Selecciona un usuario e ingresa un monto válido.');
       return;
     }
     const credits = Math.max(0, Number(form.credits.value) || 0);
+    const concept = form.concept.value.trim() || 'Ingreso manual';
+    const category = form.category.value;
+
+    if (existing) {
+      const previousUser = RS.data.getUser(existing.userId);
+      const previousCredits = Math.max(0, Number(existing.creditsAdded != null ? existing.creditsAdded : existing.creditsToAdd) || 0);
+      if (previousUser && previousCredits) {
+        previousUser.credits = Math.max(0, Number(previousUser.credits || 0) - previousCredits);
+      }
+      if (credits) user.credits = Number(user.credits || 0) + credits;
+      if (category === 'Planes' || RS.data.isPlanLabel(concept)) {
+        user.planLabel = concept;
+      }
+      Object.assign(existing, {
+        userId: user.id,
+        userName: user.name,
+        concept,
+        category,
+        amount,
+        date: form.date.value,
+        method: form.method.value,
+        creditsToAdd: credits,
+        creditsAdded: credits,
+        note: form.note.value.trim(),
+        updatedAt: new Date().toISOString(),
+        updatedBy: me().name,
+      });
+      RS.DB.save();
+      RS.data.addAudit(me().name, 'Ingreso editado', `${existing.ref} · ${user.name} · ${U.fmtMoney(amount)}${credits ? ` · +${credits} sesiones` : ''}.`);
+      if (previousUser && previousUser.id !== user.id) {
+        RS.SupabaseSync.pushAccount(previousUser.id).catch(() => { /* no bloquea la UI */ });
+      }
+      RS.SupabaseSync.pushAccount(user.id).catch(() => { /* no bloquea la UI */ });
+      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+      UI.closeModal();
+      UI.toast('Ingreso actualizado correctamente.', 'success');
+      RS.App.render(true);
+      return;
+    }
+
     const payment = {
       id: U.uid('pay'),
       ref: U.ref('PAG'),
       userId: user.id,
       userName: user.name,
-      concept: form.concept.value.trim() || 'Ingreso manual',
-      category: form.category.value,
+      concept,
+      category,
       amount,
       date: form.date.value,
       status: 'aprobado',
@@ -255,9 +311,9 @@
     if (credits) {
       const previousLabel = user.planLabel;
       user.credits += credits;
-      if (payment.concept && form.category.value === 'Planes') {
-        user.planLabel = payment.concept;
-        RS.data.startPlan(user, payment.concept, { extend: previousLabel === payment.concept });
+      if (category === 'Planes') {
+        user.planLabel = concept;
+        RS.data.startPlan(user, concept, { extend: previousLabel === concept });
       }
     }
     st().payments.unshift(payment);
@@ -370,7 +426,7 @@
         </div>
         <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>Fecha</th><th>Referencia</th><th>Usuario</th><th>Concepto</th><th>Categoría</th><th>Método</th><th>Monto</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Referencia</th><th>Usuario</th><th>Concepto</th><th>Categoría</th><th>Método</th><th>Monto</th><th></th></tr></thead>
             <tbody>${fin.payments.slice().sort((a, b) => b.date.localeCompare(a.date)).map((p) => `<tr>
               <td>${U.fmtDate(p.date, 'compact')}</td>
               <td><span class="mono">${U.esc(p.ref)}</span></td>
@@ -379,7 +435,8 @@
               <td>${UI.pill(p.category || 'Otros', 'info')}</td>
               <td>${U.esc(p.method)}</td>
               <td><strong>${U.fmtMoney(p.amount)}</strong></td>
-            </tr>`).join('') || '<tr><td colspan="7" class="muted">Sin ingresos en este mes.</td></tr>'}</tbody>
+              <td><button class="icon-btn" data-action="admin-edit-payment" data-id="${p.id}" title="Editar ingreso" aria-label="Editar ingreso">${UI.icon('edit', 15)}</button></td>
+            </tr>`).join('') || '<tr><td colspan="8" class="muted">Sin ingresos en este mes.</td></tr>'}</tbody>
           </table>
         </div>
       </section>
@@ -713,6 +770,13 @@
   RS.actions['admin-manual-payment'] = () => {
     UI.closeModal();
     openManualPayment();
+  };
+
+  RS.actions['admin-edit-payment'] = (el) => {
+    const payment = st().payments.find((p) => p.id === el.dataset.id);
+    if (!payment) return;
+    UI.closeModal();
+    openManualPayment(payment);
   };
 
   RS.changes['finance-month'] = (el) => {
