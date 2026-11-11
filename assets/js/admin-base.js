@@ -97,7 +97,8 @@
     const end = start + duration;
     return st().sessions.find((s) => {
       if (s.id === ignoreId) return false;
-      if (s.date !== date || s.status === 'cancelada') return false;
+      if (s.date !== date) return false;
+      if (s.status === 'cancelada' || s.status === 'completada' || s.status === 'no_asistio') return false;
       const otherStart = U.timeToMin(s.time);
       const otherService = RS.data.getService(s.serviceId);
       const otherEnd = otherStart + (otherService ? Number(otherService.duration) || 60 : 60);
@@ -450,6 +451,12 @@
         }
         st().sessions = st().sessions.filter((s) => s.id !== existing.id);
         RS.DB.save();
+        try {
+          await RS.SupabaseSync.deleteSession(existing.id);
+        } catch (error) {
+          console.warn('No se pudo eliminar la sesión en la nube:', error && error.message);
+          UI.toast('Se eliminó en este dispositivo, pero no se pudo borrar en la nube. Sincroniza o inténtalo de nuevo.', 'warning', 7000);
+        }
         if (existing.payment === 'plan') {
           const pu = RS.data.getUser(existing.userId);
           if (pu) RS.SupabaseSync.pushAccount(pu.id).catch(() => { /* no bloquea la UI */ });
@@ -534,7 +541,7 @@
         if (previousUser) RS.SupabaseSync.pushAccount(previousUser.id).catch(() => { /* no bloquea la UI */ });
       }
       const previous = { date: session.date, time: session.time };
-      Object.assign(session, values, { coach: 'Daniel Barrueto' });
+      Object.assign(session, values, { coach: 'Daniel Barrueto', dirty: true });
       if (usesPlan) user.credits = Math.max(0, Number(user.credits) || 0) - 1;
       RS.data.addAudit(me().name, 'Sesión modificada', `${RS.data.serviceName(values.serviceId)} de ${user.name} · ${values.date} ${values.time}${usesPlan ? ` · saldo del plan: ${user.credits}` : ''}.`);
       RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
@@ -566,6 +573,7 @@
         coach: 'Daniel Barrueto',
         createdAt: new Date().toISOString(),
         createdBy: 'admin',
+        dirty: true,
       };
       st().sessions.push(session);
       if (usesPlan) user.credits = Math.max(0, Number(user.credits) || 0) - 1;
@@ -642,6 +650,7 @@
     const session = st().sessions.find((s) => s.id === el.dataset.id);
     if (!session) return;
     session.status = 'completada';
+    session.dirty = true;
     if (session.payment === 'pendiente') session.payment = 'pagado';
     RS.DB.save();
     RS.data.addAudit(me().name, 'Sesión completada', `${RS.data.serviceName(session.serviceId)} · ${session.date} ${session.time}.`);
@@ -662,6 +671,7 @@
     }).then(async (ok) => {
       if (!ok) return;
       session.status = 'cancelada';
+      session.dirty = true;
       if (refundsPlan) {
         const planUser = RS.data.getUser(session.userId);
         if (planUser) planUser.credits = Math.max(0, Number(planUser.credits) || 0) + 1;

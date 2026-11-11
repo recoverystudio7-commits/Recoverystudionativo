@@ -814,6 +814,7 @@
       session.date = date;
       session.time = time;
       session.rescheduledAt = new Date().toISOString();
+      session.dirty = true;
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión reagendada', `${service ? service.name : 'Sesión'} movida a ${U.fmtDate(date, 'long')} ${time} h.`);
       RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
@@ -853,6 +854,7 @@
       if (!ok) return;
       session.status = 'cancelada';
       session.cancelledAt = new Date().toISOString();
+      session.dirty = true;
       if (session.payment === 'plan') {
         const user = RS.data.getUser(session.userId);
         if (user) user.credits += 1;

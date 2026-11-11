@@ -844,7 +844,11 @@
     const step = Number(settings.slot) || 60;
     const service = getService(serviceId);
     const duration = service ? Number(service.duration) || 60 : 60;
-    const sameDay = sessionsOn(date).filter((s) => s.id !== options.ignoreSessionId);
+    // Solo bloquean cupo las sesiones activas: una sesión completada o no
+    // asistida (sobre todo si quedó marcada por error en una fecha futura)
+    // no debe impedir que otro cliente reserve ese horario.
+    const sameDay = sessionsOn(date).filter((s) => s.id !== options.ignoreSessionId
+      && s.status !== 'completada' && s.status !== 'no_asistio');
     const blocks = (state.blockedSlots || []).filter((block) => block.date === date);
     const now = new Date();
     const list = [];

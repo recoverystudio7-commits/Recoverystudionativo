@@ -405,7 +405,7 @@
         // para que admin y clientes vean reagendamientos y cancelaciones al instante.
         const remoteTime = Date.parse(base.remoteUpdatedAt || '') || 0;
         const localTime = Date.parse(existing.remoteUpdatedAt || '') || 0;
-        if (!existing.remoteUpdatedAt || remoteTime > localTime) {
+        if (!existing.dirty && (!existing.remoteUpdatedAt || remoteTime > localTime)) {
           Object.assign(existing, base);
           merged += 1;
         } else {
@@ -419,6 +419,18 @@
       state.sessions.push(base);
       merged += 1;
     });
+
+    // Elimina de este dispositivo las sesiones que ya no existen en la nube
+    // (por ejemplo, cupos fantasma o sesiones eliminadas desde el panel admin).
+    // Solo toca filas que ya estaban sincronizadas y sin cambios locales pendientes.
+    const remoteIds = new Set(rows.map((row) => row && row.id).filter(Boolean));
+    const stale = state.sessions.filter((s) => s && s.id && !s.dirty
+      && s.remoteUpdatedAt && !remoteIds.has(s.id));
+    if (stale.length) {
+      state.sessions = state.sessions.filter((s) => !(s && s.id && !s.dirty
+        && s.remoteUpdatedAt && !remoteIds.has(s.id)));
+      merged += stale.length;
+    }
     return merged;
   }
 
@@ -603,6 +615,9 @@
     const state = st();
     const candidates = (state.sessions || []).filter((s) => {
       if (!s || !s.id || !s.date || !s.time) return false;
+      // Solo se suben sesiones nuevas o con cambios locales pendientes. Así una
+      // sesión eliminada en otro equipo no reaparece desde un navegador viejo.
+      if (s.remoteUpdatedAt && !s.dirty) return false;
       const ownerId = s.userId || (isAdmin ? null : uid);
       if (isAdmin) {
         const owner = RS.data.getUser(s.userId) || localUserBySupabaseId(s.userId);
@@ -638,12 +653,32 @@
       try {
         const saved = await upsert('sessions', app.id, isAdmin ? null : 'user_id', ownerId, payload, tk);
         app.remoteUpdatedAt = (saved && saved.updated_at) || payload.updated_at;
+        app.dirty = false;
+        app.source = 'supabase';
         pushed += 1;
       } catch (error) {
         console.warn('No se pudo sincronizar la sesión', app.id, error.message);
       }
     }
     return pushed;
+  }
+
+  async function deleteSession(sessionId) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    if (!sessionId) return { ok: false, reason: 'no-id' };
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid) return { ok: false, reason: 'no-user' };
+    const tk = await freshToken();
+    const isAdmin = user.role === 'admin';
+    const path = isAdmin
+      ? `/rest/v1/sessions?id=eq.${encodeURIComponent(sessionId)}`
+      : `/rest/v1/sessions?id=eq.${encodeURIComponent(sessionId)}&user_id=eq.${encodeURIComponent(uid)}`;
+    await RS.Supabase.request(path, {
+      method: 'DELETE',
+      headers: { Prefer: 'return=minimal' },
+    }, tk);
+    return { ok: true };
   }
 
   async function pushPayments(tk, user, uid, isAdmin) {
@@ -816,6 +851,7 @@
     pull,
     push,
     pushAccount,
+    deleteSession,
     syncNow,
     startAutoSync,
     stopAutoSync,
