@@ -1,5 +1,5 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v53';
+const CACHE = 'recovery-studio-v54';
 const ASSETS = [
   './',
   './index.html',
@@ -26,12 +26,12 @@ const ASSETS = [
   './assets/js/admin-library.js?v=3',
   './assets/js/admin-club.js?v=4',
   './assets/js/admin-alerts.js?v=1',
-  './assets/js/admin-money.js?v=8',
+  './assets/js/admin-money.js?v=9',
   './assets/js/admin-system.js?v=3',
   './assets/js/content.js?v=5',
   './assets/js/reviews.js?v=5',
   './assets/js/supabase-client.js?v=5',
-  './assets/js/supabase-sync.js?v=9',
+  './assets/js/supabase-sync.js?v=10',
   './assets/js/routine-sync.js?v=2',
   './assets/js/app.js?v=12',
   './kinesiologia.html',

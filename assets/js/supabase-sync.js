@@ -724,6 +724,20 @@
     return { ok: true };
   }
 
+  async function deletePayment(paymentId) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    if (!paymentId) return { ok: false, reason: 'no-id' };
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    const tk = await freshToken();
+    await RS.Supabase.request(`/rest/v1/payments?id=eq.${encodeURIComponent(paymentId)}`, {
+      method: 'DELETE',
+      headers: { Prefer: 'return=minimal' },
+    }, tk);
+    return { ok: true };
+  }
+
   async function saveRecurringBlock(block) {
     if (!configured()) return { ok: false, reason: 'no-config' };
     const user = me();
@@ -952,6 +966,7 @@
     push,
     pushAccount,
     deleteSession,
+    deletePayment,
     saveRecurringBlock,
     deleteRecurringBlock,
     notifyWaitlist,
