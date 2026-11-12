@@ -280,11 +280,11 @@
         <div class="loyalty-copy">
           <span class="eyebrow">${UI.icon('award', 15)} Club Recovery</span>
           <h2 id="loyalty-title">Tu constancia tiene premio</h2>
-          <p>Cada sesión completada suma un sello. Por cada 3 meses seguidos con sesiones completadas, ganas un sello extra. Al alcanzar 5 sellos, recibirás: <strong>${U.esc(loyaltyReward)}</strong>.</p>
+          <p>Cada sesión completada suma un sello. Por cada ${loyalty.consistencyMonths} meses seguidos con sesiones completadas, ganas un sello extra. Al alcanzar ${loyalty.goal} sellos, recibirás: <strong>${U.esc(loyaltyReward)}</strong>.</p>
         </div>
         <div class="loyalty-progress">
           <div class="loyalty-progress-label"><strong>${loyalty.stamps} ${loyalty.stamps === 1 ? 'sello' : 'sellos'}</strong><span>${loyalty.stampsToNextReward} para tu próxima recompensa</span></div>
-          <div class="loyalty-meter" role="progressbar" aria-label="Progreso a la próxima recompensa" aria-valuemin="0" aria-valuemax="5" aria-valuenow="${loyalty.nextRewardProgress}"><span style="width:${loyalty.nextRewardProgress * 20}%"></span></div>
+          <div class="loyalty-meter" role="progressbar" aria-label="Progreso a la próxima recompensa" aria-valuemin="0" aria-valuemax="${loyalty.goal}" aria-valuenow="${loyalty.nextRewardProgress}"><span style="width:${Math.min(100, Math.round((loyalty.nextRewardProgress / loyalty.goal) * 100))}%"></span></div>
           <div class="loyalty-foot"><span>${loyalty.completedSessions} ${loyalty.completedSessions === 1 ? 'sesión completada' : 'sesiones completadas'} · ${loyalty.activeMonthStreak} ${loyalty.activeMonthStreak === 1 ? 'mes consecutivo' : 'meses consecutivos'} con actividad</span>
             ${loyalty.earnedRewards ? `<a class="btn btn-accent btn-sm" href="${RS.data.whatsappUrl(`Hola, quiero consultar el canje de mis ${loyalty.earnedRewards} premio(s) del Club Recovery: ${loyaltyReward}. Mi cuenta: ${user.name} (${user.email}).`)}" target="_blank" rel="noopener">${UI.icon('award', 15)} Consultar mi ${loyalty.earnedRewards === 1 ? 'premio' : 'premios'}</a>` : ''}
           </div>

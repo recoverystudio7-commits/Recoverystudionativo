@@ -389,11 +389,11 @@
     };
   }
 
-  function openRoutineEditor(user) {
+  function openRoutineEditor(user, preDraft) {
     const existing = RS.data.userRoutine(user.id);
-    const draft = existing
-      ? JSON.parse(JSON.stringify(existing))
-      : { id: U.uid('rt'), userId: user.id, title: 'Nueva pauta de entrenamiento', objective: '', weeks: 4, days: [newRoutineDay(0)] };
+    const draft = preDraft
+      ? JSON.parse(JSON.stringify(preDraft))
+      : (existing ? JSON.parse(JSON.stringify(existing)) : { id: U.uid('rt'), userId: user.id, title: 'Nueva pauta de entrenamiento', objective: '', weeks: 4, days: [newRoutineDay(0)] });
     if (!draft.days.length) draft.days.push(newRoutineDay(0));
     draft.startImage = draft.startImage || '';
     draft.endImage = draft.endImage || '';
@@ -411,26 +411,36 @@
       </div>
     </div>`;
 
-    const root = UI.modal({
-      title: 'Rutina del usuario',
-      subtitle: `${user.name} · edita la pauta que verá en su perfil`,
-      size: 'xl',
-      body: `<div class="routine-editor-meta">
+    const editorBody = () => `<div class="routine-editor-meta">
         <div class="field"><label>Título de la pauta</label><input class="input" data-r-meta="title" value="${U.esc(draft.title)}"></div>
         <div class="field"><label>Objetivo</label><input class="input" data-r-meta="objective" value="${U.esc(draft.objective)}" placeholder="Foco principal del bloque"></div>
         <div class="field field-weeks"><label>Semanas</label><input class="input" type="number" min="1" max="52" data-r-meta="weeks" value="${U.esc(draft.weeks)}"></div>
       </div>
       <div class="routine-photo-editor">${photoMarkup('start', 'Foto de inicio')}${photoMarkup('end', 'Foto de final')}</div>
       <div class="routine-editor" id="routine-editor"></div>
-      <div class="routine-editor-foot"><button type="button" class="btn btn-outline btn-sm" data-r-add-day>${UI.icon('plus', 15)} Agregar día</button><span class="form-hint">${UI.icon('info', 13)} Los cambios se guardan al finalizar.</span></div>`,
-      footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" data-routine-save>${UI.icon('check', 16)} Guardar rutina</button>`,
+      <div class="routine-editor-foot"><button type="button" class="btn btn-outline btn-sm" data-r-add-day>${UI.icon('plus', 15)} Agregar día</button><span class="form-hint">${UI.icon('info', 13)} Los cambios se guardan al finalizar.</span></div>`;
+
+    const editorFoot = () => `<button class="btn btn-outline" data-r-planning>${UI.icon('bar-chart-2', 16)} Planificación</button><button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" data-routine-save>${UI.icon('check', 16)} Guardar rutina</button>`;
+
+    const root = UI.modal({
+      title: 'Rutina del usuario',
+      subtitle: `${user.name} · edita la pauta que verá en su perfil`,
+      size: 'xl',
+      body: editorBody(),
+      footer: editorFoot(),
     });
     if (!root) return;
-    const container = root.querySelector('#routine-editor');
-    const saveButton = root.querySelector('[data-routine-save]');
+    const bodyEl = root.querySelector('.modal-body');
+    const footEl = root.querySelector('.modal-foot');
 
-    const render = () => {
-      container.innerHTML = draft.days.map((day, di) => `<div class="re-day">
+    const setHead = (title, subtitle) => {
+      const h2 = root.querySelector('.modal-head-text h2');
+      const p = root.querySelector('.modal-head-text p');
+      if (h2) h2.textContent = title;
+      if (p) p.textContent = subtitle;
+    };
+
+    const daysHtml = () => draft.days.map((day, di) => `<div class="re-day">
         <div class="re-day-head">
           <span class="re-day-num">${String(di + 1).padStart(2, '0')}</span>
           <input class="input re-day-name" data-r-day="name" data-day="${di}" value="${U.esc(day.name)}" placeholder="Nombre del día">
@@ -457,47 +467,236 @@
           <button type="button" class="btn btn-ghost btn-sm re-add-item" data-r-add-item="${di}">${UI.icon('plus', 14)} Agregar ejercicio</button>
         </div>
       </div>`).join('');
+
+    const render = () => {
+      const editor = root.querySelector('#routine-editor');
+      if (editor) editor.innerHTML = daysHtml();
+    };
+
+    const renderEditor = () => {
+      setHead('Rutina del usuario', `${user.name} · edita la pauta que verá en su perfil`);
+      bodyEl.innerHTML = editorBody();
+      footEl.innerHTML = editorFoot();
+      render();
     };
     render();
+
+    /* --------------------- planificación soviética --------------------- */
+
+    function openPlanning() {
+      if (!RS.Soviet) { UI.toast('Planificación no disponible.', 'error'); return; }
+      const maxes = RS.data.userMaxes(user.id);
+      if (!maxes.length) {
+        UI.toast('Este usuario no tiene maximales. Registra sus maximales primero para poder calcular cargas y porcentajes.', 'info', 6000);
+        return;
+      }
+      const data = RS.Soviet.analyze(draft, maxes);
+      let week = 1;
+
+      const fmtNum = (n) => (n == null ? '—' : String(n));
+      const macroRows = data.macro.map((p) => `<tr>
+        <td><strong>${U.esc(p.name)}</strong></td>
+        <td>${p.weeks}${p.weeks === 1 ? ' semana' : ' semanas'} <span class="muted">(S${p.startWeek}–S${p.endWeek})</span></td>
+        <td>${p.from}–${p.to}%</td>
+        <td>${U.esc(p.volume)}</td>
+        <td class="muted">${U.esc(p.focus)}</td>
+      </tr>`).join('');
+
+      const microRows = data.micro.map((w) => `<tr class="plan-week-row" data-plan-week="${w.week}">
+        <td><strong>S${w.week}</strong></td>
+        <td>${U.esc(w.phase)}</td>
+        <td><strong>${w.intensity}%</strong></td>
+        <td>${w.sets || '—'}</td>
+        <td>${w.reps || '—'}</td>
+        <td class="muted">${w.totalRange || '—'}</td>
+      </tr>`).join('');
+
+      const exerciseRows = (() => {
+        let rows = '';
+        let idx = 0;
+        data.days.forEach((d) => {
+          d.items.forEach((it) => {
+            rows += `<tr>
+              <td><strong>${U.esc(it.name || '—')}</strong></td>
+              <td>${it.matched ? `${fmtNum(it.maxValue)} ${U.esc(it.maxUnit || '')}` : '<span class="muted">Sin máximo</span>'}</td>
+              <td>${it.loadValue != null ? `${fmtNum(it.loadValue)}${it.loadUnit === 'lb' ? ' lb' : ''}` : '—'}</td>
+              <td>${it.loadPct != null ? `${Math.round(it.loadPct)}%` : '—'}</td>
+              <td>${it.sets != null && it.reps != null ? `${it.sets} × ${it.reps}` : '—'}</td>
+              <td>${it.tonnage != null ? it.tonnage : '—'}</td>
+              <td data-plan-suggest="${idx}">—</td>
+              <td>${it.zone ? `${it.zone.min}–${it.zone.max}% · ${it.zone.reps} reps` : '—'}</td>
+            </tr>`;
+            idx += 1;
+          });
+        });
+        return rows;
+      })();
+
+      const body = `<div class="planning-wrap">
+        <div class="planning-bar">
+          <div class="field"><label>Semana objetivo</label><select class="input" id="plan-week">${data.micro.map((w) => `<option value="${w.week}">Semana ${w.week} · ${w.intensity}%</option>`).join('')}</select></div>
+          <p class="form-hint">${UI.icon('info', 14)} <span>Con el método soviético (Prilepin) cada semana usa un % del máximo. Elige la semana y aplica las cargas sugeridas a la rutina.</span></p>
+        </div>
+        <div class="planning-kpis">
+          <div><span>Semanas de trabajo</span><strong>${data.weeks}</strong></div>
+          <div><span>Días / semana</span><strong>${data.daysPerWeek}</strong></div>
+          <div><span>Tonelaje semanal</span><strong>${data.totalTonnage || '—'}</strong></div>
+          <div><span>Intensidad promedio</span><strong>${data.avgIntensity != null ? data.avgIntensity + '%' : '—'}</strong></div>
+        </div>
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">Macrociclo · fases</h2></div>
+          <div class="table-wrap"><table class="table table-compact">
+            <thead><tr><th>Fase</th><th>Semanas</th><th>% 1RM</th><th>Volumen</th><th>Foco</th></tr></thead>
+            <tbody>${macroRows}</tbody>
+          </table></div>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">Microciclo · semana a semana</h2><p class="card-sub">Haz clic en una semana para elegirla</p></div>
+          <div class="table-wrap"><table class="table table-compact">
+            <thead><tr><th>Semana</th><th>Fase</th><th>Intensidad</th><th>Series</th><th>Reps</th><th>Levantamientos</th></tr></thead>
+            <tbody>${microRows}</tbody>
+          </table></div>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2 class="card-title">Ejercicios · carga y tonelaje</h2></div>
+          <div class="table-wrap"><table class="table table-compact">
+            <thead><tr><th>Ejercicio</th><th>Máximo</th><th>Carga actual</th><th>% 1RM</th><th>Series×Reps</th><th>Tonelaje</th><th>Carga sugerida</th><th>Zona Prilepin</th></tr></thead>
+            <tbody>${exerciseRows}</tbody>
+          </table></div>
+          <p class="form-hint" style="margin:10px 14px">${UI.icon('info', 14)} <span>La “carga sugerida” es máximo × % de la semana seleccionada. Los ejercicios sin máximo se muestran como “Sin máximo”.</span></p>
+        </section>
+        <details class="card">
+          <summary class="card-head" style="cursor:pointer"><h2 class="card-title">Tabla de Prilepin (referencia)</h2></summary>
+          <div class="table-wrap"><table class="table table-compact">
+            <thead><tr><th>% 1RM</th><th>Reps / serie</th><th>Series</th><th>Total óptimo</th><th>Rango total</th></tr></thead>
+            <tbody>${RS.Soviet.prilepin.map((z) => `<tr><td>${z.min}–${z.max}%</td><td>${z.reps}</td><td>${z.sets}</td><td>${z.total}</td><td>${z.totalRange}</td></tr>`).join('')}</tbody>
+          </table></div>
+        </details>
+      </div>`;
+
+      setHead('Planificación soviética', `${user.name} · ${data.weeks} semanas · método Prilepin`);
+      bodyEl.innerHTML = body;
+      footEl.innerHTML = '<button class="btn btn-ghost" data-plan-back>' + UI.icon('arrow-left', 16) + ' Volver</button><button class="btn btn-primary" data-plan-apply>' + UI.icon('check', 16) + ' Aplicar cargas</button>';
+
+      const weekSelect = root.querySelector('#plan-week');
+      const applyBtn = root.querySelector('[data-plan-apply]');
+      const backBtn = root.querySelector('[data-plan-back]');
+      const suggestCells = Array.from(root.querySelectorAll('[data-plan-suggest]'));
+
+      function updateWeek(w) {
+        week = Math.min(data.weeks, Math.max(1, Number(w) || 1));
+        const intensity = data.micro[week - 1].intensity;
+        weekSelect.value = String(week);
+        root.querySelectorAll('[data-plan-week]').forEach((tr) => {
+          tr.classList.toggle('selected', Number(tr.dataset.planWeek) === week);
+        });
+        let idx = 0;
+        data.days.forEach((d) => d.items.forEach((it) => {
+          const cell = suggestCells[idx];
+          if (cell) {
+            cell.textContent = (it.matched && it.matched.current != null)
+              ? (RS.Soviet.suggestedLoad(it.matched, intensity) || '—')
+              : '—';
+          }
+          idx += 1;
+        }));
+        applyBtn.innerHTML = UI.icon('check', 16) + ' Aplicar cargas (Semana ' + week + ' · ' + intensity + '%)';
+      }
+
+      weekSelect.addEventListener('change', () => updateWeek(weekSelect.value));
+      root.querySelectorAll('[data-plan-week]').forEach((tr) => {
+        tr.addEventListener('click', () => updateWeek(tr.dataset.planWeek));
+      });
+      applyBtn.addEventListener('click', () => {
+        const intensity = data.micro[week - 1].intensity;
+        let applied = 0;
+        data.days.forEach((d) => d.items.forEach((it) => {
+          if (it.matched && it.matched.current != null) {
+            const value = RS.Soviet.suggestedLoad(it.matched, intensity);
+            if (value != null) { it.source.load = value; applied += 1; }
+          }
+        }));
+        renderEditor();
+        UI.toast(applied
+          ? `Cargas aplicadas para la semana ${week} (${applied} ejercicios). Guarda la rutina para conservarlas.`
+          : 'No hay ejercicios con máximo para aplicar carga.',
+        applied ? 'success' : 'info', applied ? 6000 : 5000);
+      });
+      backBtn.addEventListener('click', renderEditor);
+
+      updateWeek(1);
+    }
 
     function openLibraryPicker(di, ii) {
       if (!RS.ExerciseLibrary) return UI.toast('Biblioteca no disponible.', 'error');
       let q = '';
       let cat = 'Todas';
-      const body = document.createElement('div');
-      body.innerHTML = '<div class="lib-picker-bar"><select class="input input-sm" data-lib-cat><option value="Todas">Todas</option>'
-        + RS.ExerciseLibrary.categories.map((c) => '<option value="' + U.esc(c) + '">' + U.esc(c) + '</option>').join('') + '</select>'
-        + '<div class="input-icon input-search">' + UI.icon('search', 16) + '<input class="input input-sm" data-lib-q placeholder="Buscar ejercicio…"></div></div>'
-        + '<div class="lib-picker-list" data-lib-list></div>'
-        + '<p class="form-hint" style="margin-top:8px">Al elegir, se rellena nombre + foto/GIF + indicaciones. Luego ajustas series/reps/carga.</p>';
-      const pickerRoot = UI.modal({ title: 'Elegir de biblioteca', subtitle: '181 ejercicios · haz clic para usar', size: 'lg', body: '', footer: '<button class="btn btn-ghost" data-modal-close>Cerrar</button>' });
-      if (!pickerRoot) return;
-      const modalBody = pickerRoot.querySelector('.modal-body');
-      modalBody.innerHTML = '';
-      modalBody.appendChild(body);
-      const listEl = pickerRoot.querySelector('[data-lib-list]');
-      const qEl = pickerRoot.querySelector('[data-lib-q]');
-      const catEl = pickerRoot.querySelector('[data-lib-cat]');
-      const paint = () => {
-        const items = RS.ExerciseLibrary.all({ category: cat, query: q }).slice(0, 80);
-        listEl.innerHTML = items.length ? items.map((x) => {
-          const thumb = x.gifUrl || x.imageUrl || '';
-          return '<button type="button" class="lib-picker-row" data-lib-pick="' + U.esc(x.id) + '"><span class="lib-picker-thumb">' + (thumb ? '<img src="' + U.esc(thumb) + '" alt="">' : UI.icon('image', 18)) + '</span><span class="lib-picker-meta"><strong>' + U.esc(x.name) + '</strong><small>' + U.esc(x.category) + ' · ' + U.esc(x.muscleGroup || '') + ' · ' + U.esc(x.equipment || '') + '</small></span><span class="lib-picker-tag">' + U.esc(x.difficulty || '') + '</span></button>';
-        }).join('') : '<p class="muted" style="padding:12px">Sin resultados.</p>';
-      };
-      paint();
-      qEl.addEventListener('input', () => { q = qEl.value; paint(); });
-      catEl.addEventListener('change', () => { cat = catEl.value; paint(); });
-      listEl.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-lib-pick]');
-        if (!btn) return;
-        const libItem = RS.ExerciseLibrary.get(btn.dataset.libPick);
-        if (!libItem) return;
-        RS.ExerciseLibrary.applyToItem(draft.days[di].items[ii], libItem);
-        UI.closeModal();
-        render();
-      });
-      qEl.focus();
+
+      const imgOrFallback = (src, iconSize) => (src
+        ? `<img src="${U.esc(src)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span class="lib-no-img" style="display:none">${UI.icon('dumbbell', iconSize)}</span>`
+        : `<span class="lib-no-img">${UI.icon('dumbbell', iconSize)}</span>`);
+
+      const routineBack = () => `<button class="btn btn-ghost" data-lib-routine>${UI.icon('arrow-left', 16)} Volver a la rutina</button>`;
+
+      function renderList() {
+        setHead('Elegir de biblioteca', 'Haz clic en un ejercicio para ver su imagen antes de usarlo');
+        bodyEl.innerHTML = '<div class="lib-picker-bar"><select class="input input-sm" data-lib-cat><option value="Todas">Todas</option>'
+          + RS.ExerciseLibrary.categories.map((c) => `<option value="${U.esc(c)}"${cat === c ? ' selected' : ''}>${U.esc(c)}</option>`).join('') + '</select>'
+          + '<div class="input-icon input-search">' + UI.icon('search', 16) + `<input class="input input-sm" data-lib-q placeholder="Buscar por nombre, músculo o material…" value="${U.esc(q)}"></div></div>`
+          + '<div class="lib-picker-grid" data-lib-grid></div>'
+          + '<p class="form-hint" style="margin-top:10px">Al usar un ejercicio se rellenan nombre, foto/GIF e indicaciones. Luego ajustas series/reps/carga.</p>';
+        footEl.innerHTML = routineBack();
+        const grid = bodyEl.querySelector('[data-lib-grid]');
+        const qEl = bodyEl.querySelector('[data-lib-q]');
+        const catEl = bodyEl.querySelector('[data-lib-cat]');
+        const paint = () => {
+          const items = RS.ExerciseLibrary.all({ category: cat, query: q }).slice(0, 80);
+          grid.innerHTML = items.length ? items.map((x) => {
+            const img = x.gifUrl || x.imageUrl || '';
+            return `<button type="button" class="lib-card" data-lib-id="${U.esc(x.id)}">`
+              + `<span class="lib-card-img">${imgOrFallback(img, 26)}</span>`
+              + `<span class="lib-card-name">${U.esc(x.name)}</span>`
+              + `<span class="lib-card-sub">${U.esc(x.muscleGroup || x.category || '')}</span>`
+              + '</button>';
+          }).join('') : '<p class="muted" style="padding:12px">Sin resultados.</p>';
+        };
+        paint();
+        qEl.addEventListener('input', () => { q = qEl.value; paint(); });
+        catEl.addEventListener('change', () => { cat = catEl.value; paint(); });
+        grid.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-lib-id]');
+          if (btn) renderDetail(btn.dataset.libId);
+        });
+        footEl.querySelector('[data-lib-routine]').addEventListener('click', renderEditor);
+        qEl.focus();
+      }
+
+      function renderDetail(id) {
+        const libItem = RS.ExerciseLibrary.get(id);
+        if (!libItem) { renderList(); return; }
+        const media = libItem.gifUrl || libItem.imageUrl || '';
+        setHead('Elegir de biblioteca', libItem.name);
+        bodyEl.innerHTML = '<div class="lib-detail">'
+          + '<button type="button" class="btn btn-ghost btn-sm" data-lib-back>' + UI.icon('arrow-left', 15) + ' Volver</button>'
+          + '<div class="lib-detail-media">' + imgOrFallback(media, 40) + '</div>'
+          + '<div class="lib-detail-info">'
+          + '<h3>' + U.esc(libItem.name) + '</h3>'
+          + '<div class="lib-detail-tags"><span class="tag-soft">' + U.esc(libItem.category || '') + '</span><span class="tag-soft">' + U.esc(libItem.muscleGroup || 'General') + '</span><span class="tag-soft">' + U.esc(libItem.equipment || 'Sin material') + '</span><span class="tag-soft">' + U.esc(libItem.difficulty || '') + '</span></div>'
+          + (libItem.description ? '<p class="lib-detail-desc">' + U.esc(libItem.description) + '</p>' : '')
+          + (libItem.cues ? '<p class="lib-detail-cues"><strong>Indicaciones:</strong> ' + U.esc(libItem.cues) + '</p>' : '')
+          + '<div class="lib-detail-actions"><button type="button" class="btn btn-accent" data-lib-use>' + UI.icon('check', 16) + ' Usar este ejercicio</button></div>'
+          + '</div></div>';
+        footEl.innerHTML = routineBack();
+        bodyEl.querySelector('[data-lib-back]').addEventListener('click', renderList);
+        footEl.querySelector('[data-lib-routine]').addEventListener('click', renderEditor);
+        bodyEl.querySelector('[data-lib-use]').addEventListener('click', () => {
+          RS.ExerciseLibrary.applyToItem(draft.days[di].items[ii], libItem);
+          renderEditor();
+          UI.toast('Ejercicio aplicado. Ajusta series, repeticiones y carga.', 'success', 4000);
+        });
+      }
+
+      renderList();
     }
 
     root.addEventListener('change', async (e) => {
@@ -505,8 +704,9 @@
       const file = input && input.files && input.files[0];
       if (!file) return;
       const side = input.dataset.rPhoto;
+      const saveBtn = root.querySelector('[data-routine-save]');
       root.querySelectorAll('[data-r-photo]').forEach((photoInput) => { photoInput.disabled = true; });
-      saveButton.disabled = true;
+      if (saveBtn) saveBtn.disabled = true;
       try {
         draft[`${side}Image`] = await U.compressImage(file, 1100, 0.72);
         root.querySelector(`[data-r-photo-preview="${side}"]`).innerHTML =
@@ -518,18 +718,9 @@
       } finally {
         input.value = '';
         root.querySelectorAll('[data-r-photo]').forEach((photoInput) => { photoInput.disabled = false; });
-        saveButton.disabled = false;
+        const sb = root.querySelector('[data-routine-save]');
+        if (sb) sb.disabled = false;
       }
-    });
-
-    root.addEventListener('click', (e) => {
-      const button = e.target.closest('[data-r-photo-remove]');
-      if (!button) return;
-      const side = button.dataset.rPhotoRemove;
-      draft[`${side}Image`] = '';
-      root.querySelector(`[data-r-photo-preview="${side}"]`).innerHTML = '<span>Sin imagen</span>';
-      button.disabled = true;
-      root.querySelector(`[data-r-photo-label="${side}"]`).textContent = 'Agregar imagen';
     });
 
     root.addEventListener('input', (e) => {
@@ -560,7 +751,51 @@
       }
     });
 
-    container.addEventListener('click', (e) => {
+    async function saveRoutine() {
+      draft.title = draft.title.trim() || 'Pauta de entrenamiento';
+      draft.objective = draft.objective.trim();
+      draft.days.forEach((d) => {
+        d.items = d.items.filter((i) => i.name.trim());
+      });
+      const totalItems = U.sum(draft.days, (d) => d.items.length);
+      if (!totalItems) {
+        UI.toast('Agrega al menos un ejercicio a la rutina.', 'error');
+        return;
+      }
+      draft.updatedAt = U.todayISO();
+      const remote = RS.TrainingRoutines.supportsUserId(user.id);
+      const saveBtn = root.querySelector('[data-routine-save]');
+      if (saveBtn) saveBtn.disabled = true;
+      try {
+        if (remote) await RS.TrainingRoutines.save(user.id, draft, me().id);
+      } catch (error) {
+        UI.toast(`No pudimos sincronizar la rutina: ${error.message}`, 'error', 7000);
+        if (saveBtn) saveBtn.disabled = false;
+        return;
+      }
+      const idx = st().routines.findIndex((r) => r.userId === user.id);
+      if (idx >= 0) st().routines[idx] = draft;
+      else st().routines.push(draft);
+      if (!RS.DB.save()) {
+        if (!remote) {
+          if (idx >= 0) st().routines[idx] = existing;
+          else st().routines.pop();
+          if (saveBtn) saveBtn.disabled = false;
+          return;
+        }
+      }
+      RS.data.addAudit(me().name, 'Rutina asignada', `${user.name} · ${draft.title} · ${draft.days.length} días.`);
+      UI.closeModal();
+      UI.toast(remote
+        ? 'Rutina guardada y sincronizada. El usuario ya puede verla desde su cuenta.'
+        : 'Rutina guardada en este navegador. Esta cuenta aún no está vinculada a un perfil de Supabase.',
+      remote ? 'success' : 'info', 6000);
+      RS.App.render(true);
+    }
+
+    root.addEventListener('click', (e) => {
+      if (e.target.closest('[data-modal-close]')) { UI.closeModal(); return; }
+
       const libBtn = e.target.closest('[data-r-lib]');
       if (libBtn) {
         const [di, ii] = libBtn.dataset.rLib.split(':').map(Number);
@@ -595,53 +830,21 @@
           draft.days[di].items.push(newRoutineItem());
         }
         render();
-      }
-    });
-
-    root.querySelector('[data-r-add-day]').addEventListener('click', () => {
-      draft.days.push(newRoutineDay(draft.days.length));
-      render();
-    });
-
-    saveButton.addEventListener('click', async () => {
-      draft.title = draft.title.trim() || 'Pauta de entrenamiento';
-      draft.objective = draft.objective.trim();
-      draft.days.forEach((d) => {
-        d.items = d.items.filter((i) => i.name.trim());
-      });
-      const totalItems = U.sum(draft.days, (d) => d.items.length);
-      if (!totalItems) {
-        UI.toast('Agrega al menos un ejercicio a la rutina.', 'error');
         return;
       }
-      draft.updatedAt = U.todayISO();
-      const remote = RS.TrainingRoutines.supportsUserId(user.id);
-      saveButton.disabled = true;
-      try {
-        if (remote) await RS.TrainingRoutines.save(user.id, draft, me().id);
-      } catch (error) {
-        UI.toast(`No pudimos sincronizar la rutina: ${error.message}`, 'error', 7000);
-        saveButton.disabled = false;
+      const photoRemove = e.target.closest('[data-r-photo-remove]');
+      if (photoRemove) {
+        const side = photoRemove.dataset.rPhotoRemove;
+        draft[`${side}Image`] = '';
+        root.querySelector(`[data-r-photo-preview="${side}"]`).innerHTML = '<span>Sin imagen</span>';
+        photoRemove.disabled = true;
+        root.querySelector(`[data-r-photo-label="${side}"]`).textContent = 'Agregar imagen';
         return;
       }
-      const idx = st().routines.findIndex((r) => r.userId === user.id);
-      if (idx >= 0) st().routines[idx] = draft;
-      else st().routines.push(draft);
-      if (!RS.DB.save()) {
-        if (!remote) {
-          if (idx >= 0) st().routines[idx] = existing;
-          else st().routines.pop();
-          saveButton.disabled = false;
-          return;
-        }
-      }
-      RS.data.addAudit(me().name, 'Rutina asignada', `${user.name} · ${draft.title} · ${draft.days.length} días.`);
-      UI.closeModal();
-      UI.toast(remote
-        ? 'Rutina guardada y sincronizada. El usuario ya puede verla desde su cuenta.'
-        : 'Rutina guardada en este navegador. Esta cuenta aún no está vinculada a un perfil de Supabase.',
-      remote ? 'success' : 'info', 6000);
-      RS.App.render(true);
+      const planning = e.target.closest('[data-r-planning]');
+      if (planning) { openPlanning(); return; }
+      const save = e.target.closest('[data-routine-save]');
+      if (save) { saveRoutine(); return; }
     });
   }
 

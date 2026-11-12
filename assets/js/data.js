@@ -454,6 +454,8 @@
         whatsapp: BRAND.whatsapp,
         address: 'Gorbea, Región de la Araucanía',
         clubRecoveryReward: 'Sesión de sauna',
+        clubRecoveryStamps: 5,
+        clubRecoveryConsistencyMonths: 3,
         discountCodes: [],
         bank: {
           holder: 'DANIEL ESTEBAN BARRUETO',
@@ -537,6 +539,8 @@
             state.settings = Object.assign({}, parsed.settings || {});
             state.settings.discountCodes = Array.isArray(state.settings.discountCodes) ? state.settings.discountCodes : [];
             state.settings.clubRecoveryReward = String(state.settings.clubRecoveryReward || 'Sesión de sauna');
+            state.settings.clubRecoveryStamps = Math.max(1, Number(state.settings.clubRecoveryStamps) || 5);
+            state.settings.clubRecoveryConsistencyMonths = Math.max(1, Number(state.settings.clubRecoveryConsistencyMonths) || 3);
             // Dirección oficial: corrige datos antiguos guardados en el navegador.
             if (!state.settings.address || /providencia/i.test(String(state.settings.address))) {
               state.settings.address = 'Gorbea, Región de la Araucanía';
@@ -622,16 +626,20 @@
       activeMonthStreak += 1;
       month.setMonth(month.getMonth() - 1);
     }
-    const consistencyStamps = Math.floor(activeMonthStreak / 3);
+    const goal = Math.max(1, Number((state && state.settings && state.settings.clubRecoveryStamps)) || 5);
+    const consistencyMonths = Math.max(1, Number((state && state.settings && state.settings.clubRecoveryConsistencyMonths)) || 3);
+    const consistencyStamps = Math.floor(activeMonthStreak / consistencyMonths);
     const stamps = completed.length + consistencyStamps;
-    const nextRewardProgress = stamps % 5;
+    const nextRewardProgress = stamps % goal;
     return {
       completedSessions: completed.length,
       activeMonthStreak,
+      consistencyMonths,
       consistencyStamps,
       stamps,
-      earnedRewards: Math.floor(stamps / 5),
-      stampsToNextReward: 5 - nextRewardProgress,
+      goal,
+      earnedRewards: Math.floor(stamps / goal),
+      stampsToNextReward: goal - nextRewardProgress,
       nextRewardProgress,
       reward: (state && state.settings && state.settings.clubRecoveryReward) || 'Sesión de sauna',
     };

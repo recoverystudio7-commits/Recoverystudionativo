@@ -7814,6 +7814,17 @@
   }
 }
 
+/* Avisos de regalo / cupón */
+.coupon-form { display: flex; flex-direction: column; gap: 12px; }
+.coupon-list { display: flex; flex-direction: column; gap: 10px; max-height: 340px; overflow: auto; margin-top: 4px; }
+.coupon-row { border: 1px solid var(--border, #e5e7eb); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--surface, #fff); }
+.coupon-row-user { display: flex; align-items: center; gap: 10px; }
+.coupon-row-user > div { display: flex; flex-direction: column; }
+.coupon-row-user strong { font-size: 14px; color: var(--text, #0f172a); }
+.coupon-row-user span { font-size: 12px; color: var(--muted, #64748b); }
+.coupon-row-msg { font-size: 13px; color: var(--text, #0f172a); background: var(--surface-2, #f1f5f9); border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; }
+.coupon-row-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
 /* ----------------------- Biblioteca de ejercicios + rutina visual ----------------------- */
 .routine-branded { overflow: hidden; }
 .routine-brand { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--border, #e5e7eb); background: linear-gradient(90deg, rgba(18,63,112,.06), rgba(255,122,24,.06)); }
@@ -7859,6 +7870,38 @@
 .re-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .re-name { min-width: 180px; flex: 1.4; }
 .re-lib-btn { white-space: nowrap; }
+.lib-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-height: 380px; overflow: auto; padding: 2px; }
+.lib-card { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border, #e5e7eb); border-radius: 12px; overflow: hidden; background: var(--surface, #fff); cursor: pointer; text-align: left; padding: 0; }
+.lib-card:hover { border-color: #123f70; box-shadow: 0 4px 12px rgba(0, 0, 0, .08); }
+.lib-card-img { display: block; width: 100%; height: 120px; background: #0f172a; overflow: hidden; position: relative; }
+.lib-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-card-img .lib-no-img { position: absolute; inset: 0; }
+.lib-card-name { font-size: 13px; font-weight: 600; color: var(--text, #0f172a); padding: 0 8px; line-height: 1.25; }
+.lib-card-sub { font-size: 11px; color: var(--muted, #64748b); padding: 0 8px 8px; }
+.lib-no-img { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: #94a3b8; }
+.lib-detail { display: flex; flex-direction: column; gap: 12px; }
+.lib-detail-media { width: 100%; max-height: 320px; background: #0f172a; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+.lib-detail-media img { width: 100%; max-height: 320px; object-fit: contain; display: block; }
+.lib-detail-media .lib-no-img { height: 200px; }
+.lib-detail-info h3 { margin: 0; font-size: 18px; }
+.lib-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.lib-detail-desc { margin: 10px 0 0; font-size: 13px; color: var(--muted, #475569); }
+.lib-detail-cues { margin: 10px 0 0; font-size: 13px; color: var(--text, #0f172a); }
+.lib-detail-actions { margin-top: 10px; display: flex; gap: 8px; }
+.planning-wrap { display: flex; flex-direction: column; gap: 14px; }
+.planning-bar { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.planning-bar .field { margin: 0; min-width: 200px; }
+.planning-bar .form-hint { flex: 1; min-width: 240px; }
+.planning-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.planning-kpis > div { background: var(--surface, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.planning-kpis span { font-size: 11px; color: var(--muted, #64748b); }
+.planning-kpis strong { font-size: 20px; color: var(--text, #0f172a); }
+.plan-week-row { cursor: pointer; }
+.plan-week-row:hover td { background: #f1f5f9; }
+.plan-week-row.selected td { background: #e0f2fe; }
+@media (max-width: 640px) {
+  .planning-kpis { grid-template-columns: repeat(2, 1fr); }
+}
 .library-table .catalog-icon { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 10px; background: rgba(18,63,112,.08); }
 @media (max-width: 640px) {
   .routine-brand-right { text-align: left; }
