@@ -49,9 +49,11 @@
         const desc = String(it.description || '').trim();
         const cues = String(it.cues || '').trim();
         const img = String(it.gifUrl || it.imageUrl || '').trim();
+        const tags = [String(it.muscleGroup || '').trim(), String(it.equipment || '').trim()].filter(Boolean);
         return '<div class="ex">'
           + '<div class="ex-n">' + String(ii + 1).padStart(2, '0') + '</div>'
           + '<div class="ex-body"><strong>' + esc(it.name) + '</strong>'
+          + (tags.length ? '<span class="ex-tags">' + tags.map((t) => '<span class="ex-tag">' + esc(t) + '</span>').join('') + '</span>' : '')
           + (line ? '<span class="ex-line">' + esc(line) + '</span>' : '')
           + (desc ? '<span class="ex-desc">' + esc(desc) + '</span>' : '')
           + (cues ? '<span class="ex-cues"><b>Indicaciones:</b> ' + esc(cues) + '</span>' : '')
@@ -117,6 +119,8 @@
       + '.ex-n { color: #94a3b8; font-weight: 800; font-size: 12px; padding-top: 2px; flex-shrink: 0; }'
       + '.ex-body { display: flex; flex-direction: column; gap: 1px; }'
       + '.ex-body strong { font-size: 13.5px; }'
+      + '.ex-tags { display: flex; flex-wrap: wrap; gap: 4px; }'
+      + '.ex-tag { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: #123F70; background: #e0e7ff; border-radius: 4px; padding: 1px 6px; }'
       + '.ex-line { font-size: 12px; color: #475569; }'
       + '.ex-desc { font-size: 12px; color: #475569; line-height: 1.45; }'
       + '.ex-cues { font-size: 11px; color: #64748b; line-height: 1.4; }'
