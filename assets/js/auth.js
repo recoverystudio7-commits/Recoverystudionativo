@@ -596,6 +596,8 @@
   function renderLogin() {
     const tab = (RS.ui && RS.ui.authTab) || 'login';
     const isRegister = tab === 'register';
+    const trialService = state().services.find((s) => s.id === 'srv-training' && s.active);
+    const trialOn = !!trialService && state().settings.freeTrialEnabled !== false;
     return `<div class="auth-page">
       <section class="auth-hero">
         <div class="hero-orb hero-orb-1"></div>
@@ -653,6 +655,10 @@
               <button class="auth-tab ${!isRegister ? 'active' : ''}" data-action="auth-tab" data-tab="login" role="tab" aria-selected="${!isRegister}">Ingresar</button>
               <button class="auth-tab ${isRegister ? 'active' : ''}" data-action="auth-tab" data-tab="register" role="tab" aria-selected="${isRegister}">Crear cuenta</button>
             </div>
+            ${trialOn ? `<div class="auth-trial">
+              <span class="auth-trial-icon" aria-hidden="true">🎁</span>
+              <span class="auth-trial-text"><strong>Tu primera clase es gratis</strong><span>Entrenamiento personal · solo para tu primera vez</span></span>
+            </div>` : ''}
             ${isRegister ? renderRegisterForm() : renderLoginForm()}
           </div>
           <a class="company-cta" href="#/cotizar">

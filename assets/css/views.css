@@ -401,6 +401,40 @@
   box-shadow: var(--shadow-xs);
 }
 
+/* Aviso de primera clase gratis (respeta el interruptor de Configuración) */
+.auth-trial {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -8px 0 18px;
+  padding: 10px 12px;
+  border: 1px dashed #f59e0b;
+  border-radius: 10px;
+  background: #fffbeb;
+}
+
+.auth-trial-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.auth-trial-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.auth-trial-text strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: #9a3412;
+}
+
+.auth-trial-text span {
+  font-size: 11.5px;
+  color: #92400e;
+}
+
 .auth-form-wrap {
   display: flex;
   flex-direction: column;

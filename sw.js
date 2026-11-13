@@ -1,5 +1,5 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v61';
+const CACHE = 'recovery-studio-v62';
 const ASSETS = [
   './',
   './index.html',
@@ -11,13 +11,13 @@ const ASSETS = [
   './assets/icon-512.png',
   './assets/apple-touch-icon.png',
   './assets/css/styles.css?v=2',
-  './assets/css/views.css?v=14',
+  './assets/css/views.css?v=15',
   './assets/css/landing.css',
   './assets/css/legal.css',
   './assets/js/data.js?v=18',
   './assets/js/analytics.js?v=1',
   './assets/js/ui.js?v=3',
-  './assets/js/auth.js?v=18',
+  './assets/js/auth.js?v=19',
   './assets/js/user.js?v=34',
   './assets/js/admin-base.js?v=12',
   './assets/js/admin-people.js?v=15',
