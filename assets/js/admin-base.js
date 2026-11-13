@@ -274,7 +274,7 @@
           ${UI.avatar(user ? user.name : 'Usuario', 42)}
           <div class="agenda-info">
             <div class="agenda-name"><strong>${U.esc(user ? user.name : 'Usuario')}</strong>${UI.statusPill(session.status)}${showAttendance ? UI.statusPill(session.attendanceStatus || 'pendiente', 'attendance') : ''}</div>
-            <p>${U.esc(service ? service.name : 'Sesión')} · ${U.esc(session.coach || 'Daniel Barrueto')}</p>
+            <p>${U.esc(service ? service.name : 'Sesión')} · ${U.esc(session.coach || 'Daniel Barrueto Jopia')}</p>
             ${session.notes ? `<span class="agenda-note">${UI.icon('info', 13)} ${U.esc(session.notes)}</span>` : ''}
             <span class="agenda-pay">${UI.icon('credit-card', 13)} ${session.payment === 'plan' ? 'Sesión del plan' : session.payment === 'pagado' ? 'Pagada' : session.payment === 'cortesia' ? 'Cortesía' : 'Pago pendiente'}</span>
           </div>
@@ -408,7 +408,7 @@
       status: (existing && existing.status) || 'confirmada',
       payment: (existing && existing.payment) || o.payment || 'pendiente',
       notes: (existing && existing.notes) || '',
-      coach: (existing && existing.coach) || 'Daniel Barrueto',
+      coach: (existing && existing.coach) || 'Daniel Barrueto Jopia',
     };
     const attendanceMeta = UI.ATTENDANCE_STATUS[(existing && existing.attendanceStatus) || 'pendiente'] || UI.ATTENDANCE_STATUS.pendiente;
     const root = UI.modal({
@@ -587,7 +587,7 @@
         if (previousUser) RS.SupabaseSync.pushAccount(previousUser.id).catch(() => { /* no bloquea la UI */ });
       }
       const previous = { date: session.date, time: session.time };
-      Object.assign(session, values, { coach: 'Daniel Barrueto', dirty: true });
+      Object.assign(session, values, { coach: 'Daniel Barrueto Jopia', dirty: true });
       if (usesPlan) user.credits = Math.max(0, Number(user.credits) || 0) - 1;
       RS.data.addAudit(me().name, 'Sesión modificada', `${RS.data.serviceName(values.serviceId)} de ${user.name} · ${values.date} ${values.time}${usesPlan ? ` · saldo del plan: ${user.credits}` : ''}.`);
       RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
@@ -616,7 +616,7 @@
         status: values.status,
         payment: values.payment,
         notes: values.notes,
-        coach: 'Daniel Barrueto',
+        coach: 'Daniel Barrueto Jopia',
         createdAt: new Date().toISOString(),
         createdBy: 'admin',
         dirty: true,

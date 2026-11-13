@@ -3605,6 +3605,8 @@
     routineItem.commonErrors = snap.commonErrors;
     routineItem.variants = snap.variants;
     routineItem.imageUrl = snap.imageUrl;
+    routineItem.imageStart = snap.imageStart;
+    routineItem.imageEnd = snap.imageEnd;
     routineItem.gifUrl = snap.gifUrl;
     routineItem.videoUrl = snap.videoUrl;
     return routineItem;

@@ -377,11 +377,11 @@
   /* --------------------------------- rutina -------------------------------- */
 
   function newRoutineItem() {
-    return { name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '', exerciseId: '', category: '', muscleGroup: '', equipment: '', difficulty: '', description: '', cues: '', commonErrors: '', variants: '', imageUrl: '', gifUrl: '', videoUrl: '' };
+    return { name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '', exerciseId: '', category: '', muscleGroup: '', equipment: '', difficulty: '', description: '', cues: '', commonErrors: '', variants: '', imageUrl: '', imageStart: '', imageEnd: '', gifUrl: '', videoUrl: '' };
   }
 
   function newStretch() {
-    return { id: U.uid('rstretch'), name: '', muscleGroup: '', duration: '30 s', notes: '' };
+    return { id: U.uid('rstretch'), name: '', muscleGroup: '', duration: '30 s', notes: '', exerciseId: '', description: '', cues: '', imageStart: '', imageEnd: '' };
   }
 
   function newRoutineDay(index) {
@@ -482,14 +482,19 @@
         <div class="re-stretches">
           <div class="re-stretches-head">${UI.icon('heart', 13)} <span>Estiramientos · vuelta a la calma</span></div>
           <div class="re-stretches-list">
-            ${(day.stretches || []).map((s, si) => `<div class="re-stretch">
+            ${(day.stretches || []).map((s, si) => {
+              const sThumb = s.imageStart || s.imageUrl || s.imageEnd || '';
+              return `<div class="re-stretch re-stretch-lib">
               <span class="re-item-num">${si + 1}</span>
+              ${sThumb ? `<span class="re-item-thumb"><img src="${U.esc(sThumb)}" alt="" loading="lazy"></span>` : ''}
               <input class="input re-st-name" data-r-stretch="name" data-day="${di}" data-stretch="${si}" value="${U.esc(s.name)}" placeholder="Estiramiento" list="ex-stretch-groups-${di}">
+              <button type="button" class="btn btn-outline btn-sm re-lib-btn" data-r-stretch-lib="${di}:${si}" title="Elegir de biblioteca">${UI.icon('search', 14)} Biblioteca</button>
               <input class="input re-small" data-r-stretch="muscleGroup" data-day="${di}" data-stretch="${si}" value="${U.esc(s.muscleGroup || '')}" placeholder="Músculo" list="ex-stretch-groups-${di}">
               <input class="input re-small" data-r-stretch="duration" data-day="${di}" data-stretch="${si}" value="${U.esc(s.duration || '')}" placeholder="Tiempo">
               <input class="input re-notes" data-r-stretch="notes" data-day="${di}" data-stretch="${si}" value="${U.esc(s.notes || '')}" placeholder="Nota (opcional)">
               <button type="button" class="icon-btn danger" data-r-remove-stretch="${di}:${si}" aria-label="Quitar estiramiento">${UI.icon('x', 15)}</button>
-            </div>`).join('')}
+            </div>`;
+            }).join('')}
           </div>
           <datalist id="ex-stretch-groups-${di}">${stretchGroups(day).map((g) => `<option value="${U.esc(g)}"></option>`).join('')}</datalist>
           <button type="button" class="btn btn-ghost btn-sm re-add-stretch" data-r-add-stretch="${di}">${UI.icon('plus', 14)} Agregar estiramiento</button>
@@ -687,6 +692,46 @@
       if (input) input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); generate(); }
       });
+    }
+
+    function openStretchPicker(di, si) {
+      if (!RS.ExerciseLibrary) return UI.toast('Biblioteca no disponible.', 'error');
+      const pool = RS.ExerciseLibrary.all({ category: 'Movilidad' });
+      if (!pool.length) {
+        UI.toast('Todavía no hay estiramientos en la biblioteca.', 'error');
+        return;
+      }
+      setHead('Elegir estiramiento', 'Se rellenará nombre, músculo, fotos (inicio y final) e indicaciones');
+      bodyEl.innerHTML = '<div class="lib-picker-grid" data-stretch-grid></div>';
+      footEl.innerHTML = `<button class="btn btn-ghost" data-stretch-back>${UI.icon('arrow-left', 16)} Volver</button>`;
+      const grid = bodyEl.querySelector('[data-stretch-grid]');
+      grid.innerHTML = pool.map((x) => {
+        const img = x.imageStart || x.imageUrl || '';
+        return `<button type="button" class="lib-card" data-stretch-id="${U.esc(x.id)}">`
+          + `<span class="lib-card-img">${img
+            ? `<img src="${U.esc(img)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span class="lib-no-img" style="display:none">${UI.icon('heart', 26)}</span>`
+            : `<span class="lib-no-img">${UI.icon('heart', 26)}</span>`}</span>`
+          + `<span class="lib-card-name">${U.esc(x.name)}</span>`
+          + `<span class="lib-card-sub">${U.esc(x.muscleGroup || '')}</span>`
+          + '</button>';
+      }).join('');
+      grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-stretch-id]');
+        if (!btn) return;
+        const lib = RS.ExerciseLibrary.get(btn.dataset.stretchId);
+        if (!lib) return;
+        const s = draft.days[di].stretches[si];
+        s.name = lib.name;
+        s.muscleGroup = lib.muscleGroup || s.muscleGroup;
+        s.imageStart = lib.imageStart || lib.imageUrl || '';
+        s.imageEnd = lib.imageEnd || '';
+        s.description = lib.description || '';
+        s.cues = lib.cues || '';
+        s.exerciseId = lib.id || '';
+        renderEditor();
+        UI.toast('Estiramiento aplicado. Ajusta el tiempo si quieres.', 'success', 4000);
+      });
+      footEl.querySelector('[data-stretch-back]').addEventListener('click', renderEditor);
     }
 
     function openLibraryPicker(di, ii) {
@@ -917,6 +962,12 @@
         render();
         return;
       }
+      const stretchLib = e.target.closest('[data-r-stretch-lib]');
+      if (stretchLib) {
+        const [di, si] = stretchLib.dataset.rStretchLib.split(':').map(Number);
+        openStretchPicker(di, si);
+        return;
+      }
       const photoRemove = e.target.closest('[data-r-photo-remove]');
       if (photoRemove) {
         const side = photoRemove.dataset.rPhotoRemove;
@@ -943,7 +994,7 @@
       size: 'md',
       body: sessions.length ? `<div class="mini-session-list">${sessions.slice(0, 20).map((s) => `<div class="mini-session">
         <div class="mini-session-date"><strong>${U.fmtDate(s.date, 'compact')}</strong><span>${s.time}</span></div>
-        <div class="mini-session-info"><strong>${U.esc(RS.data.serviceName(s.serviceId))}</strong><span>${U.esc(s.coach || 'Daniel Barrueto')} · ${s.payment === 'plan' ? 'Plan' : s.payment === 'pagado' ? 'Pagada' : s.payment === 'cortesia' ? 'Cortesía' : 'Pendiente'}</span></div>
+        <div class="mini-session-info"><strong>${U.esc(RS.data.serviceName(s.serviceId))}</strong><span>${U.esc(s.coach || 'Daniel Barrueto Jopia')} · ${s.payment === 'plan' ? 'Plan' : s.payment === 'pagado' ? 'Pagada' : s.payment === 'cortesia' ? 'Cortesía' : 'Pendiente'}</span></div>
         ${UI.statusPill(s.status)}
       </div>`).join('')}</div>` : UI.empty({ icon: 'calendar', title: 'Sin sesiones', text: 'Este usuario aún no tiene sesiones registradas.' }),
       footer: '<button class="btn btn-primary" data-modal-close>Cerrar</button>',

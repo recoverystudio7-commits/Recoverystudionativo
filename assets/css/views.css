@@ -7944,6 +7944,10 @@
 .re-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .re-name { min-width: 180px; flex: 1.4; }
 .re-lib-btn { white-space: nowrap; }
+.re-stretch-lib { display: flex; flex-wrap: wrap; }
+.re-st-name { min-width: 150px; flex: 1.4; }
+.re-stretch-lib .re-small { flex: 0 0 92px; }
+.re-stretch-lib .re-notes { flex: 1; min-width: 130px; }
 .lib-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-height: 380px; overflow: auto; padding: 2px; }
 .lib-card { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border, #e5e7eb); border-radius: 12px; overflow: hidden; background: var(--surface, #fff); cursor: pointer; text-align: left; padding: 0; }
 .lib-card:hover { border-color: #123f70; box-shadow: 0 4px 12px rgba(0, 0, 0, .08); }

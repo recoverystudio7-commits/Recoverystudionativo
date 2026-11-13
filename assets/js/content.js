@@ -101,7 +101,8 @@
     );
     st().settings.clubRecoveryStamps = Math.max(1, Number(studioRows[0].config.clubRecoveryStamps) || Number(st().settings.clubRecoveryStamps) || 5);
     st().settings.clubRecoveryConsistencyMonths = Math.max(1, Number(studioRows[0].config.clubRecoveryConsistencyMonths) || Number(st().settings.clubRecoveryConsistencyMonths) || 3);
-    st().settings.coachName = String(studioRows[0].config.coachName || st().settings.coachName || 'Daniel Barrueto');
+    st().settings.coachName = String(studioRows[0].config.coachName || st().settings.coachName || 'Daniel Barrueto Jopia');
+    if (st().settings.coachName === 'Daniel Barrueto') st().settings.coachName = 'Daniel Barrueto Jopia';
     st().settings.coachProfession = String(studioRows[0].config.coachProfession || st().settings.coachProfession || 'Kinesiólogo · Magíster');
     st().settings.studioName = String(studioRows[0].config.studioName || st().settings.studioName || 'Recovery Studio');
   }

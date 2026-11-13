@@ -108,7 +108,7 @@
             <div class="card-head"><h2 class="card-title">Identidad y firma</h2><p class="card-sub">Nombre, profesión y nombre del studio que aparecen en las rutinas descargadas como PDF.</p></div>
             <div class="card-body">
               <div class="grid grid-2 gap-sm">
-                <div class="field"><label for="st-coach">Nombre del profesional</label><input class="input" id="st-coach" name="coachName" value="${U.esc(s.coachName || 'Daniel Barrueto')}" required></div>
+                <div class="field"><label for="st-coach">Nombre del profesional</label><input class="input" id="st-coach" name="coachName" value="${U.esc(s.coachName || 'Daniel Barrueto Jopia')}" required></div>
                 <div class="field"><label for="st-profession">Profesión</label><input class="input" id="st-profession" name="coachProfession" value="${U.esc(s.coachProfession || 'Kinesiólogo · Magíster')}" required></div>
                 <div class="field"><label for="st-studio">Nombre del studio / pyme</label><input class="input" id="st-studio" name="studioName" value="${U.esc(s.studioName || 'Recovery Studio')}" required></div>
               </div>
@@ -195,7 +195,7 @@
     s.whatsapp = whatsapp;
     s.clubRecoveryReward = clubRecoveryReward;
     s.address = form.address.value.trim();
-    s.coachName = form.coachName.value.trim() || 'Daniel Barrueto';
+    s.coachName = form.coachName.value.trim() || 'Daniel Barrueto Jopia';
     s.coachProfession = form.coachProfession.value.trim() || 'Kinesiólogo · Magíster';
     s.studioName = form.studioName.value.trim() || 'Recovery Studio';
     s.bank = {

@@ -628,7 +628,7 @@
               <div class="preview-date"><strong>12</strong><span>NOV</span></div>
               <div class="preview-info">
                 <strong>Recovery + movilidad</strong>
-                <span>${UI.icon('clock', 14)} 60 min · Daniel Barrueto</span>
+                <span>${UI.icon('clock', 14)} 60 min · Daniel Barrueto Jopia</span>
               </div>
               <span class="preview-check">${UI.icon('check', 16)}</span>
             </div>

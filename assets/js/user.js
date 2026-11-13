@@ -65,7 +65,7 @@
     const duration = service ? Number(service.duration) || 60 : 60;
     const end = new Date(start.getTime() + duration * 60000);
     const fmt = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-    const desc = `Sesión en Recovery Studio con ${session.coach || 'Daniel Barrueto'}. Servicio: ${service ? service.name : ''}.`;
+    const desc = `Sesión en Recovery Studio con ${session.coach || 'Daniel Barrueto Jopia'}. Servicio: ${service ? service.name : ''}.`;
     const lines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
@@ -118,7 +118,7 @@
         <div class="session-title-row">
           <div>
             <h3>${U.esc(service ? service.name : 'Sesión')}</h3>
-            <p class="session-meta">${UI.icon('clock', 14)} ${U.esc(session.time)} · ${service ? service.duration : 60} min · ${U.esc(session.coach || 'Daniel Barrueto')}</p>
+            <p class="session-meta">${UI.icon('clock', 14)} ${U.esc(session.time)} · ${service ? service.duration : 60} min · ${U.esc(session.coach || 'Daniel Barrueto Jopia')}</p>
           </div>
           ${UI.statusPill(session.status)}
         </div>
@@ -234,7 +234,7 @@
               </div>
               <div class="next-info">
                 <h2>${U.esc(service ? service.name : 'Sesión')}</h2>
-                <p>${UI.icon('clock', 15)} ${U.esc(next.time)} · ${service ? service.duration : 60} min ${UI.icon('user', 15)} ${U.esc(next.coach || 'Daniel Barrueto')}</p>
+                <p>${UI.icon('clock', 15)} ${U.esc(next.time)} · ${service ? service.duration : 60} min ${UI.icon('user', 15)} ${U.esc(next.coach || 'Daniel Barrueto Jopia')}</p>
                 <div class="next-tags">
                   ${UI.statusPill(next.status)}
                   <span class="tiny-pill">${UI.icon('map-pin', 12)} Recovery Studio</span>
@@ -534,7 +534,7 @@
             <div class="summary-rows">
               <div><span>Fecha</span><strong>${b.time ? U.fmtDate(b.date, 'short') : U.fmtDate(b.date, 'short')}</strong></div>
               <div><span>Hora</span><strong>${b.time || 'Por elegir'}</strong></div>
-              <div><span>Profesional</span><strong>Daniel Barrueto</strong></div>
+              <div><span>Profesional</span><strong>Daniel Barrueto Jopia</strong></div>
             </div>
             <div class="summary-total">
               <div><span>Valor sesión</span><strong>${U.fmtMoney(price)}</strong></div>
@@ -585,7 +585,7 @@
         <p>${U.fmtDate(session.date, 'long')} · ${session.time} h</p>
         <div class="success-details">
           <div><span>Duración</span><strong>${service ? service.duration : 60} min</strong></div>
-          <div><span>Profesional</span><strong>${U.esc(session.coach || 'Daniel Barrueto')}</strong></div>
+          <div><span>Profesional</span><strong>${U.esc(session.coach || 'Daniel Barrueto Jopia')}</strong></div>
           <div><span>Ubicación</span><strong>Recovery Studio</strong></div>
         </div>
         <p class="success-note">${UI.icon('info', 14)} Recuerda que puedes reagendar hasta ${st().settings.policyHours} h antes.</p>
@@ -924,7 +924,7 @@
         ${UI.statusPill(session.status)}
       </div>
       <div class="detail-list">
-        ${UI.detailRow('Profesional', session.coach || 'Daniel Barrueto')}
+        ${UI.detailRow('Profesional', session.coach || 'Daniel Barrueto Jopia')}
         ${UI.detailRow('Fecha', U.fmtDate(session.date, 'long'))}
         ${UI.detailRow('Horario', `${session.time} h`)}
         ${UI.detailRow('Ubicación', location)}
@@ -1260,7 +1260,7 @@
           return `<article class="routine routine-branded card">
           <div class="routine-brand">
             <div class="routine-brand-left"><img class="routine-brand-logo" src="assets/icon-192.png" alt="Recovery Studio"><div><strong>RECOVERY STUDIO</strong><span>Performance & Recovery</span></div></div>
-            <div class="routine-brand-right"><span>Coach: Daniel Barrueto</span><span>Gorbea, Región de la Araucanía</span></div>
+            <div class="routine-brand-right"><span>Coach: Daniel Barrueto Jopia</span><span>Gorbea, Región de la Araucanía</span></div>
           </div>
           <div class="routine-head">
             <div>
@@ -1298,7 +1298,7 @@
             </details>`).join('')}
           </div>
           <div class="routine-foot">
-            <span>${UI.icon('user', 14)} Pauta asignada por Daniel Barrueto</span>
+            <span>${UI.icon('user', 14)} Pauta asignada por Daniel Barrueto Jopia</span>
             <span>${UI.icon('info', 14)} Ante dolor o molestia, detén el ejercicio y avísale a tu coach.</span>
             <span>${UI.icon('whatsapp', 14)} ${U.esc(RS.BRAND ? RS.BRAND.whatsappDisplay : '')}</span>
             <span class="muted small">Imágenes libres: free-exercise-db y <a href="https://repdb.co" rel="nofollow" target="_blank" rel="noopener">RepDB</a></span>
@@ -1469,7 +1469,7 @@
       status: useCredit ? 'confirmada' : 'pendiente',
       payment: useCredit ? 'plan' : 'pendiente',
       notes: '',
-      coach: 'Daniel Barrueto',
+      coach: 'Daniel Barrueto Jopia',
       createdAt: new Date().toISOString(),
     };
     let syncWarning = '';

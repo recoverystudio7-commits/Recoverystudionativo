@@ -417,7 +417,7 @@
       users: [{
         id: 'usr-admin',
         role: 'admin',
-        name: 'Daniel Esteban Barrueto',
+        name: 'Daniel Esteban Barrueto Jopia',
         email: BRAND.adminEmail,
         phone: '+56 9 6505 8439',
         passwordHash: adminPasswordHash,
@@ -456,7 +456,7 @@
         clubRecoveryReward: 'Sesión de sauna',
         clubRecoveryStamps: 5,
         clubRecoveryConsistencyMonths: 3,
-        coachName: 'Daniel Barrueto',
+        coachName: 'Daniel Barrueto Jopia',
         coachProfession: 'Kinesiólogo · Magíster',
         studioName: 'Recovery Studio',
         discountCodes: [],
@@ -544,7 +544,9 @@
             state.settings.clubRecoveryReward = String(state.settings.clubRecoveryReward || 'Sesión de sauna');
             state.settings.clubRecoveryStamps = Math.max(1, Number(state.settings.clubRecoveryStamps) || 5);
             state.settings.clubRecoveryConsistencyMonths = Math.max(1, Number(state.settings.clubRecoveryConsistencyMonths) || 3);
-            state.settings.coachName = String(state.settings.coachName || 'Daniel Barrueto');
+            state.settings.coachName = state.settings.coachName === 'Daniel Barrueto'
+              ? 'Daniel Barrueto Jopia'
+              : String(state.settings.coachName || 'Daniel Barrueto Jopia');
             state.settings.coachProfession = state.settings.coachProfession && state.settings.coachProfession !== 'Kinesiólogo'
               ? String(state.settings.coachProfession)
               : 'Kinesiólogo · Magíster';
@@ -1030,7 +1032,7 @@
   function coachInfo() {
     const s = (state && state.settings) || {};
     return {
-      coachName: String(s.coachName || 'Daniel Barrueto'),
+      coachName: String(s.coachName || 'Daniel Barrueto Jopia'),
       coachProfession: String(s.coachProfession || 'Kinesiólogo · Magíster'),
       studioName: String(s.studioName || BRAND.name),
     };
@@ -1086,7 +1088,7 @@ function appointmentConfirmationEmail(session, user, service, settings) {
   const U = RS.util;
   const BRAND = RS.BRAND;
   const dateLabel = U.fmtDate(session.date, 'long');
-  const coach = session.coach || 'Daniel Barrueto';
+  const coach = session.coach || 'Daniel Barrueto Jopia';
   const address = STUDIO_ADDRESS;
   const whatsapp = (settings && settings.whatsappDisplay) || BRAND.whatsappDisplay;
 
@@ -1145,7 +1147,7 @@ function sessionRows(session, service, extra) {
     ['Servicio', U.esc(service ? service.name : 'Sesión')],
     ['Fecha', U.esc(U.fmtDate(session.date, 'long'))],
     ['Hora', `${U.esc(session.time)} h`],
-    ['Profesional', U.esc(session.coach || 'Daniel Barrueto')],
+    ['Profesional', U.esc(session.coach || 'Daniel Barrueto Jopia')],
     ['Lugar', STUDIO_ADDRESS],
   ];
   return rows.concat(extra || []);
@@ -1372,7 +1374,7 @@ function googleCalendarUrl(session) {
     action: 'TEMPLATE',
     text: `${service ? service.name : 'Sesión'} · Recovery Studio`,
     dates: `${fmt(start)}/${fmt(end)}`,
-    details: `Sesión en Recovery Studio con ${session.coach || 'Daniel Barrueto'}.\nServicio: ${service ? service.name : ''}.\nFecha: ${U.fmtDate(session.date, 'long')} a las ${session.time} h.\nLugar: ${STUDIO_ADDRESS}.\n\nPolítica: cancela con 12 h de anticipación. Llega 5 minutos antes.`,
+    details: `Sesión en Recovery Studio con ${session.coach || 'Daniel Barrueto Jopia'}.\nServicio: ${service ? service.name : ''}.\nFecha: ${U.fmtDate(session.date, 'long')} a las ${session.time} h.\nLugar: ${STUDIO_ADDRESS}.\n\nPolítica: cancela con 12 h de anticipación. Llega 5 minutos antes.`,
     location: STUDIO_LOCATION,
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
