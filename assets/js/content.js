@@ -101,6 +101,9 @@
     );
     st().settings.clubRecoveryStamps = Math.max(1, Number(studioRows[0].config.clubRecoveryStamps) || Number(st().settings.clubRecoveryStamps) || 5);
     st().settings.clubRecoveryConsistencyMonths = Math.max(1, Number(studioRows[0].config.clubRecoveryConsistencyMonths) || Number(st().settings.clubRecoveryConsistencyMonths) || 3);
+    st().settings.coachName = String(studioRows[0].config.coachName || st().settings.coachName || 'Daniel Barrueto');
+    st().settings.coachProfession = String(studioRows[0].config.coachProfession || st().settings.coachProfession || 'Kinesiólogo · Magíster');
+    st().settings.studioName = String(studioRows[0].config.studioName || st().settings.studioName || 'Recovery Studio');
   }
 
   async function saveClubRecoveryReward(reward) {
@@ -108,6 +111,14 @@
   }
 
   async function saveClubSettings(patch) {
+    return patchStudioConfig(patch, 'guardar el Club Recovery');
+  }
+
+  async function saveStudioConfig(patch) {
+    return patchStudioConfig(patch, 'guardar la configuración del studio');
+  }
+
+  async function patchStudioConfig(patch, contextLabel) {
     const token = authToken();
     const rows = await RS.Supabase.request(
       '/rest/v1/studio_settings?select=config&id=eq.studio&limit=1',
@@ -115,7 +126,7 @@
       token
     );
     if (!Array.isArray(rows) || !rows.length || !rows[0].config || typeof rows[0].config !== 'object') {
-      throw new Error('No pudimos leer la configuración del studio para guardar el Club Recovery.');
+      throw new Error(`No pudimos leer la configuración del studio${contextLabel ? ` para ${contextLabel}` : ''}.`);
     }
     const config = Object.assign({}, rows[0].config, patch || {});
     const result = await RS.Supabase.request('/rest/v1/studio_settings?id=eq.studio', {
@@ -124,7 +135,7 @@
       body: JSON.stringify({ config }),
     }, token);
     if (!Array.isArray(result) || !result.length) {
-      throw new Error('Supabase no confirmó el cambio del Club Recovery. Verifica los permisos de administrador.');
+      throw new Error('Supabase no confirmó el cambio. Verifica los permisos de administrador.');
     }
   }
 
@@ -430,5 +441,5 @@
     RS.User.refreshCheckout();
   };
 
-  RS.VideoContent = { load, saveClubRecoveryReward, saveClubSettings, renderAdmin, renderPublic };
+  RS.VideoContent = { load, saveClubRecoveryReward, saveClubSettings, saveStudioConfig, renderAdmin, renderPublic };
 })();

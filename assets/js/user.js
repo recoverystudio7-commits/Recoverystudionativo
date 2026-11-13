@@ -1241,6 +1241,22 @@
             </article>`;
           };
           const legacyRow = (it, n) => '<div class="ex-legacy-row"><span class="ex-num">' + String(n).padStart(2, '0') + '</span><div><strong>' + U.esc(it.name) + '</strong><span>' + U.esc(it.sets || '') + ' × ' + U.esc(it.reps || '') + (it.load ? ' · ' + U.esc(it.load) : '') + (it.rest ? ' · ' + U.esc(it.rest) : '') + '</span>' + (it.notes ? '<p class="muted small">' + U.esc(it.notes) + '</p>' : '') + '</div></div>';
+          const stretchBlock = (d) => {
+            const list = (d.stretches || []).filter((s) => s.name && String(s.name).trim());
+            if (!list.length) return '';
+            const groups = {};
+            list.forEach((s) => {
+              const g = String(s.muscleGroup || 'General').trim() || 'General';
+              (groups[g] = groups[g] || []).push(s);
+            });
+            const html = Object.keys(groups).map((g) => '<div class="routine-stretch-group">'
+              + '<span class="routine-stretch-tag">' + U.esc(g) + '</span>'
+              + groups[g].map((s) => '<div class="routine-stretch"><span>' + U.esc(s.name) + '</span><em>' + U.esc(s.duration || '') + (s.notes ? ' · ' + U.esc(s.notes) : '') + '</em></div>').join('')
+              + '</div>').join('');
+            return '<div class="routine-stretches">'
+              + '<div class="routine-stretches-title">' + UI.icon('heart', 14) + ' Estiramientos · vuelta a la calma</div>'
+              + html + '</div>';
+          };
           return `<article class="routine routine-branded card">
           <div class="routine-brand">
             <div class="routine-brand-left"><img class="routine-brand-logo" src="assets/icon-192.png" alt="Recovery Studio"><div><strong>RECOVERY STUDIO</strong><span>Performance & Recovery</span></div></div>
@@ -1278,6 +1294,7 @@
                 ${d.items.map((it, ii) => (it.exerciseId || it.imageUrl || it.gifUrl || it.description || it.cues) ? exCard(it, ii + 1) : legacyRow(it, ii + 1)).join('')}
               </div>
               ${d.items.some((it) => !(it.exerciseId || it.imageUrl || it.gifUrl || it.description || it.cues)) ? '<div class="routine-table-wrap routine-table-legacy"><table class="table routine-table"><thead><tr><th>Ejercicio</th><th>Series</th><th>Reps</th><th>Carga</th><th>Descanso</th><th>Notas</th></tr></thead><tbody>' + d.items.filter((it) => !(it.exerciseId || it.imageUrl || it.gifUrl || it.description || it.cues)).map((it) => '<tr><td><strong>' + U.esc(it.name) + '</strong></td><td>' + U.esc(it.sets) + '</td><td>' + U.esc(it.reps) + '</td><td>' + U.esc(it.load) + '</td><td>' + U.esc(it.rest) + '</td><td class="muted">' + U.esc(it.notes || '—') + '</td></tr>').join('') + '</tbody></table></div>' : ''}
+              ${stretchBlock(d)}
             </details>`).join('')}
           </div>
           <div class="routine-foot">

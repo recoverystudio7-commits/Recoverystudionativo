@@ -105,6 +105,18 @@
           </section>
 
           <section class="card">
+            <div class="card-head"><h2 class="card-title">Identidad y firma</h2><p class="card-sub">Nombre, profesión y nombre del studio que aparecen en las rutinas descargadas como PDF.</p></div>
+            <div class="card-body">
+              <div class="grid grid-2 gap-sm">
+                <div class="field"><label for="st-coach">Nombre del profesional</label><input class="input" id="st-coach" name="coachName" value="${U.esc(s.coachName || 'Daniel Barrueto')}" required></div>
+                <div class="field"><label for="st-profession">Profesión</label><input class="input" id="st-profession" name="coachProfession" value="${U.esc(s.coachProfession || 'Kinesiólogo · Magíster')}" required></div>
+                <div class="field"><label for="st-studio">Nombre del studio / pyme</label><input class="input" id="st-studio" name="studioName" value="${U.esc(s.studioName || 'Recovery Studio')}" required></div>
+              </div>
+              <p class="form-hint">${UI.icon('info', 14)} Estos datos encabezan el PDF de la rutina, junto al nombre del cliente.</p>
+            </div>
+          </section>
+
+          <section class="card">
             <div class="card-head"><h2 class="card-title">Seguridad del panel</h2><p class="card-sub">Protección adicional para el administrador.</p></div>
             <div class="card-body">
               <div class="grid grid-2 gap-sm">
@@ -183,6 +195,9 @@
     s.whatsapp = whatsapp;
     s.clubRecoveryReward = clubRecoveryReward;
     s.address = form.address.value.trim();
+    s.coachName = form.coachName.value.trim() || 'Daniel Barrueto';
+    s.coachProfession = form.coachProfession.value.trim() || 'Kinesiólogo · Magíster';
+    s.studioName = form.studioName.value.trim() || 'Recovery Studio';
     s.bank = {
       holder: form.bankHolder.value.trim(),
       rut: form.bankRut.value.trim(),
@@ -191,6 +206,11 @@
       account: form.account.value.trim(),
       email: form.bankEmail.value.trim(),
     };
+    try {
+      await RS.VideoContent.saveStudioConfig({ coachName: s.coachName, coachProfession: s.coachProfession, studioName: s.studioName });
+    } catch (error) {
+      console.warn('No se pudo sincronizar la identidad del studio con Supabase.', error);
+    }
     RS.DB.save();
     RS.data.addAudit(me().name, 'Configuración actualizada', `${enabledDays.length} días de atención · Política ${s.policyHours} h · Retención ${s.retention}% · Premio Club Recovery: ${clubRecoveryReward}.`);
     UI.toast('Configuración guardada.', 'success');

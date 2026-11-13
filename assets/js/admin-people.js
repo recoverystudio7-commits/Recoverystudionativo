@@ -380,12 +380,17 @@
     return { name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '', exerciseId: '', category: '', muscleGroup: '', equipment: '', difficulty: '', description: '', cues: '', commonErrors: '', variants: '', imageUrl: '', gifUrl: '', videoUrl: '' };
   }
 
+  function newStretch() {
+    return { id: U.uid('rstretch'), name: '', muscleGroup: '', duration: '30 s', notes: '' };
+  }
+
   function newRoutineDay(index) {
     return {
       id: U.uid('rday'),
       name: `Día ${index + 1}`,
       focus: '',
       items: [newRoutineItem()],
+      stretches: [],
     };
   }
 
@@ -395,6 +400,7 @@
       ? JSON.parse(JSON.stringify(preDraft))
       : (existing ? JSON.parse(JSON.stringify(existing)) : { id: U.uid('rt'), userId: user.id, title: 'Nueva pauta de entrenamiento', objective: '', weeks: 4, days: [newRoutineDay(0)] });
     if (!draft.days.length) draft.days.push(newRoutineDay(0));
+    draft.days.forEach((d) => { if (!Array.isArray(d.stretches)) d.stretches = []; });
     draft.startImage = draft.startImage || '';
     draft.endImage = draft.endImage || '';
 
@@ -420,7 +426,7 @@
       <div class="routine-editor" id="routine-editor"></div>
       <div class="routine-editor-foot"><button type="button" class="btn btn-outline btn-sm" data-r-add-day>${UI.icon('plus', 15)} Agregar día</button><span class="form-hint">${UI.icon('info', 13)} Los cambios se guardan al finalizar.</span></div>`;
 
-    const editorFoot = () => `<button class="btn btn-outline" data-r-planning>${UI.icon('bar-chart-2', 16)} Planificación</button><button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" data-routine-save>${UI.icon('check', 16)} Guardar rutina</button>`;
+    const editorFoot = () => `<button class="btn btn-outline" data-r-planning>${UI.icon('bar-chart-2', 16)} Planificación</button><button class="btn btn-outline" data-r-pdf>${UI.icon('download', 16)} Descargar PDF</button><button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" data-routine-save>${UI.icon('check', 16)} Guardar rutina</button>`;
 
     const root = UI.modal({
       title: 'Rutina del usuario',
@@ -438,6 +444,13 @@
       const p = root.querySelector('.modal-head-text p');
       if (h2) h2.textContent = title;
       if (p) p.textContent = subtitle;
+    };
+
+    const stretchGroups = (day) => {
+      const set = new Set(['Cuádriceps', 'Isquios', 'Glúteo', 'Pantorrillas', 'Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Core / Abdomen', 'Espalda baja', 'Cadera', 'Cadena posterior', 'Cuerpo completo']);
+      (day.items || []).forEach((it) => { if (it.muscleGroup) set.add(it.muscleGroup); });
+      if (RS.ExerciseLibrary) RS.ExerciseLibrary.all().forEach((x) => { if (x.muscleGroup) set.add(x.muscleGroup); });
+      return Array.from(set);
     };
 
     const daysHtml = () => draft.days.map((day, di) => `<div class="re-day">
@@ -465,6 +478,21 @@
           }).join('')}
           <datalist id="ex-library-names">${RS.ExerciseLibrary ? RS.ExerciseLibrary.all().slice(0, 220).map((x) => '<option value="' + U.esc(x.name) + '"></option>').join('') : ''}</datalist>
           <button type="button" class="btn btn-ghost btn-sm re-add-item" data-r-add-item="${di}">${UI.icon('plus', 14)} Agregar ejercicio</button>
+        </div>
+        <div class="re-stretches">
+          <div class="re-stretches-head">${UI.icon('heart', 13)} <span>Estiramientos · vuelta a la calma</span></div>
+          <div class="re-stretches-list">
+            ${(day.stretches || []).map((s, si) => `<div class="re-stretch">
+              <span class="re-item-num">${si + 1}</span>
+              <input class="input re-st-name" data-r-stretch="name" data-day="${di}" data-stretch="${si}" value="${U.esc(s.name)}" placeholder="Estiramiento" list="ex-stretch-groups-${di}">
+              <input class="input re-small" data-r-stretch="muscleGroup" data-day="${di}" data-stretch="${si}" value="${U.esc(s.muscleGroup || '')}" placeholder="Músculo" list="ex-stretch-groups-${di}">
+              <input class="input re-small" data-r-stretch="duration" data-day="${di}" data-stretch="${si}" value="${U.esc(s.duration || '')}" placeholder="Tiempo">
+              <input class="input re-notes" data-r-stretch="notes" data-day="${di}" data-stretch="${si}" value="${U.esc(s.notes || '')}" placeholder="Nota (opcional)">
+              <button type="button" class="icon-btn danger" data-r-remove-stretch="${di}:${si}" aria-label="Quitar estiramiento">${UI.icon('x', 15)}</button>
+            </div>`).join('')}
+          </div>
+          <datalist id="ex-stretch-groups-${di}">${stretchGroups(day).map((g) => `<option value="${U.esc(g)}"></option>`).join('')}</datalist>
+          <button type="button" class="btn btn-ghost btn-sm re-add-stretch" data-r-add-stretch="${di}">${UI.icon('plus', 14)} Agregar estiramiento</button>
         </div>
       </div>`).join('');
 
@@ -627,6 +655,40 @@
       updateWeek(1);
     }
 
+    function openRoutinePdf() {
+      if (!RS.RoutinePdf) { UI.toast('Exportación a PDF no disponible.', 'error'); return; }
+      const snapshot = Object.assign({}, draft, {
+        days: draft.days.map((d) => ({
+          name: d.name,
+          focus: d.focus,
+          items: (d.items || []).filter((i) => i.name && i.name.trim()),
+          stretches: (d.stretches || []).filter((s) => s.name && s.name.trim()),
+        })),
+      });
+      if (!U.sum(snapshot.days, (d) => d.items.length)) {
+        UI.toast('Agrega al menos un ejercicio para descargar el PDF.', 'error');
+        return;
+      }
+      setHead('Descargar rutina (PDF)', 'Para enviársela a alguien que aún no se registra en la página');
+      bodyEl.innerHTML = `<div class="routine-pdf-form">
+        <div class="field"><label for="pdf-client">Nombre del cliente</label><input class="input" id="pdf-client" value="${U.esc(user.name || '')}" maxlength="80" placeholder="Ej: Nombre y apellido"></div>
+        <div class="callout callout-blue">${UI.icon('info', 17)}<span>El PDF incluirá tu nombre, tu profesión y el nombre del studio, junto con la pauta completa (ejercicios y estiramientos). Se abrirá la ventana de impresión: elige “Guardar como PDF”.</span></div>
+      </div>`;
+      footEl.innerHTML = `<button class="btn btn-ghost" data-r-pdf-back>${UI.icon('arrow-left', 16)} Volver</button><button class="btn btn-primary" data-r-pdf-generate>${UI.icon('printer', 16)} Generar PDF</button>`;
+      const input = bodyEl.querySelector('#pdf-client');
+      const generateBtn = footEl.querySelector('[data-r-pdf-generate]');
+      if (input) input.focus();
+      const generate = () => {
+        const name = ((input && input.value) || '').trim() || user.name || 'Cliente';
+        RS.RoutinePdf.open(snapshot, { clientName: name });
+      };
+      generateBtn.addEventListener('click', generate);
+      footEl.querySelector('[data-r-pdf-back]').addEventListener('click', renderEditor);
+      if (input) input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); generate(); }
+      });
+    }
+
     function openLibraryPicker(di, ii) {
       if (!RS.ExerciseLibrary) return UI.toast('Biblioteca no disponible.', 'error');
       let q = '';
@@ -749,6 +811,14 @@
           }
         }
       }
+      const stretchField = e.target.dataset.rStretch;
+      if (stretchField) {
+        const di = Number(e.target.dataset.day);
+        const si = Number(e.target.dataset.stretch);
+        if (draft.days[di] && draft.days[di].stretches && draft.days[di].stretches[si]) {
+          draft.days[di].stretches[si][stretchField] = e.target.value;
+        }
+      }
     });
 
     async function saveRoutine() {
@@ -756,6 +826,7 @@
       draft.objective = draft.objective.trim();
       draft.days.forEach((d) => {
         d.items = d.items.filter((i) => i.name.trim());
+        d.stretches = (d.stretches || []).filter((s) => s.name.trim());
       });
       const totalItems = U.sum(draft.days, (d) => d.items.length);
       if (!totalItems) {
@@ -832,6 +903,20 @@
         render();
         return;
       }
+      const addStretch = e.target.closest('[data-r-add-stretch]');
+      if (addStretch) {
+        const di = Number(addStretch.dataset.rAddStretch);
+        draft.days[di].stretches.push(newStretch());
+        render();
+        return;
+      }
+      const removeStretch = e.target.closest('[data-r-remove-stretch]');
+      if (removeStretch) {
+        const [di, si] = removeStretch.dataset.rRemoveStretch.split(':').map(Number);
+        draft.days[di].stretches.splice(si, 1);
+        render();
+        return;
+      }
       const photoRemove = e.target.closest('[data-r-photo-remove]');
       if (photoRemove) {
         const side = photoRemove.dataset.rPhotoRemove;
@@ -843,6 +928,8 @@
       }
       const planning = e.target.closest('[data-r-planning]');
       if (planning) { openPlanning(); return; }
+      const pdfBtn = e.target.closest('[data-r-pdf]');
+      if (pdfBtn) { openRoutinePdf(); return; }
       const save = e.target.closest('[data-routine-save]');
       if (save) { saveRoutine(); return; }
     });

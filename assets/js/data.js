@@ -456,6 +456,9 @@
         clubRecoveryReward: 'Sesión de sauna',
         clubRecoveryStamps: 5,
         clubRecoveryConsistencyMonths: 3,
+        coachName: 'Daniel Barrueto',
+        coachProfession: 'Kinesiólogo · Magíster',
+        studioName: 'Recovery Studio',
         discountCodes: [],
         bank: {
           holder: 'DANIEL ESTEBAN BARRUETO',
@@ -541,6 +544,11 @@
             state.settings.clubRecoveryReward = String(state.settings.clubRecoveryReward || 'Sesión de sauna');
             state.settings.clubRecoveryStamps = Math.max(1, Number(state.settings.clubRecoveryStamps) || 5);
             state.settings.clubRecoveryConsistencyMonths = Math.max(1, Number(state.settings.clubRecoveryConsistencyMonths) || 3);
+            state.settings.coachName = String(state.settings.coachName || 'Daniel Barrueto');
+            state.settings.coachProfession = state.settings.coachProfession && state.settings.coachProfession !== 'Kinesiólogo'
+              ? String(state.settings.coachProfession)
+              : 'Kinesiólogo · Magíster';
+            state.settings.studioName = String(state.settings.studioName || BRAND.name);
             // Dirección oficial: corrige datos antiguos guardados en el navegador.
             if (!state.settings.address || /providencia/i.test(String(state.settings.address))) {
               state.settings.address = 'Gorbea, Región de la Araucanía';
@@ -1019,6 +1027,15 @@
     };
   }
 
+  function coachInfo() {
+    const s = (state && state.settings) || {};
+    return {
+      coachName: String(s.coachName || 'Daniel Barrueto'),
+      coachProfession: String(s.coachProfession || 'Kinesiólogo · Magíster'),
+      studioName: String(s.studioName || BRAND.name),
+    };
+  }
+
   RS.APP_VERSION = APP_VERSION;
   RS.STORAGE_KEY = STORAGE_KEY;
   RS.SESSION_KEY = SESSION_KEY;
@@ -1045,6 +1062,7 @@
     planNoticeMessage, planNoticeEmail, markPlanNotice,
     expensesInMonth, boletasInMonth, financeSummary, monthsBack, addAudit, whatsappUrl,
     bankData,
+    coachInfo,
     appointmentConfirmationEmail,
     sendAppointmentEmail,
     sendEmail,
