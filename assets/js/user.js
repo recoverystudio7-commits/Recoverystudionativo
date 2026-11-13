@@ -380,6 +380,7 @@
     if (!b.useCredit) b.useCredit = false;
     if (!b.policy) b.policy = false;
     if (!b.method) b.method = 'Transferencia';
+    if (!('trial' in b)) b.trial = false;
     if (b.busy) b.busy = false;
     return b;
   }
@@ -412,6 +413,12 @@
     const price = service ? Number(service.price) : 0;
     const useCredit = !!b.useCredit && user.credits > 0;
     const total = useCredit ? 0 : price;
+    const hasSessions = RS.data.userSessions(user.id).length > 0;
+    const trialService = st().services.find((s) => s.id === 'srv-training' && s.active);
+    const trialEligible = !!trialService && !hasSessions && st().settings.freeTrialEnabled !== false;
+    const trial = trialEligible && !!b.trial;
+    const displayPrice = trial ? 0 : price;
+    const displayTotal = trial ? 0 : total;
     const dates = openDates(21);
     const today = U.todayISO();
 
@@ -426,6 +433,11 @@
           <section class="card">
             <div class="card-head"><div class="step-head"><span class="step-num">1</span><div><h2 class="card-title">Elige tu servicio</h2><p class="card-sub">Sesiones individuales y asesorías.</p></div></div></div>
             <div class="card-body">
+              ${trialEligible ? `<button type="button" class="trial-banner ${trial ? 'selected' : ''}" data-action="book-trial">
+                <span class="trial-emoji">🎁</span>
+                <span class="trial-body"><strong>Primera clase gratis</strong><span>${U.esc(trialService.name)} · sin costo, solo una vez</span></span>
+                <span class="trial-price">$0</span>
+              </button>` : ''}
               <div class="service-grid">
                 ${services.map((s) => `<button type="button" class="service-option ${s.id === b.serviceId ? 'selected' : ''}" data-action="book-service" data-id="${s.id}">
                   <span class="service-option-top"><span class="service-option-icon">${UI.icon(s.kind === 'Asesoría' ? 'smartphone' : 'activity', 18)}</span>${s.popular ? '<span class="tag-popular">Popular</span>' : ''}</span>
@@ -488,7 +500,7 @@
           <section class="card">
             <div class="card-head"><div class="step-head"><span class="step-num">3</span><div><h2 class="card-title">Confirma tu reserva</h2><p class="card-sub">Revisa las condiciones antes de continuar.</p></div></div></div>
             <div class="card-body">
-              ${user.credits > 0 ? `<div class="pay-choice">
+              ${(user.credits > 0 && !trial) ? `<div class="pay-choice">
                 <label class="choice-card ${useCredit ? 'selected' : ''}">
                   <input type="radio" name="paymode" value="credit" ${useCredit ? 'checked' : ''} data-change="booking-credit" data-value="credit">
                   <span class="choice-icon">${UI.icon('layers', 18)}</span>
@@ -503,7 +515,7 @@
                 </label>
               </div>` : ''}
 
-              ${!useCredit ? `<div class="pay-methods">
+              ${(!useCredit && !trial) ? `<div class="pay-methods">
                 <label class="method-card ${b.method === 'Transferencia' ? 'selected' : ''}">
                   <input type="radio" name="method" value="Transferencia" ${b.method === 'Transferencia' ? 'checked' : ''} data-change="booking-method" data-value="Transferencia">
                   <span class="method-icon">${UI.icon('building', 17)}</span>
@@ -516,6 +528,7 @@
                 </label>
               </div>` : ''}
 
+              ${trial ? `<div class="trial-note">${UI.icon('award', 18)}<span><strong>Clase de prueba gratuita.</strong> No tiene costo y es solo para tu primera vez.</span></div>` : ''}
               <label class="policy-check" for="booking-policy">
                 <input type="checkbox" id="booking-policy" ${b.policy ? 'checked' : ''} data-change="booking-policy">
                 <span>Confirmo que puedo reagendar o cancelar hasta <strong>${st().settings.policyHours} horas antes</strong>. Si aviso con menos tiempo, la sesión no será reagendada y se considerará utilizada.</span>
@@ -529,7 +542,7 @@
             <div class="summary-head"><span>Resumen de reserva</span>${UI.icon('receipt', 18)}</div>
             <div class="summary-service">
               <span class="summary-icon">${UI.icon(service && service.kind === 'Asesoría' ? 'smartphone' : 'activity', 20)}</span>
-              <div><strong>${U.esc(service ? service.name : 'Selecciona un servicio')}</strong><span>${service ? `${service.duration} min · 1:1` : '—'}</span></div>
+              <div><strong>${U.esc(service ? service.name : 'Selecciona un servicio')}${trial ? ' · Gratis' : ''}</strong><span>${service ? `${service.duration} min · 1:1` : '—'}</span></div>
             </div>
             <div class="summary-rows">
               <div><span>Fecha</span><strong>${b.time ? U.fmtDate(b.date, 'short') : U.fmtDate(b.date, 'short')}</strong></div>
@@ -537,12 +550,12 @@
               <div><span>Profesional</span><strong>Daniel Barrueto Jopia</strong></div>
             </div>
             <div class="summary-total">
-              <div><span>Valor sesión</span><strong>${U.fmtMoney(price)}</strong></div>
+              <div><span>Valor sesión</span><strong>${U.fmtMoney(displayPrice)}</strong></div>
               ${useCredit ? `<div class="summary-credit"><span>Uso de plan</span><strong>− ${U.fmtMoney(price)}</strong></div>` : ''}
-              <div class="summary-grand"><span>Total a pagar</span><strong>${U.fmtMoney(total)}</strong></div>
+              <div class="summary-grand"><span>Total a pagar</span><strong>${U.fmtMoney(displayTotal)}</strong></div>
             </div>
-            ${useCredit ? `<p class="summary-note">${UI.icon('layers', 14)} Se descontará 1 sesión de tu plan al confirmar.</p>` : `<p class="summary-note">${UI.icon('info', 14)} Si eliges transferencia, podrás adjuntar el comprobante al finalizar.</p>`}
-            ${(() => { const check = bookingBlockers(b, useCredit); const deadline = b.time ? policyDeadlineText(b.date, b.time) : ''; return `${deadline ? `<p class="summary-note">${UI.icon('clock', 14)} Cambios permitidos hasta: <strong>${U.esc(deadline)}</strong>.</p>` : ''}${!check.ready ? `<div class="callout callout-orange" role="status">${UI.icon('info', 16)}<span>${U.esc(check.blockers[0])}</span></div>` : ''}<button class="btn btn-accent btn-block btn-lg" data-action="book-confirm" ${(check.ready && !b.busy) ? '' : 'disabled'}>${UI.icon('calendar-check', 18)} ${b.busy ? 'Confirmando…' : (useCredit ? 'Confirmar con mi plan' : 'Confirmar reserva')}</button>`; })()}
+            ${trial ? `<p class="summary-note">${UI.icon('award', 14)} Clase de prueba gratuita · sin costo.</p>` : (useCredit ? `<p class="summary-note">${UI.icon('layers', 14)} Se descontará 1 sesión de tu plan al confirmar.</p>` : `<p class="summary-note">${UI.icon('info', 14)} Si eliges transferencia, podrás adjuntar el comprobante al finalizar.</p>`)}
+            ${(() => { const check = bookingBlockers(b, useCredit); const deadline = b.time ? policyDeadlineText(b.date, b.time) : ''; return `${deadline ? `<p class="summary-note">${UI.icon('clock', 14)} Cambios permitidos hasta: <strong>${U.esc(deadline)}</strong>.</p>` : ''}${!check.ready ? `<div class="callout callout-orange" role="status">${UI.icon('info', 16)}<span>${U.esc(check.blockers[0])}</span></div>` : ''}<button class="btn btn-accent btn-block btn-lg" data-action="book-confirm" ${(check.ready && !b.busy) ? '' : 'disabled'}>${UI.icon('calendar-check', 18)} ${b.busy ? 'Confirmando…' : (trial ? 'Confirmar mi clase gratis' : (useCredit ? 'Confirmar con mi plan' : 'Confirmar reserva'))}</button>`; })()}
             <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes. ${UI.icon('mail', 14)} Enviaremos confirmación por correo cuando sea posible.</p>
           </div>
           <div class="help-card">
@@ -1399,8 +1412,19 @@
   RS.actions['book-service'] = (el) => {
     const b = bookingState();
     b.serviceId = el.dataset.id;
+    b.trial = false;
     b.time = null;
     b.date = nextAvailableDate(b.serviceId, b.date);
+    RS.App.render();
+  };
+
+  RS.actions['book-trial'] = () => {
+    const b = bookingState();
+    b.trial = true;
+    b.serviceId = 'srv-training';
+    b.useCredit = false;
+    b.time = null;
+    b.date = nextAvailableDate('srv-training', b.date);
     RS.App.render();
   };
 
@@ -1459,6 +1483,9 @@
       return;
     }
     const useCredit = b.useCredit && user.credits > 0;
+    const hasSessions = RS.data.userSessions(user.id).length > 0;
+    const trialService = st().services.find((s) => s.id === 'srv-training' && s.active);
+    const trial = !!b.trial && !!trialService && !hasSessions && st().settings.freeTrialEnabled !== false;
 
     const session = {
       id: U.uid('ses'),
@@ -1466,8 +1493,8 @@
       serviceId: service.id,
       date: b.date,
       time: b.time,
-      status: useCredit ? 'confirmada' : 'pendiente',
-      payment: useCredit ? 'plan' : 'pendiente',
+      status: (useCredit || trial) ? 'confirmada' : 'pendiente',
+      payment: useCredit ? 'plan' : trial ? 'cortesía' : 'pendiente',
       notes: '',
       coach: 'Daniel Barrueto Jopia',
       createdAt: new Date().toISOString(),
@@ -1487,7 +1514,7 @@
       console.error('No se pudo sincronizar la reserva con Supabase:', error);
       syncWarning = 'La reserva quedó guardada en este dispositivo, pero no se pudo compartir con el studio. Usa "Sincronizar" cuando tengas conexión.';
     }
-    RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${useCredit ? ' con crédito de plan' : ''}.`);
+    RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${trial ? ' (clase de prueba gratis)' : useCredit ? ' con crédito de plan' : ''}.`);
 
     if (useCredit) user.credits -= 1;
     st().sessions.push(session);
@@ -1505,7 +1532,7 @@
 
     if (syncWarning) UI.toast(syncWarning, 'warning', 9000);
 
-    if (useCredit) {
+    if (trial || useCredit) {
       finish();
       window.location.href = confirmationUrl(session, 'confirmada');
       return;

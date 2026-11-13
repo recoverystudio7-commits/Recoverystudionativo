@@ -105,6 +105,7 @@
     if (st().settings.coachName === 'Daniel Barrueto') st().settings.coachName = 'Daniel Barrueto Jopia';
     st().settings.coachProfession = String(studioRows[0].config.coachProfession || st().settings.coachProfession || 'Kinesiólogo · Magíster');
     st().settings.studioName = String(studioRows[0].config.studioName || st().settings.studioName || 'Recovery Studio');
+    st().settings.freeTrialEnabled = studioRows[0].config.freeTrialEnabled !== false;
   }
 
   async function saveClubRecoveryReward(reward) {

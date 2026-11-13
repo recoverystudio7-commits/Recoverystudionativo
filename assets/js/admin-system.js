@@ -88,6 +88,13 @@
           </section>
 
           <section class="card">
+            <div class="card-head"><h2 class="card-title">Clase de prueba gratis</h2><p class="card-sub">Deja que los clientes nuevos reserven su primera clase sin costo.</p></div>
+            <div class="card-body">
+              <label class="check check-boxed"><input type="checkbox" name="freeTrialEnabled" ${s.freeTrialEnabled !== false ? 'checked' : ''}><span><strong>Activar clase de prueba gratis</strong><small>Los clientes nuevos (sin sesiones previas) podrán reservar 1 sesión de Entrenamiento personal sin costo, marcada como cortesía.</small></span></label>
+            </div>
+          </section>
+
+          <section class="card">
             <div class="card-head"><h2 class="card-title">Pagos y transferencia</h2><p class="card-sub">Estos datos se muestran a los usuarios al pagar.</p></div>
             <div class="card-body">
               <div class="grid grid-2 gap-sm">
@@ -194,6 +201,7 @@
     s.retention = retention;
     s.whatsapp = whatsapp;
     s.clubRecoveryReward = clubRecoveryReward;
+    s.freeTrialEnabled = form.freeTrialEnabled.checked;
     s.address = form.address.value.trim();
     s.coachName = form.coachName.value.trim() || 'Daniel Barrueto Jopia';
     s.coachProfession = form.coachProfession.value.trim() || 'Kinesiólogo · Magíster';
@@ -207,7 +215,7 @@
       email: form.bankEmail.value.trim(),
     };
     try {
-      await RS.VideoContent.saveStudioConfig({ coachName: s.coachName, coachProfession: s.coachProfession, studioName: s.studioName });
+      await RS.VideoContent.saveStudioConfig({ coachName: s.coachName, coachProfession: s.coachProfession, studioName: s.studioName, freeTrialEnabled: s.freeTrialEnabled });
     } catch (error) {
       console.warn('No se pudo sincronizar la identidad del studio con Supabase.', error);
     }
