@@ -1089,15 +1089,19 @@
 
   function addAudit(actor, action, detail) {
     if (!state) return;
-    state.audits.unshift({
+    const entry = {
       id: uid('aud'),
       at: new Date().toISOString(),
       actor: actor || 'Sistema',
       action,
       detail: detail || '',
-    });
+    };
+    state.audits.unshift(entry);
     state.audits = state.audits.slice(0, 300);
     DB.save();
+    if (RS.SupabaseSync && RS.SupabaseSync.pushAudit) {
+      RS.SupabaseSync.pushAudit(entry).catch(() => { /* la app sigue sin conexión */ });
+    }
   }
 
   function whatsappUrl(message) {

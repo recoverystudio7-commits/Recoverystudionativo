@@ -716,6 +716,233 @@
     return merged;
   }
 
+  /* Cotizaciones de empresas: las envía el formulario público y el admin las
+     gestiona. Solo el admin las descarga; el visitante puede insertar la suya. */
+  function quotePayload(quote) {
+    return {
+      id: quote.id,
+      reference: quote.ref || quote.reference || quote.id,
+      company: quote.company || '',
+      rut: quote.rut || '',
+      contact: quote.contact || '',
+      email: quote.email || '',
+      phone: quote.phone || '',
+      company_size: quote.companySize || '',
+      people: Math.max(1, Number(quote.people) || 1),
+      service_ids: Array.isArray(quote.serviceIds) ? quote.serviceIds : [],
+      requested_date: quote.date ? String(quote.date).slice(0, 10) : null,
+      message: quote.message || '',
+      status: quote.status || 'nueva',
+      estimate: Math.max(0, Number(quote.estimate) || 0),
+      final_amount: Math.max(0, Number(quote.finalAmount) || 0),
+      notes: quote.notes || '',
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async function pullQuotes(tk, isAdmin) {
+    if (!isAdmin) return 0;
+    let rows;
+    try {
+      rows = await RS.Supabase.request(
+        '/rest/v1/company_quotes?select=*&order=created_at.desc',
+        { method: 'GET' },
+        tk
+      );
+    } catch (error) {
+      console.warn('No se pudieron traer las cotizaciones:', error.message);
+      return 0;
+    }
+    if (!Array.isArray(rows)) return 0;
+    const state = st();
+    state.quotes = Array.isArray(state.quotes) ? state.quotes : [];
+    const remoteIds = new Set();
+    let merged = 0;
+    rows.forEach((row) => {
+      if (!row || !row.id) return;
+      remoteIds.add(row.id);
+      const base = {
+        id: row.id,
+        ref: row.reference || '',
+        company: row.company || '',
+        rut: row.rut || '',
+        contact: row.contact || '',
+        email: row.email || '',
+        phone: row.phone || '',
+        companySize: row.company_size || '',
+        people: Number(row.people) || 0,
+        serviceIds: Array.isArray(row.service_ids) ? row.service_ids : [],
+        date: row.requested_date || '',
+        message: row.message || '',
+        status: row.status || 'nueva',
+        estimate: Number(row.estimate) || 0,
+        finalAmount: Number(row.final_amount) || 0,
+        notes: row.notes || '',
+        createdAt: row.created_at || new Date().toISOString(),
+        updatedAt: row.updated_at || row.created_at || null,
+        remoteUpdatedAt: row.updated_at || row.created_at || null,
+        dirty: false,
+        source: 'supabase',
+      };
+      const existing = state.quotes.find((q) => q.id === row.id);
+      if (existing) {
+        if (existing.dirty) return;
+        const changed = existing.status !== base.status
+          || existing.finalAmount !== base.finalAmount
+          || existing.notes !== base.notes
+          || existing.estimate !== base.estimate;
+        Object.assign(existing, base);
+        if (changed) merged += 1;
+        return;
+      }
+      state.quotes.push(base);
+      merged += 1;
+    });
+    const before = state.quotes.length;
+    state.quotes = state.quotes.filter((q) => !(q && q.remoteUpdatedAt && !q.dirty && !remoteIds.has(q.id)));
+    merged += before - state.quotes.length;
+    return merged;
+  }
+
+  /* Gastos del studio: se comparten solo entre administradores. */
+  async function pullExpenses(tk, isAdmin) {
+    if (!isAdmin) return 0;
+    let rows;
+    try {
+      rows = await RS.Supabase.request(
+        '/rest/v1/expenses?select=*&order=expense_date.desc',
+        { method: 'GET' },
+        tk
+      );
+    } catch (error) {
+      console.warn('No se pudieron traer los gastos:', error.message);
+      return 0;
+    }
+    if (!Array.isArray(rows)) return 0;
+    const state = st();
+    state.expenses = Array.isArray(state.expenses) ? state.expenses : [];
+    const remoteIds = new Set();
+    let merged = 0;
+    rows.forEach((row) => {
+      if (!row || !row.id) return;
+      remoteIds.add(row.id);
+      const base = {
+        id: row.id,
+        date: row.expense_date || '',
+        category: row.category || 'Otros',
+        description: row.description || '',
+        amount: Number(row.amount) || 0,
+        method: row.method || 'Transferencia',
+        notes: row.notes || '',
+        remoteUpdatedAt: row.created_at || null,
+        source: 'supabase',
+      };
+      const existing = state.expenses.find((e) => e.id === row.id);
+      if (existing) {
+        Object.assign(existing, base);
+        return;
+      }
+      state.expenses.push(base);
+      merged += 1;
+    });
+    const before = state.expenses.length;
+    state.expenses = state.expenses.filter((e) => !(e && e.remoteUpdatedAt && !remoteIds.has(e.id)));
+    merged += before - state.expenses.length;
+    return merged;
+  }
+
+  /* Boletas de honorarios: también exclusivas del panel administrador. */
+  async function pullBoletas(tk, isAdmin) {
+    if (!isAdmin) return 0;
+    let rows;
+    try {
+      rows = await RS.Supabase.request(
+        '/rest/v1/boletas?select=*&order=issue_date.desc',
+        { method: 'GET' },
+        tk
+      );
+    } catch (error) {
+      console.warn('No se pudieron traer las boletas:', error.message);
+      return 0;
+    }
+    if (!Array.isArray(rows)) return 0;
+    const state = st();
+    state.boletas = Array.isArray(state.boletas) ? state.boletas : [];
+    const remoteIds = new Set();
+    let merged = 0;
+    rows.forEach((row) => {
+      if (!row || !row.id) return;
+      remoteIds.add(row.id);
+      const rate = Number(row.retention_rate);
+      const base = {
+        id: row.id,
+        number: row.folio || '',
+        date: row.issue_date || '',
+        client: row.provider || '',
+        gross: Number(row.gross_amount) || 0,
+        retentionRate: Number.isFinite(rate) ? rate : 15.25,
+        notes: row.notes || '',
+        remoteUpdatedAt: row.created_at || null,
+        source: 'supabase',
+      };
+      const existing = state.boletas.find((b) => b.id === row.id);
+      if (existing) {
+        Object.assign(existing, base);
+        return;
+      }
+      state.boletas.push(base);
+      merged += 1;
+    });
+    const before = state.boletas.length;
+    state.boletas = state.boletas.filter((b) => !(b && b.remoteUpdatedAt && !remoteIds.has(b.id)));
+    merged += before - state.boletas.length;
+    return merged;
+  }
+
+  /* Historial de actividad: cada equipo sube sus eventos y el admin los ve
+     todos en Auditoría. */
+  async function pullAudits(tk, isAdmin) {
+    if (!isAdmin) return 0;
+    let rows;
+    try {
+      rows = await RS.Supabase.request(
+        '/rest/v1/audit_log?select=*&order=created_at.desc&limit=300',
+        { method: 'GET' },
+        tk
+      );
+    } catch (error) {
+      console.warn('No se pudo traer la auditoría:', error.message);
+      return 0;
+    }
+    if (!Array.isArray(rows)) return 0;
+    const state = st();
+    state.audits = Array.isArray(state.audits) ? state.audits : [];
+    let merged = 0;
+    rows.forEach((row) => {
+      if (!row) return;
+      const id = row.client_id || `aud-${row.id}`;
+      const base = {
+        id,
+        at: row.created_at || new Date().toISOString(),
+        actor: row.actor_name || 'Sistema',
+        action: row.action || 'Evento',
+        detail: row.detail || '',
+        remoteId: row.id,
+        synced: true,
+      };
+      const existing = state.audits.find((a) => a.id === id);
+      if (existing) {
+        Object.assign(existing, base);
+        return;
+      }
+      state.audits.push(base);
+      merged += 1;
+    });
+    state.audits.sort((a, b) => new Date(b.at) - new Date(a.at));
+    state.audits = state.audits.slice(0, 300);
+    return merged;
+  }
+
   async function pull() {
     if (!configured()) return { ok: false, reason: 'no-config' };
     const user = me();
@@ -730,7 +957,7 @@
       console.warn('No se pudieron traer perfiles:', e.message);
       return 0;
     });
-    const [services, sessions, payments, accounts, recurring, maxes, blocked] = await Promise.all([
+    const [services, sessions, payments, accounts, recurring, maxes, blocked, quotes, expenses, boletas, audits] = await Promise.all([
       pullServices(tk, isAdmin).catch((e) => { console.warn('No se pudo traer el catálogo:', e.message); return 0; }),
       pullSessions(tk, isAdmin, uid),
       pullPayments(tk, isAdmin, uid),
@@ -738,10 +965,14 @@
       pullRecurringBlocks(tk),
       pullMaxes(tk, isAdmin, uid).catch((e) => { console.warn('No se pudieron traer los maximales:', e.message); return 0; }),
       pullBlockedSlots(tk).catch((e) => { console.warn('No se pudieron traer los bloqueos:', e.message); return 0; }),
+      pullQuotes(tk, isAdmin).catch((e) => { console.warn('No se pudieron traer las cotizaciones:', e.message); return 0; }),
+      pullExpenses(tk, isAdmin).catch((e) => { console.warn('No se pudieron traer los gastos:', e.message); return 0; }),
+      pullBoletas(tk, isAdmin).catch((e) => { console.warn('No se pudieron traer las boletas:', e.message); return 0; }),
+      pullAudits(tk, isAdmin).catch((e) => { console.warn('No se pudo traer la auditoría:', e.message); return 0; }),
     ]);
 
     RS.DB.save();
-    return { ok: true, merged: profiles + services + sessions + payments + accounts + recurring + maxes + blocked };
+    return { ok: true, merged: profiles + services + sessions + payments + accounts + recurring + maxes + blocked + quotes + expenses + boletas + audits };
   }
 
   /* ----------------------------- push ----------------------------------- */
@@ -1164,6 +1395,234 @@
     return pushed;
   }
 
+  /* -------------------- finanzas, cotizaciones y auditoría ---------------- */
+
+  async function pushQuotes(tk, isAdmin) {
+    if (!isAdmin) return 0;
+    const state = st();
+    let pushed = 0;
+    for (const quote of (state.quotes || [])) {
+      if (!quote || !quote.id || !quote.company) continue;
+      if (quote.remoteUpdatedAt && !quote.dirty) continue;
+      try {
+        const payload = quotePayload(quote);
+        const saved = await upsert('company_quotes', quote.id, null, null, payload, tk);
+        quote.remoteUpdatedAt = (saved && saved.updated_at) || payload.updated_at;
+        quote.updatedAt = quote.remoteUpdatedAt;
+        quote.dirty = false;
+        quote.source = 'supabase';
+        pushed += 1;
+      } catch (error) {
+        console.warn('No se pudo sincronizar la cotización', quote.id, error.message);
+      }
+    }
+    return pushed;
+  }
+
+  /* Envía una cotización desde el formulario público. No exige sesión:
+     usa la clave pública y la política de inserción para visitantes. */
+  async function submitQuote(quote) {
+    if (!quote || !quote.id) return { ok: false, reason: 'invalid' };
+    try {
+      RS.Supabase.config();
+    } catch (error) {
+      return { ok: false, reason: 'no-config' };
+    }
+    const payload = quotePayload(quote);
+    try {
+      const saved = await RS.Supabase.request('/rest/v1/company_quotes', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify(payload),
+      });
+      quote.remoteUpdatedAt = (Array.isArray(saved) && saved[0] && saved[0].updated_at) || payload.updated_at;
+      quote.updatedAt = quote.remoteUpdatedAt;
+      quote.source = 'supabase';
+      RS.DB.save();
+      return { ok: true };
+    } catch (error) {
+      console.warn('No se pudo enviar la cotización a la nube:', error.message);
+      return { ok: false, error: error.message };
+    }
+  }
+
+  async function saveQuote(quote) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    if (!quote || !quote.id) return { ok: false, reason: 'invalid' };
+    const user = me();
+    if (!user || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    const tk = await freshToken();
+    const payload = quotePayload(quote);
+    const saved = await upsert('company_quotes', quote.id, null, null, payload, tk);
+    quote.remoteUpdatedAt = (saved && saved.updated_at) || payload.updated_at;
+    quote.updatedAt = quote.remoteUpdatedAt;
+    quote.dirty = false;
+    quote.source = 'supabase';
+    RS.DB.save();
+    return { ok: true };
+  }
+
+  function expensePayload(expense) {
+    return {
+      description: expense.description || 'Gasto',
+      category: expense.category || 'Otros',
+      amount: Math.max(0, Number(expense.amount) || 0),
+      expense_date: expense.date || U.todayISO(),
+      method: expense.method || 'Transferencia',
+      notes: expense.notes || '',
+      created_by: supabaseUserId(me()),
+    };
+  }
+
+  async function saveExpense(expense) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    const user = me();
+    if (!user || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    if (!expense || !expense.id) return { ok: false, reason: 'invalid' };
+    const tk = await freshToken();
+    const saved = await upsert('expenses', expense.id, null, null, expensePayload(expense), tk);
+    expense.remoteUpdatedAt = (saved && saved.created_at) || new Date().toISOString();
+    RS.DB.save();
+    return { ok: true };
+  }
+
+  async function deleteExpense(id) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    const user = me();
+    if (!user || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    if (!id) return { ok: false, reason: 'no-id' };
+    const tk = await freshToken();
+    await RS.Supabase.request(`/rest/v1/expenses?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { Prefer: 'return=minimal' },
+    }, tk);
+    return { ok: true };
+  }
+
+  function boletaPayload(boleta) {
+    return {
+      provider: boleta.client || 'Recovery Studio SpA',
+      folio: String(boleta.number || ''),
+      gross_amount: Math.max(0, Number(boleta.gross) || 0),
+      retention_rate: Math.max(0, Math.min(100, Number(boleta.retentionRate) || 15.25)),
+      issue_date: boleta.date || U.todayISO(),
+      notes: boleta.notes || '',
+      created_by: supabaseUserId(me()),
+    };
+  }
+
+  async function saveBoleta(boleta) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    const user = me();
+    if (!user || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    if (!boleta || !boleta.id) return { ok: false, reason: 'invalid' };
+    const tk = await freshToken();
+    const saved = await upsert('boletas', boleta.id, null, null, boletaPayload(boleta), tk);
+    boleta.remoteUpdatedAt = (saved && saved.created_at) || new Date().toISOString();
+    RS.DB.save();
+    return { ok: true };
+  }
+
+  async function deleteBoleta(id) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    const user = me();
+    if (!user || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    if (!id) return { ok: false, reason: 'no-id' };
+    const tk = await freshToken();
+    await RS.Supabase.request(`/rest/v1/boletas?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { Prefer: 'return=minimal' },
+    }, tk);
+    return { ok: true };
+  }
+
+  /* Sube los gastos y boletas creados en este equipo antes de la sincronización. */
+  async function pushFinance(tk, isAdmin) {
+    if (!isAdmin) return 0;
+    const state = st();
+    let pushed = 0;
+    for (const expense of (state.expenses || [])) {
+      if (!expense || !expense.id || !expense.description || expense.remoteUpdatedAt) continue;
+      try {
+        const saved = await upsert('expenses', expense.id, null, null, expensePayload(expense), tk);
+        expense.remoteUpdatedAt = (saved && saved.created_at) || new Date().toISOString();
+        pushed += 1;
+      } catch (error) {
+        console.warn('No se pudo sincronizar el gasto', expense.id, error.message);
+      }
+    }
+    for (const boleta of (state.boletas || [])) {
+      if (!boleta || !boleta.id || !boleta.number || boleta.remoteUpdatedAt) continue;
+      try {
+        const saved = await upsert('boletas', boleta.id, null, null, boletaPayload(boleta), tk);
+        boleta.remoteUpdatedAt = (saved && saved.created_at) || new Date().toISOString();
+        pushed += 1;
+      } catch (error) {
+        console.warn('No se pudo sincronizar la boleta', boleta.id, error.message);
+      }
+    }
+    return pushed;
+  }
+
+  /* Cada evento de auditoría se guarda también en la nube. Si falla, la app
+     sigue funcionando con el registro local. */
+  async function pushAudit(entry, token) {
+    if (!entry || !entry.id || entry.synced) return { ok: false, reason: 'skip' };
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    try {
+      const tk = token || await freshToken();
+      const user = me();
+      const payload = {
+        client_id: entry.id,
+        actor_id: supabaseUserId(user),
+        actor_name: entry.actor || 'Sistema',
+        action: entry.action || 'Evento',
+        detail: entry.detail || '',
+        created_at: entry.at || new Date().toISOString(),
+      };
+      await RS.Supabase.request('/rest/v1/audit_log?on_conflict=client_id', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' },
+        body: JSON.stringify(payload),
+      }, tk);
+      entry.synced = true;
+      RS.DB.save();
+      return { ok: true };
+    } catch (error) {
+      console.warn('No se pudo guardar el evento de auditoría:', error.message);
+      return { ok: false, error: error.message };
+    }
+  }
+
+  /* Reintenta subir los eventos que quedaron pendientes por falta de conexión. */
+  async function pushAuditsBulk(tk) {
+    const pending = (st().audits || []).filter((entry) => entry && entry.id && !entry.synced);
+    if (!pending.length) return 0;
+    const user = me();
+    const actorId = supabaseUserId(user);
+    const rows = pending.map((entry) => ({
+      client_id: entry.id,
+      actor_id: actorId,
+      actor_name: entry.actor || 'Sistema',
+      action: entry.action || 'Evento',
+      detail: entry.detail || '',
+      created_at: entry.at || new Date().toISOString(),
+    }));
+    try {
+      await RS.Supabase.request('/rest/v1/audit_log?on_conflict=client_id', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' },
+        body: JSON.stringify(rows),
+      }, tk);
+      pending.forEach((entry) => { entry.synced = true; });
+      RS.DB.save();
+      return pending.length;
+    } catch (error) {
+      console.warn('No se pudieron subir los eventos de auditoría:', error.message);
+      return 0;
+    }
+  }
+
   async function push() {
     if (!configured()) return { ok: false, reason: 'no-config' };
     const user = me();
@@ -1177,6 +1636,9 @@
     pushed += await pushServices(tk, isAdmin);
     pushed += await pushBlockedSlots(tk, isAdmin);
     pushed += await pushMaxesBulk(tk, isAdmin);
+    pushed += await pushFinance(tk, isAdmin);
+    pushed += await pushQuotes(tk, isAdmin);
+    pushed += await pushAuditsBulk(tk);
     pushed += await pushSessions(tk, user, uid, isAdmin);
     pushed += await pushPayments(tk, user, uid, isAdmin);
     return { ok: true, pushed };
@@ -1224,6 +1686,12 @@
   }
 
   async function syncNow() {
+    // Sube primero lo pendiente de este equipo y luego trae los cambios de la nube.
+    try {
+      await push();
+    } catch (error) {
+      console.warn('No se pudieron subir los cambios pendientes:', error.message);
+    }
     const result = await pull();
     return result;
   }
@@ -1242,6 +1710,13 @@
     pushMaxes: pushMaxesForUser,
     saveBlockedSlot,
     deleteBlockedSlot,
+    submitQuote,
+    saveQuote,
+    saveExpense,
+    deleteExpense,
+    saveBoleta,
+    deleteBoleta,
+    pushAudit,
     notifyWaitlist,
     syncNow,
     startAutoSync,

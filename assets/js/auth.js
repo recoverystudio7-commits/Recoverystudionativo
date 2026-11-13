@@ -1226,6 +1226,16 @@
     st.quotes.unshift(quote);
     RS.DB.save();
     RS.data.addAudit(contact, 'Cotización solicitada', `${quote.ref} · ${company} · ${people} personas.`);
+    if (RS.SupabaseSync && RS.SupabaseSync.submitQuote) {
+      try {
+        await Promise.race([
+          RS.SupabaseSync.submitQuote(quote),
+          new Promise((resolve) => setTimeout(() => resolve({ ok: false, reason: 'timeout' }), 6000)),
+        ]);
+      } catch (error) {
+        console.warn('La cotización quedó guardada en este dispositivo:', error.message);
+      }
+    }
     RS.ui.lastQuote = quote;
     setLoading(submitter, true, 'Enviando…');
     setTimeout(() => {

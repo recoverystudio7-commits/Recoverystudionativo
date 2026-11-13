@@ -572,7 +572,7 @@
     });
   }
 
-  RS.forms['admin-expense'] = (form) => {
+  RS.forms['admin-expense'] = async (form) => {
     const amount = Number(form.amount.value);
     const description = form.description.value.trim();
     const err = document.getElementById('expense-error');
@@ -583,16 +583,25 @@
       }
       return;
     }
-    st().expenses.push({
+    const expense = {
       id: U.uid('exp'),
       date: form.date.value,
       category: form.category.value,
       description,
       amount,
       method: form.method.value,
-    });
+    };
+    st().expenses.push(expense);
     RS.DB.save();
     RS.data.addAudit(me().name, 'Gasto registrado', `${description} · ${U.fmtMoney(amount)}.`);
+    if (RS.SupabaseSync && RS.SupabaseSync.saveExpense) {
+      try {
+        await RS.SupabaseSync.saveExpense(expense);
+      } catch (error) {
+        console.warn('El gasto quedó solo en este equipo:', error.message);
+        UI.toast('Gasto guardado en este equipo, pero no se pudo subir a la nube.', 'warning', 6000);
+      }
+    }
     UI.closeModal();
     UI.toast('Gasto registrado.', 'success');
     RS.App.render(true);
@@ -632,7 +641,7 @@
     if (netEl) netEl.textContent = U.fmtMoney(gross - ret);
   };
 
-  RS.forms['admin-boleta'] = (form) => {
+  RS.forms['admin-boleta'] = async (form) => {
     const gross = Number(form.gross.value);
     const err = document.getElementById('boleta-error');
     if (!gross || gross <= 0) {
@@ -642,7 +651,7 @@
       }
       return;
     }
-    st().boletas.push({
+    const boleta = {
       id: U.uid('bol'),
       number: form.number.value.trim(),
       date: form.date.value,
@@ -650,9 +659,18 @@
       gross,
       retentionRate: Number(st().settings.retention) || 15.25,
       notes: form.notes.value.trim(),
-    });
+    };
+    st().boletas.push(boleta);
     RS.DB.save();
     RS.data.addAudit(me().name, 'Boleta registrada', `N° ${form.number.value} · ${U.fmtMoney(gross)} bruto.`);
+    if (RS.SupabaseSync && RS.SupabaseSync.saveBoleta) {
+      try {
+        await RS.SupabaseSync.saveBoleta(boleta);
+      } catch (error) {
+        console.warn('La boleta quedó solo en este equipo:', error.message);
+        UI.toast('Boleta guardada en este equipo, pero no se pudo subir a la nube.', 'warning', 6000);
+      }
+    }
     UI.closeModal();
     UI.toast('Boleta registrada.', 'success');
     RS.App.render(true);
@@ -737,13 +755,22 @@
         <button class="btn btn-primary" data-quote-save>${UI.icon('check', 16)} Guardar</button>`,
     });
     if (!root) return;
-    root.querySelector('[data-quote-save]').addEventListener('click', () => {
+    root.querySelector('[data-quote-save]').addEventListener('click', async () => {
       quote.status = root.querySelector('#q-status').value;
       quote.finalAmount = Math.max(0, Number(root.querySelector('#q-final').value) || 0);
       quote.notes = root.querySelector('#q-notes').value.trim();
       quote.updatedAt = new Date().toISOString();
+      quote.dirty = true;
       RS.DB.save();
       RS.data.addAudit(me().name, 'Cotización actualizada', `${quote.ref} · ${quote.company} · ${quote.status}.`);
+      if (RS.SupabaseSync && RS.SupabaseSync.saveQuote) {
+        try {
+          await RS.SupabaseSync.saveQuote(quote);
+        } catch (error) {
+          console.warn('La cotización quedó solo en este equipo:', error.message);
+          UI.toast('Cotización guardada en este equipo, pero no se pudo subir a la nube.', 'warning', 6000);
+        }
+      }
       UI.closeModal();
       UI.toast('Cotización actualizada.', 'success');
       RS.App.render(true);
@@ -848,11 +875,19 @@
       message: `Se eliminará “${expense.description}” por ${U.fmtMoney(expense.amount)}.`,
       okText: 'Eliminar',
       danger: true,
-    }).then((ok) => {
+    }).then(async (ok) => {
       if (!ok) return;
       st().expenses = st().expenses.filter((e) => e.id !== expense.id);
       RS.DB.save();
       RS.data.addAudit(me().name, 'Gasto eliminado', `${expense.description} · ${U.fmtMoney(expense.amount)}.`);
+      if (RS.SupabaseSync && RS.SupabaseSync.deleteExpense) {
+        try {
+          await RS.SupabaseSync.deleteExpense(expense.id);
+        } catch (error) {
+          console.warn('No se pudo borrar el gasto en la nube:', error.message);
+          UI.toast('Gasto eliminado en este equipo, pero no en la nube.', 'warning', 6000);
+        }
+      }
       UI.toast('Gasto eliminado.', 'info');
       RS.App.render();
     });
@@ -868,11 +903,19 @@
       message: `Se eliminará la boleta N° ${boleta.number} por ${U.fmtMoney(boleta.gross)}.`,
       okText: 'Eliminar',
       danger: true,
-    }).then((ok) => {
+    }).then(async (ok) => {
       if (!ok) return;
       st().boletas = st().boletas.filter((b) => b.id !== boleta.id);
       RS.DB.save();
       RS.data.addAudit(me().name, 'Boleta eliminada', `N° ${boleta.number}.`);
+      if (RS.SupabaseSync && RS.SupabaseSync.deleteBoleta) {
+        try {
+          await RS.SupabaseSync.deleteBoleta(boleta.id);
+        } catch (error) {
+          console.warn('No se pudo borrar la boleta en la nube:', error.message);
+          UI.toast('Boleta eliminada en este equipo, pero no en la nube.', 'warning', 6000);
+        }
+      }
       UI.toast('Boleta eliminada.', 'info');
       RS.App.render();
     });
