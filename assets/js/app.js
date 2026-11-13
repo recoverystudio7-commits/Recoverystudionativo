@@ -477,6 +477,9 @@
     if (el) el.disabled = true;
     try {
       const result = await RS.SupabaseSync.syncNow();
+      if (RS.VideoContent && RS.VideoContent.load) {
+        try { await RS.VideoContent.load(); } catch (e) { /* no bloquea */ }
+      }
       if (RS.ExerciseLibrary && RS.ExerciseLibrary.load) {
         try { await RS.ExerciseLibrary.load(); } catch (e) { /* no bloquea */ }
       }

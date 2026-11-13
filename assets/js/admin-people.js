@@ -367,6 +367,9 @@
         });
       });
       RS.DB.save();
+      if (RS.SupabaseSync && RS.SupabaseSync.pushMaxes) {
+        RS.SupabaseSync.pushMaxes(user.id).catch(() => {});
+      }
       RS.data.addAudit(me().name, 'Maximales actualizados', `${user.name} · ${parsed.length} registros.`);
       UI.closeModal();
       UI.toast('Maximales actualizados.', 'success');

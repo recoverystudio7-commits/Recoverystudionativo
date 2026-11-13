@@ -603,6 +603,119 @@
     return before === JSON.stringify(next) ? 0 : 1;
   }
 
+  /* Maximales: el admin los edita y el cliente los ve en su ficha.
+     Se guardan en client_maxes y se comparten entre dispositivos. */
+  async function pullMaxes(tk, isAdmin, uid) {
+    const path = isAdmin
+      ? '/rest/v1/client_maxes?select=*&order=recorded_at.desc'
+      : `/rest/v1/client_maxes?user_id=eq.${encodeURIComponent(uid)}&select=*`;
+    let rows;
+    try {
+      rows = await RS.Supabase.request(path, { method: 'GET' }, tk);
+    } catch (error) {
+      console.warn('No se pudieron traer los maximales:', error.message);
+      return 0;
+    }
+    if (!Array.isArray(rows)) return 0;
+    const state = st();
+    state.maxes = Array.isArray(state.maxes) ? state.maxes : [];
+    const remoteIds = new Set();
+    let merged = 0;
+    rows.forEach((row) => {
+      if (!row || !row.id || !row.user_id) return;
+      remoteIds.add(row.id);
+      const userId = localUserId(row.user_id);
+      if (!userId) return;
+      let extra = {};
+      try {
+        extra = row.notes ? JSON.parse(row.notes) : {};
+      } catch (e) {
+        extra = {};
+      }
+      const base = {
+        id: row.id,
+        userId,
+        exercise: row.exercise || '',
+        current: Number(row.weight) || 0,
+        previous: extra.previous === null || extra.previous === undefined ? null : Number(extra.previous),
+        unit: extra.unit || 'kg',
+        updatedAt: row.recorded_at || '',
+        remoteUpdatedAt: row.recorded_at || '',
+        dirty: false,
+      };
+      const existing = state.maxes.find((m) => m.id === row.id);
+      if (existing) {
+        if (!existing.dirty) {
+          const changed = existing.current !== base.current
+            || existing.exercise !== base.exercise
+            || existing.unit !== base.unit
+            || existing.previous !== base.previous
+            || existing.userId !== base.userId;
+          Object.assign(existing, base);
+          if (changed) merged += 1;
+        }
+        return;
+      }
+      state.maxes.push(base);
+      merged += 1;
+    });
+    // Quita de este equipo los maximales que ya no existen en la nube.
+    const before = state.maxes.length;
+    state.maxes = state.maxes.filter((m) => !(m && m.remoteUpdatedAt && !m.dirty && !remoteIds.has(m.id)));
+    merged += before - state.maxes.length;
+    return merged;
+  }
+
+  /* Bloqueos puntuales de agenda: se comparten para que el teléfono no
+     muestre disponible un horario bloqueado en el computador. */
+  async function pullBlockedSlots(tk) {
+    let rows;
+    try {
+      rows = await RS.Supabase.request(
+        '/rest/v1/blocked_slots?select=*&order=starts_at.asc',
+        { method: 'GET' },
+        tk
+      );
+    } catch (error) {
+      console.warn('No se pudieron traer los bloqueos de agenda:', error.message);
+      return 0;
+    }
+    if (!Array.isArray(rows)) return 0;
+    const state = st();
+    state.blockedSlots = Array.isArray(state.blockedSlots) ? state.blockedSlots : [];
+    const remoteIds = new Set();
+    let merged = 0;
+    rows.forEach((row) => {
+      if (!row || !row.id || !row.starts_at) return;
+      remoteIds.add(row.id);
+      const when = isoToChile(row.starts_at);
+      const starts = Date.parse(row.starts_at);
+      const ends = Date.parse(row.ends_at);
+      const duration = Number.isFinite(starts) && Number.isFinite(ends) && ends > starts
+        ? Math.round((ends - starts) / 60000)
+        : (Number(state.settings.slot) || 60);
+      const base = {
+        id: row.id,
+        date: when.date,
+        time: when.time,
+        duration,
+        actor: (localUserBySupabaseId(row.created_by) || {}).name || '',
+        remoteUpdatedAt: row.created_at || null,
+      };
+      const existing = state.blockedSlots.find((b) => b.id === row.id);
+      if (existing) {
+        Object.assign(existing, base);
+        return;
+      }
+      state.blockedSlots.push(base);
+      merged += 1;
+    });
+    const before = state.blockedSlots.length;
+    state.blockedSlots = state.blockedSlots.filter((b) => !(b && b.remoteUpdatedAt && !remoteIds.has(b.id)));
+    merged += before - state.blockedSlots.length;
+    return merged;
+  }
+
   async function pull() {
     if (!configured()) return { ok: false, reason: 'no-config' };
     const user = me();
@@ -617,16 +730,18 @@
       console.warn('No se pudieron traer perfiles:', e.message);
       return 0;
     });
-    const [services, sessions, payments, accounts, recurring] = await Promise.all([
+    const [services, sessions, payments, accounts, recurring, maxes, blocked] = await Promise.all([
       pullServices(tk, isAdmin).catch((e) => { console.warn('No se pudo traer el catálogo:', e.message); return 0; }),
       pullSessions(tk, isAdmin, uid),
       pullPayments(tk, isAdmin, uid),
       pullAccounts(tk, isAdmin, uid).catch((e) => { console.warn('No se pudieron traer los saldos:', e.message); return 0; }),
       pullRecurringBlocks(tk),
+      pullMaxes(tk, isAdmin, uid).catch((e) => { console.warn('No se pudieron traer los maximales:', e.message); return 0; }),
+      pullBlockedSlots(tk).catch((e) => { console.warn('No se pudieron traer los bloqueos:', e.message); return 0; }),
     ]);
 
     RS.DB.save();
-    return { ok: true, merged: profiles + services + sessions + payments + accounts + recurring };
+    return { ok: true, merged: profiles + services + sessions + payments + accounts + recurring + maxes + blocked };
   }
 
   /* ----------------------------- push ----------------------------------- */
@@ -896,6 +1011,159 @@
     return pushed;
   }
 
+  /* Sube los maximales de un cliente. Se llama justo después de guardarlos
+     en la ficha, para que el cliente los vea en su teléfono. */
+  async function pushMaxesForUser(userId) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    const user = RS.data.getUser(userId);
+    const uid = supabaseUserId(user);
+    if (!uid || me().role !== 'admin') return { ok: false, reason: 'no-admin' };
+    const tk = await freshToken();
+    const state = st();
+    const local = (state.maxes || []).filter((m) => m && m.id && m.userId === userId && m.exercise);
+    let remote = [];
+    try {
+      remote = await RS.Supabase.request(
+        `/rest/v1/client_maxes?user_id=eq.${encodeURIComponent(uid)}&select=id`,
+        { method: 'GET' },
+        tk
+      );
+    } catch (error) {
+      console.warn('No se pudieron leer los maximales remotos:', error.message);
+      remote = [];
+    }
+    if (Array.isArray(remote)) {
+      const localIds = new Set(local.map((m) => m.id));
+      for (const row of remote) {
+        if (!row || !row.id || localIds.has(row.id)) continue;
+        try {
+          await RS.Supabase.request(`/rest/v1/client_maxes?id=eq.${encodeURIComponent(row.id)}`, {
+            method: 'DELETE',
+            headers: { Prefer: 'return=minimal' },
+          }, tk);
+        } catch (error) {
+          console.warn('No se pudo eliminar un maximal:', error.message);
+        }
+      }
+    }
+    let pushed = 0;
+    for (const m of local) {
+      const payload = {
+        user_id: uid,
+        exercise: m.exercise,
+        weight: Math.max(0, Number(m.current) || 0),
+        recorded_at: String(m.updatedAt || U.todayISO()).slice(0, 10),
+        notes: JSON.stringify({
+          unit: m.unit || 'kg',
+          previous: m.previous === null || m.previous === undefined ? null : Number(m.previous),
+        }),
+      };
+      try {
+        await upsert('client_maxes', m.id, null, null, payload, tk);
+        m.remoteUpdatedAt = payload.recorded_at;
+        m.dirty = false;
+        pushed += 1;
+      } catch (error) {
+        console.warn('No se pudo sincronizar un maximal:', error.message);
+      }
+    }
+    RS.DB.save();
+    return { ok: true, pushed };
+  }
+
+  async function saveBlockedSlot(block) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    if (!block || !block.id || !block.date || !block.time) return { ok: false, reason: 'invalid' };
+    const startsAt = chileToIso(block.date, block.time);
+    if (!startsAt) return { ok: false, reason: 'invalid' };
+    const tk = await freshToken();
+    const duration = Number(block.duration) || Number(st().settings.slot) || 60;
+    const payload = {
+      starts_at: startsAt,
+      ends_at: new Date(new Date(startsAt).getTime() + duration * 60000).toISOString(),
+      reason: block.reason || block.actor || '',
+      created_by: uid,
+    };
+    const saved = await upsert('blocked_slots', block.id, null, null, payload, tk);
+    return { ok: true, id: block.id, row: saved };
+  }
+
+  async function deleteBlockedSlot(id) {
+    if (!configured()) return { ok: false, reason: 'no-config' };
+    if (!id) return { ok: false, reason: 'no-id' };
+    const user = me();
+    const uid = supabaseUserId(user);
+    if (!uid || user.role !== 'admin') return { ok: false, reason: 'no-admin' };
+    const tk = await freshToken();
+    await RS.Supabase.request(`/rest/v1/blocked_slots?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { Prefer: 'return=minimal' },
+    }, tk);
+    return { ok: true };
+  }
+
+  /* Sube bloqueos creados en este equipo que todavía no estaban en la nube. */
+  async function pushBlockedSlots(tk, isAdmin) {
+    if (!isAdmin) return 0;
+    const state = st();
+    let pushed = 0;
+    for (const block of (state.blockedSlots || [])) {
+      if (!block || !block.id || !block.date || !block.time || block.remoteUpdatedAt) continue;
+      const startsAt = chileToIso(block.date, block.time);
+      if (!startsAt) continue;
+      const duration = Number(block.duration) || Number(state.settings.slot) || 60;
+      const payload = {
+        starts_at: startsAt,
+        ends_at: new Date(new Date(startsAt).getTime() + duration * 60000).toISOString(),
+        reason: block.reason || block.actor || '',
+        created_by: supabaseUserId(me()),
+      };
+      try {
+        const saved = await upsert('blocked_slots', block.id, null, null, payload, tk);
+        block.remoteUpdatedAt = (saved && saved.created_at) || new Date().toISOString();
+        pushed += 1;
+      } catch (error) {
+        console.warn('No se pudo sincronizar el bloqueo', block.id, error.message);
+      }
+    }
+    return pushed;
+  }
+
+  /* Sube los maximales antiguos que aún no estaban en la nube. */
+  async function pushMaxesBulk(tk, isAdmin) {
+    if (!isAdmin) return 0;
+    const state = st();
+    let pushed = 0;
+    for (const m of (state.maxes || [])) {
+      if (!m || !m.id || !m.exercise || m.remoteUpdatedAt) continue;
+      const owner = RS.data.getUser(m.userId);
+      const ownerId = supabaseUserId(owner);
+      if (!ownerId) continue;
+      const payload = {
+        user_id: ownerId,
+        exercise: m.exercise,
+        weight: Math.max(0, Number(m.current) || 0),
+        recorded_at: String(m.updatedAt || U.todayISO()).slice(0, 10),
+        notes: JSON.stringify({
+          unit: m.unit || 'kg',
+          previous: m.previous === null || m.previous === undefined ? null : Number(m.previous),
+        }),
+      };
+      try {
+        await upsert('client_maxes', m.id, null, null, payload, tk);
+        m.remoteUpdatedAt = payload.recorded_at;
+        m.dirty = false;
+        pushed += 1;
+      } catch (error) {
+        console.warn('No se pudo sincronizar el maximal', m.id, error.message);
+      }
+    }
+    return pushed;
+  }
+
   async function push() {
     if (!configured()) return { ok: false, reason: 'no-config' };
     const user = me();
@@ -907,6 +1175,8 @@
     // Primero catálogo (servicios/planes), luego perfiles/sesiones; pagos al final.
     let pushed = 0;
     pushed += await pushServices(tk, isAdmin);
+    pushed += await pushBlockedSlots(tk, isAdmin);
+    pushed += await pushMaxesBulk(tk, isAdmin);
     pushed += await pushSessions(tk, user, uid, isAdmin);
     pushed += await pushPayments(tk, user, uid, isAdmin);
     return { ok: true, pushed };
@@ -969,6 +1239,9 @@
     deletePayment,
     saveRecurringBlock,
     deleteRecurringBlock,
+    pushMaxes: pushMaxesForUser,
+    saveBlockedSlot,
+    deleteBlockedSlot,
     notifyWaitlist,
     syncNow,
     startAutoSync,

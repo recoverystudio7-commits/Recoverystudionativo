@@ -686,14 +686,32 @@
       danger: true,
     });
     if (!ok) return;
-    RS.data.blockSlot(date, time, me().name);
+    const block = RS.data.blockSlot(date, time, me().name);
+    if (block && RS.SupabaseSync && RS.SupabaseSync.saveBlockedSlot) {
+      RS.SupabaseSync.saveBlockedSlot(block).then((result) => {
+        if (!result || !result.ok) {
+          UI.toast('El bloqueo quedó solo en este equipo. Se subirá cuando recuperes la conexión.', 'error', 6000);
+        }
+      }).catch(() => {
+        UI.toast('El bloqueo quedó solo en este equipo. Se subirá cuando recuperes la conexión.', 'error', 6000);
+      });
+    }
     RS.data.addAudit(me().name, 'Horario bloqueado', `${date} ${time}.`);
     UI.toast(`Horario ${time} bloqueado.`, 'success');
     RS.App.render(true);
   };
 
-  RS.actions['admin-unblock-slot'] = (el) => {
-    const slot = RS.data.unblockSlot(el.dataset.id);
+  RS.actions['admin-unblock-slot'] = async (el) => {
+    const id = el.dataset.id;
+    try {
+      if (RS.SupabaseSync && RS.SupabaseSync.deleteBlockedSlot) {
+        await RS.SupabaseSync.deleteBlockedSlot(id);
+      }
+    } catch (error) {
+      UI.toast(`No se pudo desbloquear en la nube: ${error.message}`, 'error', 6000);
+      return;
+    }
+    const slot = RS.data.unblockSlot(id);
     if (!slot) return;
     RS.data.addAudit(me().name, 'Horario desbloqueado', `${slot.date} ${slot.time}.`);
     UI.toast(`Horario ${slot.time} disponible nuevamente.`, 'success');

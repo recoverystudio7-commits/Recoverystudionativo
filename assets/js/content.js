@@ -106,6 +106,36 @@
     st().settings.coachProfession = String(studioRows[0].config.coachProfession || st().settings.coachProfession || 'Kinesiólogo · Magíster');
     st().settings.studioName = String(studioRows[0].config.studioName || st().settings.studioName || 'Recovery Studio');
     st().settings.freeTrialEnabled = studioRows[0].config.freeTrialEnabled !== false;
+
+    // El resto de la configuración (horarios, banco, política, retención, dirección y WhatsApp)
+    // se aplica solo cuando la nube tiene una versión más nueva que este equipo.
+    const cloud = studioRows[0].config;
+    const cloudStamp = Number(cloud.settingsUpdatedAt) || 0;
+    const localStamp = Number(st().settings.settingsUpdatedAt) || 0;
+    if (cloudStamp > localStamp) {
+      const settings = st().settings;
+      if (Array.isArray(cloud.openDays)) {
+        settings.openDays = cloud.openDays.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+      }
+      if (cloud.hoursByDay && typeof cloud.hoursByDay === 'object') {
+        settings.hoursByDay = cloud.hoursByDay;
+      }
+      ['start', 'end'].forEach((key) => {
+        if (typeof cloud[key] === 'string' && cloud[key]) settings[key] = cloud[key];
+      });
+      [['slot', 5], ['horizonDays', 1], ['leadHours', 0], ['policyHours', 1], ['autoLockMin', 0]].forEach(([key, min]) => {
+        const value = Number(cloud[key]);
+        if (Number.isFinite(value) && value >= min) settings[key] = value;
+      });
+      const retention = Number(cloud.retention);
+      if (Number.isFinite(retention) && retention >= 0 && retention <= 100) settings.retention = retention;
+      if (typeof cloud.whatsapp === 'string' && cloud.whatsapp) settings.whatsapp = cloud.whatsapp;
+      if (typeof cloud.address === 'string' && cloud.address) settings.address = cloud.address;
+      if (cloud.bank && typeof cloud.bank === 'object') {
+        settings.bank = Object.assign({}, settings.bank || {}, cloud.bank);
+      }
+      settings.settingsUpdatedAt = cloudStamp;
+    }
   }
 
   async function saveClubRecoveryReward(reward) {

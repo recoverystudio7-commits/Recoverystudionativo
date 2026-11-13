@@ -188,7 +188,6 @@
       UI.toast('Define el premio de Club Recovery.', 'error');
       return;
     }
-    await RS.VideoContent.saveClubRecoveryReward(clubRecoveryReward);
     s.hoursByDay = hoursByDay;
     s.openDays = enabledDays;
     s.start = hoursByDay[enabledDays[0]].start;
@@ -214,10 +213,35 @@
       account: form.account.value.trim(),
       email: form.bankEmail.value.trim(),
     };
+    const settingsPatch = {
+      openDays: s.openDays,
+      hoursByDay: s.hoursByDay,
+      start: s.start,
+      end: s.end,
+      slot: s.slot,
+      horizonDays: s.horizonDays,
+      leadHours: s.leadHours,
+      policyHours: s.policyHours,
+      autoLockMin: s.autoLockMin,
+      retention: s.retention,
+      whatsapp: s.whatsapp,
+      address: s.address,
+      clubRecoveryReward: s.clubRecoveryReward,
+      clubRecoveryStamps: s.clubRecoveryStamps,
+      clubRecoveryConsistencyMonths: s.clubRecoveryConsistencyMonths,
+      coachName: s.coachName,
+      coachProfession: s.coachProfession,
+      studioName: s.studioName,
+      freeTrialEnabled: s.freeTrialEnabled,
+      bank: s.bank,
+      settingsUpdatedAt: Date.now(),
+    };
     try {
-      await RS.VideoContent.saveStudioConfig({ coachName: s.coachName, coachProfession: s.coachProfession, studioName: s.studioName, freeTrialEnabled: s.freeTrialEnabled });
+      await RS.VideoContent.saveStudioConfig(settingsPatch);
+      s.settingsUpdatedAt = settingsPatch.settingsUpdatedAt;
     } catch (error) {
-      console.warn('No se pudo sincronizar la identidad del studio con Supabase.', error);
+      console.warn('No se pudo sincronizar la configuración del studio con Supabase.', error);
+      UI.toast('Se guardó en este equipo, pero no se pudo subir a la nube. Revisa tu conexión e intenta de nuevo.', 'error', 7000);
     }
     RS.DB.save();
     RS.data.addAudit(me().name, 'Configuración actualizada', `${enabledDays.length} días de atención · Política ${s.policyHours} h · Retención ${s.retention}% · Premio Club Recovery: ${clubRecoveryReward}.`);

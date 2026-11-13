@@ -544,6 +544,7 @@
         studioName: 'Recovery Studio',
         discountCodes: [],
         freeTrialEnabled: true,
+        settingsUpdatedAt: 0,
         bank: {
           holder: 'DANIEL ESTEBAN BARRUETO',
           rut: '17.375.282-2',
@@ -636,6 +637,7 @@
               : 'Kinesiólogo · Magíster';
             state.settings.studioName = String(state.settings.studioName || BRAND.name);
             state.settings.freeTrialEnabled = state.settings.freeTrialEnabled !== false;
+            state.settings.settingsUpdatedAt = Number(state.settings.settingsUpdatedAt) || 0;
             // Dirección oficial: corrige datos antiguos guardados en el navegador.
             if (!state.settings.address || /providencia/i.test(String(state.settings.address))) {
               state.settings.address = 'Gorbea, Región de la Araucanía';
