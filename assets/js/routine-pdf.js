@@ -46,12 +46,19 @@
           .filter(Boolean);
         const line = params.length ? params.join(' · ') : '';
         const note = String(it.notes || '').trim();
+        const desc = String(it.description || '').trim();
+        const cues = String(it.cues || '').trim();
+        const img = String(it.gifUrl || it.imageUrl || '').trim();
         return '<div class="ex">'
           + '<div class="ex-n">' + String(ii + 1).padStart(2, '0') + '</div>'
           + '<div class="ex-body"><strong>' + esc(it.name) + '</strong>'
           + (line ? '<span class="ex-line">' + esc(line) + '</span>' : '')
+          + (desc ? '<span class="ex-desc">' + esc(desc) + '</span>' : '')
+          + (cues ? '<span class="ex-cues"><b>Indicaciones:</b> ' + esc(cues) + '</span>' : '')
           + (note ? '<span class="ex-note">' + esc(note) + '</span>' : '')
-          + '</div></div>';
+          + '</div>'
+          + (img ? '<img class="ex-img" src="' + esc(img) + '" alt="' + esc(it.name) + '" onerror="this.style.display=\'none\'">' : '')
+          + '</div>';
       }).join('');
 
       const stretches = (d.stretches || []).filter((s) => s.name && String(s.name).trim());
@@ -111,7 +118,10 @@
       + '.ex-body { display: flex; flex-direction: column; gap: 1px; }'
       + '.ex-body strong { font-size: 13.5px; }'
       + '.ex-line { font-size: 12px; color: #475569; }'
+      + '.ex-desc { font-size: 12px; color: #475569; line-height: 1.45; }'
+      + '.ex-cues { font-size: 11px; color: #64748b; line-height: 1.4; }'
       + '.ex-note { font-size: 11px; color: #94a3b8; }'
+      + '.ex-img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; flex-shrink: 0; }'
       + '.stretches { margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 10px; }'
       + '.stretches-title { font-size: 12px; font-weight: 700; color: #0A2342; margin-bottom: 8px; }'
       + '.st-group { margin: 6px 0; }'
@@ -139,7 +149,18 @@
       + daysHtml
       + '<div class="foot"><span>' + esc(id.studioName) + '</span><span>' + esc(id.coachName) + ' · ' + esc(id.coachProfession) + '</span></div>'
       + '</div>'
-      + '<script>window.addEventListener("load", function () { setTimeout(function () { window.focus(); window.print(); }, 250); });</script>'
+      + '<script>'
+      + 'window.addEventListener("load", function () {'
+      + '  var imgs = Array.prototype.slice.call(document.querySelectorAll("img"));'
+      + '  var printed = false;'
+      + '  function remaining() { return imgs.filter(function (i) { return !i.complete; }).length; }'
+      + '  function printNow() { if (printed) return; printed = true; window.focus(); window.print(); }'
+      + '  function maybe() { if (remaining() === 0) printNow(); }'
+      + '  if (remaining() === 0) { setTimeout(printNow, 150); return; }'
+      + '  imgs.forEach(function (i) { i.addEventListener("load", maybe); i.addEventListener("error", maybe); });'
+      + '  setTimeout(printNow, 4000);'
+      + '});'
+      + '</script>'
       + '</body></html>';
   }
 
