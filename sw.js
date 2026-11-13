@@ -1,5 +1,5 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v58';
+const CACHE = 'recovery-studio-v59';
 const ASSETS = [
   './',
   './index.html',
@@ -14,7 +14,7 @@ const ASSETS = [
   './assets/css/views.css?v=13',
   './assets/css/landing.css',
   './assets/css/legal.css',
-  './assets/js/data.js?v=16',
+  './assets/js/data.js?v=17',
   './assets/js/analytics.js?v=1',
   './assets/js/ui.js?v=3',
   './assets/js/auth.js?v=18',
@@ -24,12 +24,12 @@ const ASSETS = [
   './assets/js/planning.js?v=1',
   './assets/js/exercise-library.js?v=7',
   './assets/js/admin-library.js?v=3',
-  './assets/js/admin-club.js?v=4',
+  './assets/js/admin-club.js?v=5',
   './assets/js/admin-alerts.js?v=1',
-  './assets/js/admin-money.js?v=9',
+  './assets/js/admin-money.js?v=10',
   './assets/js/admin-system.js?v=5',
   './assets/js/content.js?v=7',
-  './assets/js/reviews.js?v=5',
+  './assets/js/reviews.js?v=6',
   './assets/js/supabase-client.js?v=5',
   './assets/js/supabase-sync.js?v=11',
   './assets/js/routine-sync.js?v=2',

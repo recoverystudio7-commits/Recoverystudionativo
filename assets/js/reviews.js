@@ -151,7 +151,7 @@
 
   function serviceOptions() {
     const names = [];
-    ['Sauna húmedo + recovery', 'Recovery + movilidad', 'Recovery deportivo', 'Entrenamiento 1:1'].forEach((name) => names.push(name));
+    ['Sauna húmedo + recovery', 'Recovery + movilidad', 'Recovery deportivo', 'Entrenamiento personal'].forEach((name) => names.push(name));
     try {
       (RS.DB.get().services || []).forEach((service) => {
         if (service && service.active && service.name && names.indexOf(service.name) === -1) names.push(service.name);

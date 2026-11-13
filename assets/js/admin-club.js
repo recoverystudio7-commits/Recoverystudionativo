@@ -76,7 +76,7 @@
   }
 
   function rewardSuggestions() {
-    const names = new Set(['Sesión de sauna', 'Sesión de recuperación', 'Masaje de descarga', 'Evaluación + pauta']);
+    const names = new Set(['Sesión de sauna', 'Sesión de recuperación', 'Masaje de descarga', 'Evaluación inicial + plan']);
     st().services
       .filter((service) => service.active && ['Sesión', 'Asesoría', 'Plan'].includes(service.kind))
       .forEach((service) => names.add(service.name));
@@ -247,7 +247,7 @@
       return;
     }
 
-    const suggestions = ['10% de descuento en tu próximo plan', 'Sesión de sauna gratis', 'Semana de recuperación gratis', 'Evaluación + pauta de regalo'];
+    const suggestions = ['10% de descuento en tu próximo plan', 'Sesión de sauna gratis', 'Semana de recuperación gratis', 'Evaluación inicial + plan de regalo'];
     let coupon = rewardLabel();
     let note = '';
 
