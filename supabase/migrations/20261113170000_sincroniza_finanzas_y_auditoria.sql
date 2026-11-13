@@ -26,3 +26,6 @@ create policy audit_insert_own on public.audit_log
     or (select public.is_studio_admin())
   );
 grant insert on public.audit_log to authenticated;
+
+-- Refresca el esquema para que la API vea las columnas nuevas al instante.
+notify pgrst, 'reload schema';

@@ -1569,12 +1569,14 @@
   async function pushAudit(entry, token) {
     if (!entry || !entry.id || entry.synced) return { ok: false, reason: 'skip' };
     if (!configured()) return { ok: false, reason: 'no-config' };
+    const user = me();
+    const actorId = supabaseUserId(user);
+    if (!actorId && (!user || user.role !== 'admin')) return { ok: false, reason: 'no-actor' };
     try {
       const tk = token || await freshToken();
-      const user = me();
       const payload = {
         client_id: entry.id,
-        actor_id: supabaseUserId(user),
+        actor_id: actorId,
         actor_name: entry.actor || 'Sistema',
         action: entry.action || 'Evento',
         detail: entry.detail || '',
@@ -1600,6 +1602,7 @@
     if (!pending.length) return 0;
     const user = me();
     const actorId = supabaseUserId(user);
+    if (!actorId && (!user || user.role !== 'admin')) return 0;
     const rows = pending.map((entry) => ({
       client_id: entry.id,
       actor_id: actorId,
