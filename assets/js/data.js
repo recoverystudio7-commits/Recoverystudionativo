@@ -546,7 +546,7 @@
         freeTrialEnabled: true,
         settingsUpdatedAt: 0,
         bank: {
-          holder: 'DANIEL ESTEBAN BARRUETO',
+          holder: 'DANIEL ESTEBAN BARRUETO JOPIA',
           rut: '17.375.282-2',
           bankName: 'Banco BCI',
           accountType: 'Cuenta Corriente',
@@ -642,13 +642,18 @@
             if (!state.settings.address || /providencia/i.test(String(state.settings.address))) {
               state.settings.address = 'Gorbea, Región de la Araucanía';
             }
+            // Titular bancario oficial con apellido completo.
+            if (state.settings.bank && state.settings.bank.holder === 'DANIEL ESTEBAN BARRUETO') {
+              state.settings.bank.holder = 'DANIEL ESTEBAN BARRUETO JOPIA';
+            }
             // Bloques de agenda en 30 minutos.
             if (!state.settings.slot || Number(state.settings.slot) === 60) {
               state.settings.slot = 30;
             }
             state.videoCapsules = Array.isArray(parsed.videoCapsules) ? parsed.videoCapsules : [];
             state.recurringBlocks = Array.isArray(parsed.recurringBlocks) ? parsed.recurringBlocks : [];
-            if (normalizePlanData()) DB.save();
+            normalizePlanData();
+            DB.save();
             return state;
           }
         } catch (e) {
@@ -1111,7 +1116,7 @@
 
   function bankData() {
     return (state && state.settings.bank) || {
-      holder: 'DANIEL ESTEBAN BARRUETO',
+      holder: 'DANIEL ESTEBAN BARRUETO JOPIA',
       rut: '17.375.282-2',
       bankName: 'Banco BCI',
       accountType: 'Cuenta Corriente',

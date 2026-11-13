@@ -1035,7 +1035,7 @@
             <td><strong>${U.fmtMoney(p.price)}</strong></td>
             <td>${U.fmtMoney(Math.round(p.price / Math.max(1, p.sessions)))}</td>
             <td>${p.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td>
-            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${p.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${p.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${p.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${p.id}" title="${p.active ? 'Desactivar' : 'Activar'}">${UI.icon(p.active ? 'eye-off' : 'eye', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${p.id}" title="Eliminar">${UI.icon('trash', 16)}</button></div></td>
+            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${p.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${p.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${p.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${p.id}" title="${p.active ? 'Desactivar' : 'Activar'}">${UI.icon(p.active ? 'eye-off' : 'eye', 16)}</button></div></td>
           </tr>`).join('')}</tbody>
         </table></div>
       </section>
@@ -1051,7 +1051,7 @@
             <td><strong>${U.fmtMoney(s.price)}</strong></td>
             <td>${U.fmtMoney(s.companyPrice || 0)}</td>
             <td>${s.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td>
-            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${s.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${s.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${s.id}">${UI.icon(s.active ? 'eye-off' : 'eye', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${s.id}" title="Eliminar">${UI.icon('trash', 16)}</button></div></td>
+            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${s.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${s.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${s.id}">${UI.icon(s.active ? 'eye-off' : 'eye', 16)}</button></div></td>
           </tr>`).join('')}</tbody>
         </table></div>
       </section>
@@ -1060,7 +1060,7 @@
         <div class="card-head head-row"><div><h2 class="card-title">Programa empresas</h2><p class="card-sub">Valor referencial por persona para cotizaciones.</p></div><button class="link-btn" data-action="catalog-new" data-kind="Empresa">+ Agregar programa</button></div>
         <div class="table-wrap"><table class="table">
           <thead><tr><th>Programa</th><th>Valor empresa / persona</th><th>Estado</th><th></th></tr></thead>
-          <tbody>${companies.map((s) => `<tr><td><strong>${U.esc(s.name)}</strong><br><span class="muted small">${U.esc(s.description)}</span></td><td><strong>${U.fmtMoney(s.companyPrice)}</strong></td><td>${s.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td><td><div class="table-actions"><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}">${UI.icon('edit', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${s.id}">${UI.icon('trash', 16)}</button></div></td></tr>`).join('')}</tbody>
+          <tbody>${companies.map((s) => `<tr><td><strong>${U.esc(s.name)}</strong><br><span class="muted small">${U.esc(s.description)}</span></td><td><strong>${U.fmtMoney(s.companyPrice)}</strong></td><td>${s.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td><td><div class="table-actions"><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}">${UI.icon('edit', 16)}</button><button class="icon-btn ${s.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${s.id}" title="${s.active ? 'Desactivar' : 'Activar'}">${UI.icon(s.active ? 'eye-off' : 'eye', 16)}</button></div></td></tr>`).join('')}</tbody>
         </table></div>
       </section>` : ''}
     </div>`;
@@ -1402,29 +1402,6 @@
     RS.data.addAudit(me().name, 'Catálogo actualizado', `${service.name} ${service.active ? 'activado' : 'desactivado'}.`);
     UI.toast(`${service.name} ${service.active ? 'activado' : 'desactivado'}.`, 'success');
     RS.App.render();
-  };
-
-  RS.actions['catalog-delete'] = (el) => {
-    const service = RS.data.getService(el.dataset.id);
-    if (!service) return;
-    const used = st().sessions.some((s) => s.serviceId === service.id);
-    if (used) {
-      UI.toast('Este servicio tiene sesiones asociadas. Desactívalo en lugar de eliminarlo.', 'error', 5000);
-      return;
-    }
-    UI.confirm({
-      title: 'Eliminar del catálogo',
-      message: `Se eliminará “${service.name}” del catálogo. Las compras y cotizaciones históricas no se modifican.`,
-      okText: 'Eliminar',
-      danger: true,
-    }).then((ok) => {
-      if (!ok) return;
-      st().services = st().services.filter((s) => s.id !== service.id);
-      RS.DB.save();
-      RS.data.addAudit(me().name, 'Servicio eliminado', service.name);
-      UI.toast('Servicio eliminado.', 'info');
-      RS.App.render();
-    });
   };
 
   RS.inputs['user-search'] = (el) => {
