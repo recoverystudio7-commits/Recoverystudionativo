@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    Recovery Studio — Autenticación, seguridad y cotizaciones públicas
    ========================================================================== */
 (function () {
@@ -103,8 +103,35 @@
       token
     );
     const profile = Array.isArray(rows) ? rows[0] : null;
-    if (!profile || !profile.active) {
-      throw new Error('Supabase autenticó la cuenta, pero no encontramos un perfil activo. Verifica que las migraciones de perfiles estén aplicadas y contacta al administrador.');
+    if (!profile) {
+      const meta = authUser.user_metadata || authUser.user_meta_data || {};
+      const metaName = meta.full_name || meta.name || '';
+      const metaPhone = meta.phone || '';
+      let created = null;
+      try {
+        created = await RS.Supabase.request('/rest/v1/profiles', {
+          method: 'POST',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({
+            id: authUser.id,
+            email: authUser.email || '',
+            full_name: metaName || '',
+            phone: metaPhone || '',
+            goal: '',
+            role: 'user',
+            active: true,
+          }),
+        }, token);
+      } catch (createError) {
+        console.warn('No se pudo crear el perfil automÃ¡ticamente:', createError.message);
+      }
+      profile = Array.isArray(created) ? created[0] : created;
+      if (!profile) {
+        throw new Error('Tu usuario ya existe en Supabase, pero falta completar su perfil. No vuelvas a registrarte; contacta al administrador para reparar la cuenta.');
+      }
+    }
+    if (!profile.active) {
+      throw new Error('Supabase autenticÃ³ la cuenta, pero no encontramos un perfil activo. Verifica que las migraciones de perfiles estÃ©n aplicadas y contacta al administrador.');
     }
 
     const accounts = await RS.Supabase.request(
@@ -114,7 +141,21 @@
     );
     const account = Array.isArray(accounts) ? accounts[0] : null;
     if (!account) {
-      throw new Error('La cuenta inició sesión, pero falta su registro inicial en Supabase. Aplica la migración de reparación de perfiles y vuelve a intentar.');
+      try {
+        const createdAcct = await RS.Supabase.request('/rest/v1/client_accounts', {
+          method: 'POST',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({
+            user_id: authUser.id,
+            credits: 0,
+            plan_label: '',
+          }),
+        }, token);
+        account = Array.isArray(createdAcct) ? createdAcct[0] : createdAcct;
+      } catch (accountError) {
+        console.warn('No se pudo crear la cuenta de cliente; se usarÃ¡ saldo 0:', accountError.message);
+        account = { credits: 0, plan_label: '' };
+      }
     }
     let user = RS.data.getUser(authUser.id);
     if (!user) {
