@@ -906,12 +906,16 @@ select.input {
   height: 20px;
   padding: 0 8px;
   border-radius: 20px;
-  background: var(--orange);
+  background: #7a3319;
   color: #fff;
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .tag-popular.inline {
