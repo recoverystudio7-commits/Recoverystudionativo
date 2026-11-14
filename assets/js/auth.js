@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Recovery Studio — Autenticación, seguridad y cotizaciones públicas
    ========================================================================== */
 (function () {
@@ -18,8 +18,6 @@
   let pendingAdmin = null;
   let locking = false;
   let activityBound = false;
-  let adminSyncAt = 0;
-  let adminSyncPromise = null;
 
   function state() {
     return RS.DB.get();
@@ -99,67 +97,25 @@
       throw new Error('La sesión de Supabase expiró. Ingresa nuevamente.');
     }
     const token = supabaseSession.access_token;
-
-    /* ── Perfil: leer o crear si no existe (registro nuevo) ── */
     const rows = await RS.Supabase.request(
-      `/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=*`,
+      `/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=id,email,full_name,phone,goal,role,active`,
       { method: 'GET' },
       token
     );
-    let profile = Array.isArray(rows) ? rows[0] : null;
-    if (!profile) {
-      const meta = authUser.user_metadata || authUser.user_meta_data || {};
-      const metaName = meta.full_name || meta.name || '';
-      const metaPhone = meta.phone || '';
-      let created = null;
-      try {
-        created = await RS.Supabase.request('/rest/v1/profiles', {
-          method: 'POST',
-          headers: { Prefer: 'return=representation' },
-          body: JSON.stringify({
-            id: authUser.id,
-            email: authUser.email || '',
-            full_name: metaName || '',
-            phone: metaPhone || '',
-            goal: '',
-            role: 'user',
-            active: true,
-          }),
-        }, token);
-      } catch (createError) {
-        console.warn('No se pudo crear el perfil automáticamente:', createError.message);
-      }
-      profile = Array.isArray(created) ? created[0] : created;
-      if (!profile) {
-        throw new Error('Tu usuario ya existe en Supabase, pero falta completar su perfil. No vuelvas a registrarte; contacta al administrador para reparar la cuenta.');
-      }
+    const profile = Array.isArray(rows) ? rows[0] : null;
+    if (!profile || !profile.active) {
+      throw new Error('Supabase autenticó la cuenta, pero no encontramos un perfil activo. Verifica que las migraciones de perfiles estén aplicadas y contacta al administrador.');
     }
-    if (!profile.active) throw new Error('Tu cuenta está desactivada. Contacta al administrador.');
 
     const accounts = await RS.Supabase.request(
-      `/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(authUser.id)}&select=*`,
+      `/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(authUser.id)}&select=credits,plan_label`,
       { method: 'GET' },
       token
     );
     const account = Array.isArray(accounts) ? accounts[0] : null;
     if (!account) {
-      try {
-        const createdAcct = await RS.Supabase.request('/rest/v1/client_accounts', {
-          method: 'POST',
-          headers: { Prefer: 'return=representation' },
-          body: JSON.stringify({
-            user_id: authUser.id,
-            credits: 0,
-            plan_label: '',
-          }),
-        }, token);
-        account = Array.isArray(createdAcct) ? createdAcct[0] : createdAcct;
-      } catch (accountError) {
-        console.warn('No se pudo crear la cuenta de cliente; se usará saldo 0:', accountError.message);
-        account = { credits: 0, plan_label: '' };
-      }
+      throw new Error('La cuenta inició sesión, pero falta su registro inicial en Supabase. Aplica la migración de reparación de perfiles y vuelve a intentar.');
     }
-
     let user = RS.data.getUser(authUser.id);
     if (!user) {
       user = { id: authUser.id, createdAt: authUser.created_at || new Date().toISOString(), notes: '' };
@@ -172,11 +128,8 @@
       phone: profile.phone || '',
       goal: profile.goal || '',
       active: profile.active,
-      credits: account ? Number(account.credits) || 0 : 0,
-      planLabel: (account && account.plan_label) || 'Sin plan activo',
-      planStart: (account && account.plan_start) || null,
-      planExpires: (account && account.plan_expires) || null,
-      supabaseUserId: authUser.id,
+      credits: Number(account.credits) || 0,
+      planLabel: account.plan_label || 'Sin plan activo',
       source: 'supabase',
     });
     return user;
@@ -196,11 +149,6 @@
     }
     const user = await loadRemoteProfile(authUser);
     startSession(user, RS.Supabase.readSession());
-    try {
-      await RS.SupabaseSync.pull();
-    } catch (error) {
-      console.warn('No se pudo sincronizar al restaurar la sesión:', error.message);
-    }
     return currentSession;
   }
 
@@ -245,45 +193,6 @@
     }
   }
 
-  async function refreshAdminData() {
-    if (
-      document.hidden ||
-      !currentSession ||
-      currentSession.role !== 'admin' ||
-      adminSyncPromise ||
-      Date.now() - adminSyncAt < 15000
-    ) return;
-    adminSyncAt = Date.now();
-    const knownSessionIds = new Set((state().sessions || []).map((session) => session.id));
-    adminSyncPromise = RS.SupabaseSync.pull()
-      .then((result) => {
-        if (!result || !result.ok || !currentSession || currentSession.role !== 'admin' || !RS.App) return;
-        const newAppointments = (state().sessions || []).filter(
-          (session) => session.source === 'supabase' && !knownSessionIds.has(session.id)
-        );
-        // Solo repintamos si hay cambios reales: evita perder formularios abiertos.
-        if (!result.merged && !newAppointments.length) return;
-        RS.App.render();
-        if (newAppointments.length) {
-          UI.toast(
-            newAppointments.length === 1
-              ? 'Nueva reserva recibida. Revisa la agenda.'
-              : `Se recibieron ${newAppointments.length} reservas nuevas. Revisa la agenda.`,
-            'info',
-            8000
-          );
-        }
-      })
-      .catch((error) => {
-        console.error('No se pudo actualizar la agenda del administrador:', error);
-        UI.toast('No se pudo actualizar la agenda: ' + error.message, 'warning', 8000);
-      })
-      .finally(() => {
-        adminSyncPromise = null;
-      });
-    await adminSyncPromise;
-  }
-
   function initActivity() {
     if (activityBound) return;
     activityBound = true;
@@ -293,14 +202,9 @@
     document.addEventListener('pointerdown', bump, { passive: true });
     document.addEventListener('keydown', bump);
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        checkAutoLock();
-        refreshAdminData();
-      }
+      if (!document.hidden) checkAutoLock();
     });
-    window.addEventListener('focus', refreshAdminData);
     setInterval(checkAutoLock, 15000);
-    setInterval(refreshAdminData, 30000);
   }
 
   async function verifyPin(pin) {
@@ -483,24 +387,6 @@
     UI.closeModal();
   }
 
-  async function attemptLocalLogin(identifier, password) {
-    const users = state().users;
-    const normalized = U.normalize(identifier || '');
-    const user = users.find((u) => u.role === 'user' && u.active
-      && u.passwordHash
-      && (U.normalize(u.email || '') === normalized || U.normalize(u.name || '') === normalized));
-    if (!user || !user.passwordHash) {
-      return { ok: false, error: 'Cuenta no encontrada o sin clave asignada.', userFound: false };
-    }
-    const hash = await U.hashPassword(password);
-    if (hash !== user.passwordHash) {
-      return { ok: false, error: 'La contraseña no es correcta.', userFound: true };
-    }
-    startSession(user);
-    RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso con cuenta local creada por el administrador.');
-    return { ok: true, needsPin: false, user };
-  }
-
   async function attemptLogin(identifier, password) {
     const email = String(identifier || '').trim().toLowerCase();
     if (!email.includes('@')) {
@@ -516,23 +402,15 @@
       const user = await loadRemoteProfile(authUser);
       startSession(user, supabaseSession);
       RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso autenticado por Supabase.');
-      try {
-        await RS.SupabaseSync.pull();
-      } catch (error) {
-        console.error('No se pudieron actualizar los datos compartidos:', error);
-        UI.toast('Iniciaste sesión, pero no pudimos actualizar los datos compartidos: ' + error.message, 'warning', 8000);
-      }
-      if (RS.App && RS.App.startSync) RS.App.startSync();
       return { ok: true, needsPin: user.role === 'admin', user };
     } catch (error) {
       supabaseSession = null;
       RS.Supabase.writeSession(null);
-      let message = error.message;
-      if (/invalid login credentials/i.test(message)) {
-        message = 'El correo o la contraseña no son correctos.';
-      } else if (/email not confirmed/i.test(message)) {
-        message = 'Tu cuenta existe, pero el correo aún no está confirmado. Escríbenos por WhatsApp para activarla o revisa el enlace de confirmación en tu correo.';
-      }
+      const message = /invalid login credentials/i.test(error.message)
+        ? 'El correo o la contraseña no son correctos.'
+        : /email not confirmed/i.test(error.message)
+          ? 'Confirma tu correo desde el enlace que te enviamos y vuelve a ingresar.'
+          : error.message;
       return { ok: false, error: message };
     }
   }
@@ -596,8 +474,6 @@
   function renderLogin() {
     const tab = (RS.ui && RS.ui.authTab) || 'login';
     const isRegister = tab === 'register';
-    const trialService = state().services.find((s) => s.id === 'srv-training' && s.active);
-    const trialOn = !!trialService && state().settings.freeTrialEnabled !== false;
     return `<div class="auth-page">
       <section class="auth-hero">
         <div class="hero-orb hero-orb-1"></div>
@@ -630,7 +506,7 @@
               <div class="preview-date"><strong>12</strong><span>NOV</span></div>
               <div class="preview-info">
                 <strong>Recovery + movilidad</strong>
-                <span>${UI.icon('clock', 14)} 60 min · Daniel Barrueto Jopia</span>
+                <span>${UI.icon('clock', 14)} 60 min · Daniel Barrueto</span>
               </div>
               <span class="preview-check">${UI.icon('check', 16)}</span>
             </div>
@@ -643,7 +519,7 @@
               <span>${UI.icon('whatsapp', 14)} +56 9 6505 8439</span>
             </div>
           </div>
-          <p class="hero-foot">Recovery Studio · Gorbea, Chile · ${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</p>
+          <p class="hero-foot">Recovery Studio · Gorbea, Región de la Araucanía · ${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</p>
         </div>
       </section>
 
@@ -655,10 +531,6 @@
               <button class="auth-tab ${!isRegister ? 'active' : ''}" data-action="auth-tab" data-tab="login" role="tab" aria-selected="${!isRegister}">Ingresar</button>
               <button class="auth-tab ${isRegister ? 'active' : ''}" data-action="auth-tab" data-tab="register" role="tab" aria-selected="${isRegister}">Crear cuenta</button>
             </div>
-            ${trialOn ? `<div class="auth-trial">
-              <span class="auth-trial-icon" aria-hidden="true">🎁</span>
-              <span class="auth-trial-text"><strong>Tu primera clase es gratis</strong><span>Entrenamiento personal · solo para tu primera vez</span></span>
-            </div>` : ''}
             ${isRegister ? renderRegisterForm() : renderLoginForm()}
           </div>
           <a class="company-cta" href="#/cotizar">
@@ -669,6 +541,11 @@
           <a class="company-cta services-cta" href="precios.html">
             <span class="company-cta-icon">${UI.icon('layers', 20)}</span>
             <span><strong>Servicios y precios</strong><span>Kinesiología, masajes, sauna y planes</span></span>
+            ${UI.icon('arrow-right', 18)}
+          </a>
+          <a class="company-cta" href="https://wa.me/56965058439?text=Hola,%20quiero%20agendar%20sin%20crear%20cuenta">
+            <span class="company-cta-icon">${UI.icon('calendar', 20)}</span>
+            <span><strong>Reservar sin cuenta</strong><span>Agenda tu primera sesión por WhatsApp en segundos</span></span>
             ${UI.icon('arrow-right', 18)}
           </a>
           <a class="company-cta sauna-cta" href="sauna.html">
@@ -691,71 +568,6 @@
         </div>
       </section>
     </div>`;
-  }
-
-  RS.actions['google-login'] = () => startGoogleLogin();
-
-  /* --------------------------- inicio de sesión --------------------------- */
-
-  let googleEnabled = false;
-
-  async function loadProviders() {
-    try {
-      const settings = await RS.Supabase.request('/auth/v1/settings', { method: 'GET' });
-      googleEnabled = Boolean(settings && settings.external && settings.external.google);
-    } catch (error) {
-      googleEnabled = false;
-    }
-    RS.Auth.googleEnabled = googleEnabled;
-    return googleEnabled;
-  }
-
-  function consumeOAuthRedirect() {
-    const raw = location.hash || '';
-    if (!raw) return false;
-    const params = new URLSearchParams(raw.replace(/^#/, ''));
-    if (params.get('error')) {
-      const message = params.get('error_description') || 'No pudimos completar el ingreso con Google.';
-      history.replaceState(null, '', location.pathname + location.search);
-      setTimeout(() => UI.toast(message, 'error', 7000), 400);
-      return false;
-    }
-    const access = params.get('access_token');
-    if (!access) return false;
-    const expiresIn = Number(params.get('expires_in')) || 3600;
-    RS.Supabase.writeSession({
-      access_token: access,
-      refresh_token: params.get('refresh_token') || '',
-      token_type: params.get('token_type') || 'bearer',
-      expires_in: expiresIn,
-      expires_at: Math.floor(Date.now() / 1000) + expiresIn,
-    });
-    history.replaceState(null, '', location.pathname + location.search);
-    return true;
-  }
-
-  function startGoogleLogin() {
-    const config = RS.SupabaseConfig;
-    if (!config || !config.url) {
-      UI.toast('Supabase no está configurado.', 'error');
-      return;
-    }
-    if (!googleEnabled) {
-      UI.toast('El ingreso con Google aún no está habilitado. Usa tu correo y contraseña.', 'info', 6000);
-      return;
-    }
-    const redirect = `${location.origin}${location.pathname}`;
-    const url = `${config.url.replace(/\/$/, '')}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;
-    location.href = url;
-  }
-
-  function googleButton() {
-    if (!RS.Auth.googleEnabled) return '';
-    return `<div class="auth-divider"><span>o</span></div>
-      <button type="button" class="btn btn-outline btn-block" data-action="google-login">
-        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
-        Continuar con Google
-      </button>`;
   }
 
   function renderLoginForm() {
@@ -787,7 +599,6 @@
         </div>
         <button class="btn btn-primary btn-block btn-lg" type="submit" data-login-submit>Ingresar a mi cuenta ${UI.icon('arrow-right', 18)}</button>
       </form>
-      ${googleButton()}
     </div>`;
   }
 
@@ -813,17 +624,23 @@
             <div class="input-icon">${UI.icon('phone', 18)}<input class="input" id="reg-phone" name="phone" type="tel" autocomplete="tel" placeholder="+56 9 …" required></div>
           </div>
         </div>
-        <div class="field">
-          <label for="reg-password">Contraseña</label>
-          <div class="input-icon has-action">
-            ${UI.icon('lock', 18)}
-            <input class="input" id="reg-password" name="password" type="password" autocomplete="new-password" placeholder="Mín. 8 caracteres" required>
-            <button type="button" class="input-action" data-action="toggle-password" data-target="reg-password" aria-label="Mostrar contraseña">${UI.icon('eye', 18)}</button>
+        <div class="grid grid-2 gap-sm">
+          <div class="field">
+            <label for="reg-password">Contraseña</label>
+            <div class="input-icon has-action">
+              ${UI.icon('lock', 18)}
+              <input class="input" id="reg-password" name="password" type="password" autocomplete="new-password" placeholder="Mín. 8 caracteres" required>
+              <button type="button" class="input-action" data-action="toggle-password" data-target="reg-password" aria-label="Mostrar contraseña">${UI.icon('eye', 18)}</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="reg-confirm">Repetir contraseña</label>
+            <div class="input-icon">${UI.icon('lock', 18)}<input class="input" id="reg-confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Repite tu clave" required></div>
           </div>
         </div>
+        <label class="check check-top"><input type="checkbox" name="terms" required><span>Acepto los términos y la política de reagendamiento de 12 h.</span></label>
         <button class="btn btn-accent btn-block btn-lg" type="submit" data-register-submit>Crear mi cuenta ${UI.icon('arrow-right', 18)}</button>
       </form>
-      ${googleButton()}
       <div class="auth-divider"><span>¿Prefieres que te inscribamos?</span></div>
       <a class="btn btn-outline btn-block" href="https://wa.me/${RS.BRAND.whatsapp}?text=${encodeURIComponent('Hola Recovery Studio, quiero inscribirme y agendar mi primera evaluación.')}" target="_blank" rel="noopener">${UI.icon('whatsapp', 18)} Escríbenos por WhatsApp</a>
     </div>`;
@@ -948,7 +765,7 @@
         </div>
       </main>
       <footer class="public-foot">
-        <span>© ${new Date().getFullYear()} Recovery Studio · Gorbea, Chile</span>
+        <span>© ${new Date().getFullYear()} Recovery Studio · Gorbea, Región de la Araucanía</span>
         <span>${UI.icon('map-pin', 14)} ${U.esc(state().settings.address)}</span>
       </footer>
     </div>`;
@@ -1036,7 +853,7 @@
       title: 'Privacidad y datos',
       size: 'md',
       body: `<div class="prose">
-        <p>Tu cuenta, tus reservas y tus pagos se sincronizan de forma segura con la nube, para que puedas verlos desde cualquier dispositivo. Solo tú y el equipo de Recovery Studio pueden acceder a tu información.</p>
+        <p>La información de esta cuenta se guarda en el almacenamiento local de este navegador. No se sincroniza con otros dispositivos.</p>
         <p>Los datos de salud, pagos y entrenamiento deben protegerse con cifrado en tránsito y en reposo, control de acceso por roles y una política de retención.</p>
       </div>`,
       footer: '<button class="btn btn-primary" data-modal-close>Entendido</button>',
@@ -1053,19 +870,10 @@
       return;
     }
     setLoading(submitter, true, 'Ingresando…');
-    let result = await attemptLocalLogin(identifier, password);
-    let supabaseError = null;
-    if (!result.ok && !result.userFound) {
-      const supabaseResult = await attemptLogin(identifier, password);
-      if (supabaseResult.ok) {
-        result = supabaseResult;
-      } else {
-        supabaseError = supabaseResult.error;
-      }
-    }
+    const result = await attemptLogin(identifier, password);
     setLoading(submitter, false);
     if (!result.ok) {
-      loginError(supabaseError || result.error || 'No se pudo iniciar sesión.');
+      loginError(result.error);
       const pass = form.password;
       pass.classList.add('shake');
       setTimeout(() => pass.classList.remove('shake'), 400);
@@ -1085,92 +893,51 @@
     const email = form.email.value.trim().toLowerCase();
     const phone = form.phone.value.trim();
     const password = form.password.value;
+    const confirm = form.confirm.value;
     const error = document.getElementById('auth-error');
     if (error) error.classList.remove('show');
     if (name.length < 3) return loginError('Ingresa tu nombre y apellido.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return loginError('Ingresa un correo válido.');
     if (phone.replace(/\D/g, '').length < 8) return loginError('Ingresa un WhatsApp válido.');
     if (password.length < 8) return loginError('La contraseña debe tener al menos 8 caracteres.');
+    if (password !== confirm) return loginError('Las contraseñas no coinciden.');
+    if (!form.terms.checked) return loginError('Debes aceptar los términos y la política de reservas.');
     setLoading(submitter, true, 'Creando cuenta…');
     try {
-      const result = await RS.Supabase.auth.signUp(email, password, { full_name: name, phone });
-      if (!result.user) {
+      const emailRedirect = new URL(window.location.href);
+      emailRedirect.search = '';
+      emailRedirect.hash = '#/login';
+      const result = await RS.Supabase.auth.signUp(
+        email,
+        password,
+        { full_name: name, phone },
+        emailRedirect.href
+      );
+      if (!result.user) throw new Error('Supabase no confirmó la creación de la cuenta.');
+      if (!result.access_token) {
         setLoading(submitter, false);
-        loginError('No se pudo crear la cuenta. Intenta nuevamente.');
+        UI.toast('Cuenta creada en Supabase. Confirma tu correo con el enlace que te enviamos; después podrás ingresar desde cualquier dispositivo.', 'success', 8000);
+        RS.ui.authTab = 'login';
+        RS.App.render(true);
         return;
       }
-      // Sesión inmediata si Supabase entregó access_token
-      if (result.access_token) {
-        supabaseSession = result;
-        RS.Supabase.writeSession(result);
-        const user = await loadRemoteProfile(result.user);
-        startSession(user, result);
-        if (RS.App && RS.App.startSync) RS.App.startSync();
-        initActivity();
-        RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
-        // Notificación al admin por correo (nuevo registro)
-        try {
-          await RS.data.sendAdminNotification(
-            `Nuevo registro de usuario · ${name}`,
-            `Se creó una nueva cuenta:\n\n• Nombre: ${name}\n• Correo: ${email}\n• Teléfono: ${phone}\n\nEl usuario ya puede iniciar sesión y agendar sesiones.`
-          );
-        } catch (err) {
-          console.error('Notificación admin (registro) falló:', err);
-        }
-        setLoading(submitter, false);
-        UI.toast('¡Cuenta creada! Bienvenido a Recovery Studio.', 'success');
-        RS.App.go('agendar');
-        return;
-      }
-      // Si Supabase no entregó access_token, intentar login directo con las mismas credenciales
-      try {
-        const loginResult = await RS.Supabase.auth.signInWithPassword(email, password);
-        if (loginResult && loginResult.access_token) {
-          supabaseSession = loginResult;
-          RS.Supabase.writeSession(loginResult);
-          const user = await loadRemoteProfile(loginResult.user);
-          startSession(user, loginResult);
-          if (RS.App && RS.App.startSync) RS.App.startSync();
-          initActivity();
-          RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
-          // Notificación al admin por correo (nuevo registro)
-          try {
-            await RS.data.sendAdminNotification(
-              `Nuevo registro de usuario · ${name}`,
-              `Se creó una nueva cuenta:\n\n• Nombre: ${name}\n• Correo: ${email}\n• Teléfono: ${phone}\n\nEl usuario ya puede iniciar sesión y agendar sesiones.`
-            );
-          } catch (err) {
-            console.error('Notificación admin (registro) falló:', err);
-          }
-          setLoading(submitter, false);
-          UI.toast('¡Cuenta creada! Bienvenido a Recovery Studio.', 'success');
-          RS.App.go('agendar');
-          return;
-        }
-      } catch (loginErr) {
-        if (!/email not confirmed|email_not_confirmed|invalid login credentials/i.test(String(loginErr.message || ''))) {
-          throw loginErr;
-        }
-      }
+      supabaseSession = result;
+      RS.Supabase.writeSession(result);
+      const user = await loadRemoteProfile(result.user);
+      startSession(user, result);
+      initActivity();
+      RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
       setLoading(submitter, false);
-      UI.toast('Tu cuenta fue creada, pero este proyecto exige confirmar el correo antes de ingresar. Revisa tu bandeja (y spam). Si no llega el correo, escríbenos por WhatsApp para activarla.', 'info', 12000);
-      RS.ui.authTab = 'login';
-      RS.App.render(true);
+      UI.toast('¡Cuenta creada! Agenda tu primera sesión.', 'success');
+      RS.App.go('agendar');
     } catch (error) {
-      supabaseSession = null;
-      RS.Supabase.writeSession(null);
       setLoading(submitter, false);
-      const msg = String(error.message || '');
-      if (/rate limit|too many|exceeded/i.test(msg)) {
-        loginError('Demasiados registros recientes. Intenta nuevamente en unos minutos.');
-      } else if (/already registered|already exists/i.test(msg)) {
-        loginError('Ya existe una cuenta con ese correo. Inicia sesión.');
-      } else if (/ya existe en Supabase|cuenta está desactivada/i.test(msg)) {
-        loginError(msg);
-      } else {
-        console.error('Registro en Supabase falló:', error);
-        loginError(msg || 'No se pudo crear la cuenta. Intenta nuevamente.');
-      }
+      const message = /already registered|already exists/i.test(error.message)
+        ? 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.'
+        : /redirect.*(allow|valid)|not allowed/i.test(error.message)
+          ? 'Supabase rechazó el retorno de confirmación. Agrega la URL de este sitio a Authentication → URL Configuration → Redirect URLs.'
+          : error.message;
+      loginError(message);
     }
   };
 
@@ -1226,16 +993,6 @@
     st.quotes.unshift(quote);
     RS.DB.save();
     RS.data.addAudit(contact, 'Cotización solicitada', `${quote.ref} · ${company} · ${people} personas.`);
-    if (RS.SupabaseSync && RS.SupabaseSync.submitQuote) {
-      try {
-        await Promise.race([
-          RS.SupabaseSync.submitQuote(quote),
-          new Promise((resolve) => setTimeout(() => resolve({ ok: false, reason: 'timeout' }), 6000)),
-        ]);
-      } catch (error) {
-        console.warn('La cotización quedó guardada en este dispositivo:', error.message);
-      }
-    }
     RS.ui.lastQuote = quote;
     setLoading(submitter, true, 'Enviando…');
     setTimeout(() => {
@@ -1277,9 +1034,6 @@
     renderQuoteThanks,
     clearSession,
     quoteEstimate,
-    loadProviders,
-    consumeOAuthRedirect,
-    startGoogleLogin,
-    googleEnabled: false,
   };
 })();
+

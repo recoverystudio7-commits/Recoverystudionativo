@@ -1,47 +1,33 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v67';
+const CACHE = 'recovery-studio-v19';
 const ASSETS = [
   './',
   './index.html',
-  './gracias.html',
   './manifest.webmanifest',
   './sitemap.xml',
   './robots.txt',
-  './assets/icon-192.png',
-  './assets/icon-512.png',
-  './assets/apple-touch-icon.png',
-  './assets/css/styles.css?v=2',
-  './assets/css/views.css?v=15',
+  './assets/icon.svg',
+  './assets/css/styles.css?v=4',
+  './assets/css/views.css?v=6',
   './assets/css/landing.css',
-  './assets/css/legal.css',
-  './assets/js/data.js?v=21',
-  './assets/js/analytics.js?v=1',
-  './assets/js/ui.js?v=3',
-  './assets/js/auth.js?v=20',
-  './assets/js/user.js?v=34',
-  './assets/js/admin-base.js?v=13',
-  './assets/js/admin-people.js?v=17',
-  './assets/js/planning.js?v=1',
-  './assets/js/exercise-library.js?v=8',
-  './assets/js/admin-library.js?v=3',
-  './assets/js/admin-club.js?v=5',
-  './assets/js/admin-alerts.js?v=1',
-  './assets/js/admin-money.js?v=11',
-  './assets/js/admin-system.js?v=7',
-  './assets/js/content.js?v=9',
-  './assets/js/reviews.js?v=6',
-  './assets/js/supabase-client.js?v=5',
-  './assets/js/supabase-sync.js?v=14',
-  './assets/js/routine-sync.js?v=2',
-  './assets/js/routine-pdf.js?v=4',
-  './assets/js/app.js?v=13',
+  './assets/js/data.js?v=4',
+  './assets/js/ui.js?v=2',
+  './assets/js/auth.js?v=6',
+  './assets/js/user.js?v=7',
+  './assets/js/admin-base.js?v=2',
+  './assets/js/admin-people.js?v=4',
+  './assets/js/admin-money.js?v=4',
+  './assets/js/admin-system.js?v=3',
+  './assets/js/content.js?v=3',
+  './assets/js/reviews.js?v=3',
+  './assets/js/supabase-client.js?v=2',
+  './assets/js/routine-sync.js?v=1',
+  './assets/js/app.js?v=5',
   './kinesiologia.html',
   './masajes.html',
   './sauna.html',
   './asesorias.html',
   './precios.html',
-  './privacidad.html',
-  './terminos.html',
 ];
 
 self.addEventListener('install', (event) => {
@@ -68,33 +54,5 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
-  );
-});
-
-/* Push notifications */
-self.addEventListener('push', (event) => {
-  let data = { title: 'Recovery Studio', body: 'Tienes una nueva notificación.' };
-  try { data = event.data.json(); } catch (e) { /* usar default */ }
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'Recovery Studio', {
-      body: data.body || '',
-      icon: '/assets/icon-192.png',
-      badge: '/assets/icon-192.png',
-      tag: data.tag || 'rs-notification',
-      data: { url: data.url || '/' },
-    })
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || '/';
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes(url) && 'focus' in client) return client.focus();
-      }
-      if (clients.openWindow) return clients.openWindow(url);
-    })
   );
 });

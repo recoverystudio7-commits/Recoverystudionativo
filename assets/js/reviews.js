@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Recovery Studio — Reseñas compartidas (Supabase) y sauna húmedo
    ========================================================================== */
 (function () {
@@ -137,7 +137,7 @@
 
   function publicFoot() {
     return `<footer class="public-foot">
-      <span>© ${new Date().getFullYear()} Recovery Studio · Gorbea, Chile</span>
+      <span>© ${new Date().getFullYear()} Recovery Studio · Gorbea, Región de la Araucanía</span>
       <span class="public-foot-links">
         <a href="kinesiologia.html">Kinesiología</a>
         <a href="masajes.html">Masajes</a>
@@ -151,7 +151,7 @@
 
   function serviceOptions() {
     const names = [];
-    ['Sauna húmedo + recovery', 'Recovery + movilidad', 'Recovery deportivo', 'Entrenamiento personal'].forEach((name) => names.push(name));
+    ['Sauna húmedo + recovery', 'Recovery + movilidad', 'Recovery deportivo', 'Entrenamiento 1:1'].forEach((name) => names.push(name));
     try {
       (RS.DB.get().services || []).forEach((service) => {
         if (service && service.active && service.name && names.indexOf(service.name) === -1) names.push(service.name);
@@ -240,7 +240,6 @@
           <span class="hero-eyebrow">${UI.icon('star', 14)} Comunidad Recovery Studio</span>
           <h1>Lo que dicen<br><em>nuestros clientes.</em></h1>
           <p>Opiniones reales de personas que entrenan, se recuperan y vuelven más fuertes con nosotros. Tu experiencia también ayuda a otros.</p>
-          <a class="btn btn-outline reviews-google-cta" href="https://g.page/r/CZxVsgDhqJElEBM/review" target="_blank" rel="noopener">${UI.icon('star', 16)} Dejar reseña en Google</a>
           <div data-reviews-score>${scoreCard([])}</div>
         </section>
 
@@ -589,3 +588,4 @@
     average,
   };
 })();
+
