@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Recovery Studio — Atajos IG & WhatsApp",
+  "version": "1.0.0",
+  "description": "Respuestas rápidas y plantillas de Recovery Studio para WhatsApp Web e Instagram Direct.",
+  "permissions": ["clipboardWrite"],
+  "action": {
+    "default_title": "Plantillas Recovery Studio",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://web.whatsapp.com/*",
+        "https://www.instagram.com/*",
+        "https://instagram.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

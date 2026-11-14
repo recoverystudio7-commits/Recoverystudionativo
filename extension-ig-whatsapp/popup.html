@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Recovery Studio — Plantillas</title>
+  <style>
+    body {
+      width: 340px;
+      margin: 0;
+      padding: 12px;
+      background: #0A2342;
+      color: #fff;
+      font: 13px/1.4 system-ui, -apple-system, sans-serif;
+    }
+    h1 {
+      font-size: 14px;
+      margin: 0 0 4px;
+      color: #FF7A18;
+    }
+    p {
+      margin: 0 0 10px;
+      font-size: 11px;
+      color: rgba(255,255,255,.75);
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 7px 9px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.2);
+      background: #123F70;
+      color: #fff;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    input::placeholder { color: rgba(255,255,255,.6); }
+    .item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      color: #fff;
+      padding: 8px;
+      margin-bottom: 6px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+    .item:hover { border-color: #FF7A18; background: rgba(255,122,24,.2); }
+    .cmd { color: #FF7A18; font-family: monospace; font-weight: 700; }
+    .txt { display: block; font-size: 11px; color: rgba(255,255,255,.75); margin-top: 3px; }
+    #status { color: #4ade80; font-weight: 700; font-size: 11px; min-height: 16px; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Recovery Studio ⚡ IG & WhatsApp</h1>
+  <p>Haz clic para copiar o escribe el comando + Espacio en WhatsApp Web o Instagram DM.</p>
+  <div id="status"></div>
+  <input id="q" placeholder="Filtrar (/precios, bienvenida, primera...)" autofocus />
+  <div id="list"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
