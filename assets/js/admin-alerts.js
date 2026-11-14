@@ -167,4 +167,5 @@
   };
 
   Admin.renderPlanAlerts = renderPlanAlerts;
+  Admin.renderAlerts = renderPlanAlerts;
 })();
