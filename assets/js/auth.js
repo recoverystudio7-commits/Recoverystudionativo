@@ -748,7 +748,7 @@
       UI.toast('El ingreso con Google aún no está habilitado. Usa tu correo y contraseña.', 'info', 6000);
       return;
     }
-    const redirect = `${location.origin}${location.pathname}`;
+    const redirect = location.origin;
     const url = `${config.url.replace(/\/$/, '')}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;
     location.href = url;
   }
