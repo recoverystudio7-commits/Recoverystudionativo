@@ -1,5 +1,5 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v23';
+const CACHE = 'recovery-studio-v24';
 const ASSETS = [
   './',
   './index.html',

@@ -906,8 +906,8 @@ select.input {
   height: 20px;
   padding: 0 8px;
   border-radius: 20px;
-  background: #7a3319;
-  color: #ff6b00;
+  background: #ff6b00;
+  color: #3a2a1a;
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -916,7 +916,7 @@ select.input {
   position: relative;
   z-index: 1;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  text-shadow: 0 0 6px rgba(255, 107, 0, 0.6);
+  text-shadow: none;
 }
 
 .tag-popular.inline {
