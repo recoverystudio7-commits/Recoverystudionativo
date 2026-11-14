@@ -375,6 +375,7 @@
     if (!b.useCredit) b.useCredit = false;
     if (!b.policy) b.policy = false;
     if (!b.method) b.method = 'Transferencia';
+    if (!('trial' in b)) b.trial = false;
     return b;
   }
 
@@ -388,6 +389,12 @@
     const price = service ? Number(service.price) : 0;
     const useCredit = !!b.useCredit && user.credits > 0;
     const total = useCredit ? 0 : price;
+    const hasSessions = RS.data.userSessions(user.id).length > 0;
+    const trialService = st().services.find((s) => s.id === 'srv-training' && s.active);
+    const trialEligible = !!trialService && !hasSessions && st().settings.freeTrialEnabled !== false;
+    const trial = !!b.trial && trialEligible;
+    const displayPrice = trial ? 0 : price;
+    const displayTotal = trial ? 0 : total;
     const dates = openDates(21);
     const today = U.todayISO();
 
@@ -402,7 +409,12 @@
           <section class="card">
             <div class="card-head"><div class="step-head"><span class="step-num">1</span><div><h2 class="card-title">Elige tu servicio</h2><p class="card-sub">Sesiones individuales y asesorías.</p></div></div></div>
             <div class="card-body">
-              <div class="service-grid">
+              ${trialEligible ? `<button type="button" class="trial-banner ${trial ? 'selected' : ''}" data-action="book-trial">
+               <span class="trial-emoji">🎁</span>
+               <span class="trial-body"><strong>Primera clase gratis</strong><span>${U.esc(trialService.name)} · sin costo, solo una vez</span></span>
+               <span class="trial-price">$0</span>
+             </button>` : ''}
+             <div class="service-grid">
                 ${services.map((s) => `<button type="button" class="service-option ${s.id === b.serviceId ? 'selected' : ''}" data-action="book-service" data-id="${s.id}">
                   <span class="service-option-top"><span class="service-option-icon">${UI.icon(s.kind === 'Asesoría' ? 'smartphone' : 'activity', 18)}</span>${s.popular ? '<span class="tag-popular">Popular</span>' : ''}</span>
                   <strong>${U.esc(s.name)}</strong>
@@ -455,12 +467,12 @@
                 <label class="choice-card ${!useCredit ? 'selected' : ''}">
                   <input type="radio" name="paymode" value="pay" ${!useCredit ? 'checked' : ''} data-change="booking-credit" data-value="pay">
                   <span class="choice-icon">${UI.icon('credit-card', 18)}</span>
-                  <span class="choice-body"><strong>Pagar esta sesión</strong><span>${U.fmtMoney(price)} · transferencia o recepción</span></span>
+                  <span class="choice-body"><strong>Pagar esta sesión</strong><span>${U.fmtMoney(displayPrice)} · transferencia o recepción</span></span>
                   <span class="choice-check">${UI.icon('check', 14)}</span>
                 </label>
               </div>` : ''}
 
-              ${!useCredit ? `<div class="pay-methods">
+              ${(!useCredit && !trial) ? `<div class="pay-methods">
                 <label class="method-card ${b.method === 'Transferencia' ? 'selected' : ''}">
                   <input type="radio" name="method" value="Transferencia" ${b.method === 'Transferencia' ? 'checked' : ''} data-change="booking-method" data-value="Transferencia">
                   <span class="method-icon">${UI.icon('building', 17)}</span>
@@ -494,13 +506,13 @@
               <div><span>Profesional</span><strong>Daniel Barrueto</strong></div>
             </div>
             <div class="summary-total">
-              <div><span>Valor sesión</span><strong>${U.fmtMoney(price)}</strong></div>
-              ${useCredit ? `<div class="summary-credit"><span>Uso de plan</span><strong>− ${U.fmtMoney(price)}</strong></div>` : ''}
-              <div class="summary-grand"><span>Total a pagar</span><strong>${U.fmtMoney(total)}</strong></div>
+              <div><span>Valor sesión</span><strong>${U.fmtMoney(displayPrice)}</strong></div>
+              ${useCredit ? `<div class="summary-credit"><span>Uso de plan</span><strong>− ${U.fmtMoney(displayPrice)}</strong></div>` : ''}
+              <div class="summary-grand"><span>Total a pagar</span><strong>${U.fmtMoney(displayTotal)}</strong></div>
             </div>
             ${useCredit ? `<p class="summary-note">${UI.icon('layers', 14)} Se descontará 1 sesión de tu plan al confirmar.</p>` : `<p class="summary-note">${UI.icon('info', 14)} Si eliges transferencia, podrás adjuntar el comprobante al finalizar.</p>`}
             <button class="btn btn-accent btn-block btn-lg" data-action="book-confirm" ${b.time && b.policy ? '' : 'disabled'}>
-              ${UI.icon('calendar-check', 18)} ${useCredit ? 'Confirmar con mi plan' : 'Confirmar reserva'}
+              ${UI.icon('calendar-check', 18)} ${useCredit ? 'Confirmar con mi plan' : (trial ? 'Confirmar mi clase gratis' : 'Confirmar reserva')}
             </button>
             <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes.</p>
           </div>
@@ -1201,6 +1213,12 @@
     if (btn) btn.disabled = !(b.time && b.policy);
   };
 
+  RS.actions['book-trial'] = () => {
+    const b = bookingState();
+    b.trial = !b.trial;
+    RS.App.render();
+  };
+
   RS.actions['book-confirm'] = () => {
     const user = me();
     const b = bookingState();
@@ -1216,6 +1234,10 @@
       return;
     }
     const useCredit = b.useCredit && user.credits > 0;
+    const hasSessions = RS.data.userSessions(user.id).length > 0;
+    const trialService = st().services.find((s) => s.id === 'srv-training' && s.active);
+    const trialEligible = !!trialService && !hasSessions && st().settings.freeTrialEnabled !== false;
+    const trial = !!b.trial && trialEligible;
     if (useCredit) user.credits -= 1;
 
     const session = {
@@ -1224,20 +1246,21 @@
       serviceId: service.id,
       date: b.date,
       time: b.time,
-      status: useCredit ? 'confirmada' : 'pendiente',
-      payment: useCredit ? 'plan' : 'pendiente',
+      status: (useCredit || trial) ? 'confirmada' : 'pendiente',
+      payment: useCredit ? 'plan' : trial ? 'cortesía' : 'pendiente',
       notes: '',
       coach: 'Daniel Barrueto',
       createdAt: new Date().toISOString(),
     };
     st().sessions.push(session);
     RS.DB.save();
-    RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${useCredit ? ' con crédito de plan' : ''}.`);
+    RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${trial ? ' (clase de prueba gratis)' : useCredit ? ' con crédito de plan' : ''}.`);
 
-    if (useCredit) {
+    if (useCredit || trial) {
       showBookingSuccess(session);
       RS.ui.booking.time = null;
       RS.ui.booking.policy = false;
+      RS.ui.booking.trial = false;
       RS.App.render();
       return;
     }
