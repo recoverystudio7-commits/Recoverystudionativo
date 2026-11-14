@@ -903,20 +903,20 @@ select.input {
 .tag-popular {
   display: inline-flex;
   align-items: center;
-  height: 20px;
-  padding: 0 8px;
+  height: 24px;
+  padding: 0 10px;
   border-radius: 20px;
   background: #ff6b00;
-  color: #3a2a1a;
-  font-size: 9.5px;
-  font-weight: 800;
+  color: #000;
+  font-size: 11px;
+  font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
   position: relative;
   z-index: 1;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  text-shadow: none;
+  border: 1px solid #cc5500;
 }
 
 .tag-popular.inline {
