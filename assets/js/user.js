@@ -514,7 +514,7 @@
             <button class="btn btn-accent btn-block btn-lg" data-action="book-confirm" ${b.time && b.policy ? '' : 'disabled'}>
               ${UI.icon('calendar-check', 18)} ${useCredit ? 'Confirmar con mi plan' : (trial ? 'Confirmar mi clase gratis' : 'Confirmar reserva')}
             </button>
-            <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes.</p>
+            <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes. ${UI.icon('mail', 14)} Enviaremos confirmaci��n por correo cuando sea posible.</p>
           </div>
           <div class="help-card">
             <span class="help-icon">${UI.icon('whatsapp', 20)}</span>
@@ -718,11 +718,15 @@
         UI.toast(`El nuevo horario debe tener al menos ${policy} h de anticipación.`, 'error');
         return;
       }
+      const previous = { date: session.date, time: session.time };
       session.date = date;
       session.time = time;
       session.rescheduledAt = new Date().toISOString();
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión reagendada', `${service ? service.name : 'Sesión'} movida a ${U.fmtDate(date, 'long')} ${time} h.`);
+      RS.data.rescheduleNotification(session, me(), service, st().settings, previous).catch((error) => {
+        console.error('No se pudieron enviar los correos del reagendamiento:', error);
+      });
       UI.closeModal();
       UI.toast('Sesión reagendada correctamente.', 'success');
       RS.App.render(true);
@@ -766,6 +770,12 @@
         payment.note = 'Reserva cancelada por el usuario.';
       }
       RS.DB.save();
+      const cancelUser = RS.data.getUser(session.userId);
+      if (cancelUser) {
+        RS.data.cancellationNotification(session, cancelUser, RS.data.getService(session.serviceId), st().settings, false).catch((error) => {
+          console.error('Notificacion de cancelacion fallo:', error);
+        });
+      }
       RS.data.addAudit(me().name, 'Sesión cancelada', `${RS.data.serviceName(session.serviceId)} del ${U.fmtDate(session.date, 'long')} ${session.time} h.`);
       UI.toast('Tu sesión fue cancelada. El cupo quedó liberado.', 'success');
       RS.App.render(true);
@@ -1255,6 +1265,9 @@
     st().sessions.push(session);
     RS.DB.save();
     RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${trial ? ' (clase de prueba gratis)' : useCredit ? ' con crédito de plan' : ''}.`);
+    RS.data.bookingNotification(session, user, service, st().settings).catch((error) => {
+      console.error('No se pudieron enviar los correos de la reserva:', error);
+    });
 
     if (useCredit || trial) {
       showBookingSuccess(session);
@@ -1368,6 +1381,9 @@
       note: checkout.credits ? `${checkout.credits} sesiones al aprobar el pago.` : '',
     });
     RS.data.addAudit(user.name, 'Orden de pago creada', `${checkout.concept} · ${U.fmtMoney(checkout.amount)} · ${payment.ref}.`);
+    RS.data.planPurchaseNotification(payment, user).catch((error) => {
+      console.error('No se pudieron enviar los correos de la compra:', error);
+    });
     RS.ui.planCart = {};
     window.location.href = 'gracias.html?ref=' + encodeURIComponent(payment.ref) + '&amount=' + encodeURIComponent(payment.amount) + '&concept=' + encodeURIComponent(payment.concept);
   };
@@ -1489,6 +1505,12 @@
         }
         RS.data.addAudit(me().name, 'Comprobante adjuntado', `${payment.ref} · ${payment.concept}.`);
         UI.toast('Comprobante adjuntado. Tu pago quedó en revisión.', 'success');
+        const owner = RS.data.getUser(payment.userId);
+        if (owner) {
+          RS.data.paymentProofNotification(payment, owner).catch((error) => {
+            console.error('No se pudo notificar el comprobante:', error);
+          });
+        }
         UI.closeModal();
         RS.App.render();
       } catch (err) {
