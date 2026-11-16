@@ -602,7 +602,7 @@
       </div>
       <div class="callout callout-blue">${UI.icon('clock', 17)}<span>Tu pago quedará <strong>en revisión</strong>. Al aprobarlo, ${payment.creditsToAdd ? `se activarán ${payment.creditsToAdd} sesiones en tu plan` : 'tu reserva quedará confirmada'} y recibirás una notificación.</span></div>`,
       footer: `<a class="btn btn-ghost" href="#/pagos" data-modal-close>Ver mis pagos</a>
-        <a class="btn btn-primary" href="gracias.html" target="_blank" rel="noopener">Página de gracias ${UI.icon('arrow-right', 16)}</a>`,
+        <a class="btn btn-primary" href="gracias.html?pago=1" target="_blank" rel="noopener">Página de gracias ${UI.icon('arrow-right', 16)}</a>`,
     });
   }
 

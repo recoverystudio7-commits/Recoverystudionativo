@@ -38,12 +38,12 @@
 <div class="wrap">
   <div class="card">
     <div class="icon">✅</div>
-    <h1>¡Gracias por tu pago!</h1>
-    <p class="center">Tu pago quedó registrado y está en revisión. Sigue estos pasos para confirmar tu reserva o activar tus sesiones.</p>
+    <h1 id="page-title">¡Gracias por tu pago!</h1>
+    <p class="center" id="page-lead">Tu pago quedó registrado y está en revisión. Sigue estos pasos para confirmar tu reserva o activar tus sesiones.</p>
 
     <div id="refbox" class="refbox" style="display:none;"></div>
 
-    <div class="steps">
+    <div class="steps" id="payment-steps">
       <div class="step"><div class="n">1</div><div><strong>Transfiere</strong><br>Usa los datos bancarios de abajo. Puedes copiar cada dato con el botón.</div></div>
       <div class="step"><div class="n">2</div><div><strong>Envía el comprobante</strong><br>Por WhatsApp al +56 9 6505 8439, indicando tu nombre y la referencia.</div></div>
       <div class="step"><div class="n">3</div><div><strong>Espera confirmación</strong><br>Te contactaremos para validar el pago y activar tu reserva o sesiones.</div></div>
@@ -60,15 +60,20 @@
       <div class="row" id="row-ref" style="display:none;"><span class="label">Referencia</span><span class="value" id="val-ref"></span></div>
     </div>
 
-    <div style="margin:16px 0;border-radius:10px;overflow:hidden;">
+    <div style="margin:16px 0;border-radius:10px;overflow:hidden;" id="map-wrap">
       <iframe src="https://www.google.com/maps?q=Pasaje+uno,+Gorbea,+Regi%C3%B3n+de+la+Araucan%C3%ADa&output=embed" width="100%" height="220" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación Recovery Studio"></iframe>
     </div>
-    <div class="center">
+    <div class="center" id="payment-actions">
       <a class="btn mp" href="https://link.mercadopago.cl/recoverystudiogorbea" target="_blank" rel="noopener" style="background:#009EE3;color:#fff;">💳 Pagar con MercadoPago (recomendado)</a>
       <button class="btn ghost" id="copy-all" type="button">📋 Copiar todos los datos</button>
       <a class="btn wa" id="wa-btn" href="https://wa.me/56965058439?text=Hola,%20acabo%20de%20pagar%20en%20Recovery%20Studio" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
       <a class="btn review" href="https://g.page/r/CZxVsgDhqJElEBM/review" target="_blank" rel="noopener">Dejar reseña en Google</a>
       <a class="btn ghost" href="index.html">Volver ahora</a>
+    </div>
+
+    <div class="center" id="contact-actions" style="display:none;">
+      <a class="btn wa" href="https://wa.me/56965058439?text=Hola%2C%20acabo%20de%20enviar%20el%20formulario%20de%20contacto%20en%20Recovery%20Studio." target="_blank" rel="noopener">Escribir por WhatsApp</a>
+      <a class="btn ghost" href="index.html">Volver al inicio</a>
     </div>
 
     <p style="text-align:center;font-size:12px;color:#888;">Recovery Studio · Pasaje uno, Gorbea, Región de la Araucanía · +56 9 6505 8439</p>
@@ -95,6 +100,20 @@
   const ref = rawRef || '';
   const amount = rawAmount || '';
   const amountNumber = amount && Number.isFinite(Number(amount)) ? Number(amount) : null;
+  const isPayment = params.has('pago') || Boolean(ref || amount || concept);
+
+  // El formulario de contacto de Tally también vuelve a esta página, pero sin
+  // datos de pago. En ese caso mostramos una confirmación de contacto.
+  if (!isPayment) {
+    document.title = 'Mensaje recibido · Recovery Studio';
+    document.getElementById('page-title').textContent = '¡Recibimos tu mensaje!';
+    document.getElementById('page-lead').textContent = 'Gracias por escribirnos. Te contactaremos por WhatsApp o correo a la brevedad para coordinar tu primera clase y responder tus dudas.';
+    document.getElementById('payment-steps').style.display = 'none';
+    document.getElementById('bank').style.display = 'none';
+    document.getElementById('map-wrap').style.display = 'none';
+    document.getElementById('payment-actions').style.display = 'none';
+    document.getElementById('contact-actions').style.display = 'block';
+  }
 
   const refbox = document.getElementById('refbox');
   if (ref || amount || concept) {
