@@ -1,15 +1,24 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v26';
+const CACHE = 'recovery-studio-v27';
 const ASSETS = [
   './',
   './index.html',
+  './404.html',
+  './gracias.html',
   './manifest.webmanifest',
   './sitemap.xml',
   './robots.txt',
+  './favicon.ico',
   './assets/icon.svg',
+  './assets/icon-192.png',
+  './assets/icon-512.png',
+  './assets/apple-touch-icon.png',
+  './assets/og-image.png',
   './assets/css/styles.css?v=5',
   './assets/css/views.css?v=6',
   './assets/css/landing.css',
+  './assets/css/legal.css',
+  './assets/js/analytics.js?v=1',
   './assets/js/data.js?v=4',
   './assets/js/ui.js?v=2',
   './assets/js/auth.js?v=8',
@@ -18,6 +27,12 @@ const ASSETS = [
   './assets/js/admin-people.js?v=4',
   './assets/js/admin-money.js?v=4',
   './assets/js/admin-system.js?v=3',
+  './assets/js/exercise-library.js?v=1',
+  './assets/js/planning.js?v=1',
+  './assets/js/routine-pdf.js?v=1',
+  './assets/js/admin-library.js?v=1',
+  './assets/js/admin-club.js?v=1',
+  './assets/js/admin-alerts.js?v=2',
   './assets/js/content.js?v=3',
   './assets/js/reviews.js?v=3',
   './assets/js/supabase-client.js?v=2',
@@ -28,6 +43,8 @@ const ASSETS = [
   './sauna.html',
   './asesorias.html',
   './precios.html',
+  './privacidad.html',
+  './terminos.html',
 ];
 
 self.addEventListener('install', (event) => {
@@ -53,6 +70,10 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE).then((cache) => cache.put(event.request, copy)).catch(() => {});
         return response;
       })
-      .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+      .catch(() => caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        if (event.request.mode === 'navigate') return caches.match('./index.html');
+        return caches.match('./404.html');
+      }))
   );
 });

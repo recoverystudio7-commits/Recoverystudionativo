@@ -517,13 +517,13 @@
     const isRegister = tab === 'register';
     const trialService = state().services.find((s) => s.id === 'srv-training' && s.active);
     const trialOn = !!trialService && state().settings.freeTrialEnabled !== false;
-    return `<div class="auth-page">
+    return `<main class="auth-page" id="main-content">
       <section class="auth-hero">
         <div class="hero-orb hero-orb-1"></div>
         <div class="hero-orb hero-orb-2"></div>
         <div class="hero-grid"></div>
         <div class="auth-hero-inner">
-          <a class="brand-link" href="#/login" aria-label="Recovery Studio">${UI.logoLockup({ light: true, size: 44 })}</a>
+          <a class="brand-link" href="#/login">${UI.logoLockup({ light: true, size: 44 })}</a>
           <div class="hero-copy">
             <span class="hero-eyebrow">${UI.icon('sparkles', 14)} Agenda · Recuperación · Performance</span>
             <h1>Recupera mejor.<br><em>Vuelve más fuerte.</em></h1>
@@ -605,7 +605,7 @@
             <span><strong>Cápsulas de recuperación</strong><span>Consejos prácticos para moverte y entrenar mejor</span></span>
             ${UI.icon('arrow-right', 18)}
           </a>
-          <a class="reviews-teaser" href="#/resenas" data-reviews-teaser hidden aria-label="Ver reseñas y calificaciones de clientes"></a>
+          <a class="reviews-teaser" href="#/resenas" data-reviews-teaser hidden></a>
           <p class="auth-legal">
             <button class="link-btn" data-action="show-terms">Términos</button>
             <span>·</span>
@@ -614,7 +614,7 @@
           <p class="auth-copy">© ${new Date().getFullYear()} Recovery Studio. Todos los derechos reservados.</p>
         </div>
       </section>
-    </div>`;
+    </main>`;
   }
 
   function renderLoginForm() {

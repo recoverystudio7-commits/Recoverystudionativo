@@ -108,15 +108,15 @@
 
   function logoMark(size) {
     const s = size || 40;
-    return `<svg class="logo-mark-svg" width="${s}" height="${s}" viewBox="0 0 64 64" aria-hidden="true">
+    return `<svg class="logo-mark-svg" width="${s}" height="${s}" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="rsGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#123F70"/><stop offset="1" stop-color="#071B34"/>
+          <stop stop-color="#3C5346"/><stop offset="1" stop-color="#1E2C25"/>
         </linearGradient>
       </defs>
       <rect width="64" height="64" rx="16" fill="url(#rsGrad)"/>
       <path d="M23 48V18h11.5c6 0 10 3.6 10 9.3 0 4.4-2.3 7.6-6.3 8.9L47 48" fill="none" stroke="#FFFFFF" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="47" cy="18" r="4.4" fill="#FF7A18"/>
+      <circle cx="47" cy="18" r="4.4" fill="#9C4526"/>
     </svg>`;
   }
 
