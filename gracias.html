@@ -71,7 +71,6 @@
       <a class="btn ghost" href="index.html">Volver ahora</a>
     </div>
 
-    <p class="count">Serás redirigido a la página principal en <span id="counter">10</span> segundos.</p>
     <p style="text-align:center;font-size:12px;color:#888;">Recovery Studio · Pasaje uno, Gorbea, Región de la Araucanía · +56 9 6505 8439</p>
   </div>
 </div>
@@ -79,29 +78,45 @@
 <script>
   // Leer parámetros de la URL
   const params = new URLSearchParams(window.location.search);
-  const ref = params.get('ref');
-  const amount = params.get('amount');
-  const concept = params.get('concept');
+  const getParamValue = (name) => {
+    const value = params.get(name);
+    return value == null ? '' : String(value).trim();
+  };
+  const escapeHtml = (value) => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+  const rawRef = getParamValue('ref');
+  const rawAmount = getParamValue('amount');
+  const concept = getParamValue('concept');
+  const ref = rawRef || '';
+  const amount = rawAmount || '';
+  const amountNumber = amount && Number.isFinite(Number(amount)) ? Number(amount) : null;
 
   const refbox = document.getElementById('refbox');
   if (ref || amount || concept) {
     refbox.style.display = 'block';
-    refbox.innerHTML = (concept ? `<strong>${concept}</strong><br>` : '') +
-      (amount ? `Monto: <strong>$${Number(amount).toLocaleString('es-CL')}</strong><br>` : '') +
-      (ref ? `Referencia: <strong>${ref}</strong>` : '');
+    const details = [];
+    if (concept) details.push(`<strong>${escapeHtml(concept)}</strong>`);
+    if (amountNumber !== null) details.push(`Monto: <strong>$${escapeHtml(amountNumber.toLocaleString('es-CL'))}</strong>`);
+    if (ref) details.push(`Referencia: <strong>${escapeHtml(ref)}</strong>`);
+    refbox.innerHTML = details.join('<br>');
   }
-  if (amount) {
+  if (amountNumber !== null) {
     const ra = document.getElementById('row-amount');
     const va = document.getElementById('val-amount');
     ra.style.display = 'flex';
-    va.innerHTML = '$' + Number(amount).toLocaleString('es-CL') + ' <button class="copy" data-field="amount">Copiar</button>';
+    va.innerHTML = '$' + amountNumber.toLocaleString('es-CL') + ' <button class="copy" data-field="amount">Copiar</button>';
     va.setAttribute('data-copy', amount);
   }
   if (ref) {
     const rr = document.getElementById('row-ref');
     const vr = document.getElementById('val-ref');
     rr.style.display = 'flex';
-    vr.innerHTML = ref + ' <button class="copy" data-field="ref">Copiar</button>';
+    vr.innerHTML = escapeHtml(ref) + ' <button class="copy" data-field="ref">Copiar</button>';
     vr.setAttribute('data-copy', ref);
   }
 
@@ -109,7 +124,7 @@
   const wa = document.getElementById('wa-btn');
   let msg = 'Hola, acabo de pagar en Recovery Studio';
   if (ref) msg += ` (ref ${ref})`;
-  if (amount) msg += ` por $${Number(amount).toLocaleString('es-CL')}`;
+  if (amountNumber !== null) msg += ` por $${amountNumber.toLocaleString('es-CL')}`;
   wa.href = 'https://wa.me/56965058439?text=' + encodeURIComponent(msg);
 
   // Copiar al portapapeles
@@ -151,9 +166,9 @@
       'Nº de cuenta: 72771619',
       'Email: recoverystudio7@gmail.com',
     ];
-    if (amount) lines.push('Monto: $' + Number(amount).toLocaleString('es-CL'));
+    if (amountNumber !== null) lines.push('Monto: $' + amountNumber.toLocaleString('es-CL'));
     if (ref) lines.push('Referencia: ' + ref);
-    const text = lines.join('\\n');
+    const text = lines.join('\n');
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(() => toast('Todos los datos copiados')).catch(() => fallbackAll(text));
     } else {
@@ -167,15 +182,6 @@
     try { document.execCommand('copy'); toast('Todos los datos copiados'); } catch(err){ toast('No se pudo copiar'); }
     ta.remove();
   }
-
-  // Contador de redirección
-  let n = 10;
-  const el = document.getElementById('counter');
-  const timer = setInterval(() => {
-    n -= 1;
-    if (el) el.textContent = n;
-    if (n <= 0) { clearInterval(timer); window.location.href = 'index.html'; }
-  }, 1000);
 </script>
 </body>
 </html>
