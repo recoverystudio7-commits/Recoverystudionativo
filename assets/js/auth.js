@@ -391,6 +391,7 @@
         initActivity();
         UI.toast('Acceso verificado. Bienvenido, Daniel.', 'success');
         RS.App.go('admin');
+        if (RS.App.syncAfterLogin) RS.App.syncAfterLogin({ toast: true });
       },
     });
   }
@@ -593,6 +594,11 @@
           <a class="company-cta" href="https://wa.me/56965058439?text=Hola,%20quiero%20agendar%20sin%20crear%20cuenta">
             <span class="company-cta-icon">${UI.icon('calendar', 20)}</span>
             <span><strong>Reservar sin cuenta</strong><span>Agenda tu primera sesión por WhatsApp en segundos</span></span>
+            ${UI.icon('arrow-right', 18)}
+          </a>
+          <a class="company-cta" href="https://tally.so/r/1W4dkp" target="_blank" rel="noopener">
+            <span class="company-cta-icon">${UI.icon('mail', 20)}</span>
+            <span><strong>Formulario de contacto</strong><span>Déjanos tus datos y te escribimos a la brevedad</span></span>
             ${UI.icon('arrow-right', 18)}
           </a>
           <a class="company-cta sauna-cta" href="sauna.html">
@@ -1000,6 +1006,7 @@
     initActivity();
     UI.toast(`Bienvenido, ${result.user.name.split(' ')[0]}.`, 'success');
     RS.App.go('inicio');
+    if (RS.App.syncAfterLogin) RS.App.syncAfterLogin({ toast: true });
   };
 
   RS.forms.register = async (form, submitter) => {

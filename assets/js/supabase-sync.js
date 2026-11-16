@@ -19,6 +19,8 @@
   const U = RS.util;
   const CHILE_TZ = 'America/Santiago';
   let serviceIdsCache = null;
+  let pullPromise = null;
+  let lastPullAt = 0;
 
   function configured() {
     try {
@@ -943,7 +945,15 @@
     return merged;
   }
 
-  async function pull() {
+  /* Una sola descarga a la vez: el arranque, el inicio de sesión y la
+     sincronización automática pueden pedirla al mismo tiempo. */
+  function pull() {
+    if (pullPromise) return pullPromise;
+    pullPromise = pullData().finally(() => { pullPromise = null; });
+    return pullPromise;
+  }
+
+  async function pullData() {
     if (!configured()) return { ok: false, reason: 'no-config' };
     const user = me();
     const uid = supabaseUserId(user);
@@ -972,6 +982,7 @@
     ]);
 
     RS.DB.save();
+    lastPullAt = Date.now();
     return { ok: true, merged: profiles + services + sessions + payments + accounts + recurring + maxes + blocked + quotes + expenses + boletas + audits };
   }
 
@@ -1654,8 +1665,10 @@
   let autoCallback = null;
 
   async function autoPull() {
-    if (autoRunning || !autoCallback || !configured()) return;
+    if (autoRunning || pullPromise || !autoCallback || !configured()) return;
     if (typeof document !== 'undefined' && document.hidden) return;
+    // Evita repetir de inmediato la descarga que ya hizo el inicio de sesión.
+    if (Date.now() - lastPullAt < 5000) return;
     autoRunning = true;
     try {
       const result = await pull();
@@ -1678,7 +1691,7 @@
     const every = Math.max(20000, Number(intervalMs) || 45000);
     autoTimer = setInterval(autoPull, every);
     document.addEventListener('visibilitychange', onVisibility);
-    setTimeout(autoPull, 6000);
+    setTimeout(autoPull, 1500);
   }
 
   function stopAutoSync() {

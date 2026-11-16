@@ -525,10 +525,44 @@
     }
   };
 
+  let loginSyncPromise = null;
+
+  /* Carga inmediata de la nube al iniciar sesión (o al restaurar la sesión).
+     Solo descarga: no sube los datos locales del equipo nuevo para no
+     sobrescribir la agenda, los pagos ni los usuarios que ya existen. */
+  function syncAfterLogin(options) {
+    const opts = options || {};
+    if (!RS.SupabaseSync || !RS.SupabaseSync.configured()) return Promise.resolve(null);
+    if (loginSyncPromise) return loginSyncPromise;
+    loginSyncPromise = (async () => {
+      try {
+        const result = await RS.SupabaseSync.pull();
+        if (result && result.ok) {
+          if (!modalIsOpen()) render(false);
+          if (opts.toast && result.merged) {
+            UI.toast(`Datos cargados: ${result.merged} registro${result.merged === 1 ? '' : 's'} desde la nube.`, 'success', 3500);
+          }
+        } else if (opts.toast) {
+          UI.toast('No pudimos cargar los datos de la nube. Revisa tu conexión e inténtalo con Sincronizar.', 'error', 6000);
+        }
+        return result;
+      } catch (error) {
+        console.warn('No se pudieron cargar los datos al iniciar sesión:', error.message);
+        if (opts.toast) UI.toast('No pudimos cargar los datos de la nube. Revisa tu conexión.', 'error', 6000);
+        return { ok: false, reason: 'error' };
+      } finally {
+        loginSyncPromise = null;
+      }
+    })();
+    return loginSyncPromise;
+  }
+
   function startSync() {
-    if (RS.SupabaseSync && RS.SupabaseSync.configured()) {
-      RS.SupabaseSync.startAutoSync(refreshAfterSync, 45000);
-    }
+    if (!RS.SupabaseSync || typeof RS.SupabaseSync.startAutoSync !== 'function') return;
+    // Se inicia siempre: en un equipo nuevo la sesión de Supabase puede
+    // llegar después del arranque, y así la sincronización queda activa.
+    RS.SupabaseSync.startAutoSync(refreshAfterSync, 45000);
+    if (RS.SupabaseSync.configured()) syncAfterLogin({ toast: false });
   }
 
   /* --------------------------------- inicio -------------------------------- */
@@ -576,6 +610,7 @@
     boot,
     hardReload,
     startSync,
+    syncAfterLogin,
   };
 
   if (document.readyState === 'loading') {
