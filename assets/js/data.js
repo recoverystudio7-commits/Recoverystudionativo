@@ -545,14 +545,9 @@
         discountCodes: [],
         freeTrialEnabled: true,
         settingsUpdatedAt: 0,
-        bank: {
-          holder: 'DANIEL ESTEBAN BARRUETO JOPIA',
-          rut: '17.375.282-2',
-          bankName: 'Banco BCI',
-          accountType: 'Cuenta Corriente',
-          account: '72771619',
-          email: BRAND.adminEmail,
-        },
+        // Los datos bancarios NO se guardan en el código (repo público).
+        // Se cargan desde Supabase (studio_settings.config) y los llena el admin en Configuración.
+        bank: { holder: '', rut: '', bankName: '', accountType: '', account: '', email: '' },
       },
       audits: [],
       security: {
@@ -641,10 +636,6 @@
             // Dirección oficial: corrige datos antiguos guardados en el navegador.
             if (!state.settings.address || /providencia/i.test(String(state.settings.address))) {
               state.settings.address = 'Gorbea, Región de la Araucanía';
-            }
-            // Titular bancario oficial con apellido completo.
-            if (state.settings.bank && state.settings.bank.holder === 'DANIEL ESTEBAN BARRUETO') {
-              state.settings.bank.holder = 'DANIEL ESTEBAN BARRUETO JOPIA';
             }
             // Bloques de agenda en 30 minutos.
             if (!state.settings.slot || Number(state.settings.slot) === 60) {
@@ -1115,13 +1106,8 @@
   }
 
   function bankData() {
-    return (state && state.settings.bank) || {
-      holder: 'DANIEL ESTEBAN BARRUETO JOPIA',
-      rut: '17.375.282-2',
-      bankName: 'Banco BCI',
-      accountType: 'Cuenta Corriente',
-      account: '72771619',
-      email: BRAND.adminEmail,
+    return (state && state.settings && state.settings.bank) || {
+      holder: '', rut: '', bankName: '', accountType: '', account: '', email: BRAND.adminEmail,
     };
   }
 
