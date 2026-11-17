@@ -1,4 +1,4 @@
-/* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
+﻿/* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
 const CACHE = 'recovery-studio-v29';
 const ASSETS = [
   './',
@@ -75,3 +75,4 @@ self.addEventListener('fetch', (event) => {
       }))
   );
 });
+

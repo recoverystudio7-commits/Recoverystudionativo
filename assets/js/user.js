@@ -21,6 +21,26 @@
     return RS.Auth.getUser();
   }
 
+  const SEEN_APPROVED_KEY = 'recoveryStudio.seenApproved.v1';
+  function loadSeenApproved() {
+    try {
+      const raw = localStorage.getItem(SEEN_APPROVED_KEY);
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+  function saveSeenApproved(set) {
+    try {
+      localStorage.setItem(SEEN_APPROVED_KEY, JSON.stringify(Array.from(set)));
+    } catch (e) { /* noop */ }
+  }
+  function markApprovedSeen(paymentIds) {
+    const set = loadSeenApproved();
+    paymentIds.forEach((id) => set.add(id));
+    saveSeenApproved(set);
+  }
+
   function ensureUi() {
     RS.ui = RS.ui || {};
     if (!RS.ui.planCart) RS.ui.planCart = {};
@@ -206,6 +226,15 @@
     const past = completed + missed + cancelled;
     const attendance = past ? Math.round((completed / past) * 100) : null;
     const pending = st().payments.filter((p) => p.userId === user.id && p.status === 'pendiente');
+    const seenApproved = loadSeenApproved();
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const recentlyApproved = st().payments.filter((p) => {
+      if (p.userId !== user.id || p.status !== 'aprobado') return false;
+      if (seenApproved.has(p.id)) return false;
+      const when = p.approvedAt || p.updatedAt || p.createdAt;
+      const time = when ? Date.parse(when) : 0;
+      return Number.isFinite(time) && time >= sevenDaysAgo;
+    });
     const maxes = RS.data.userMaxes(user.id);
     const routine = RS.data.userRoutine(user.id);
     const totalPlan = planTotalSessions(user);
@@ -226,6 +255,12 @@
         <span class="banner-icon">${UI.icon('clock', 20)}</span>
         <div><strong>Tienes ${U.pluralize(pending.length, 'pago', 'pagos')} en revisión</strong><span>${pending[0].proof ? 'El equipo está validando tu comprobante.' : 'Adjunta el comprobante para activar tu pago.'}</span></div>
         <a class="btn btn-ghost btn-sm" href="#/pagos">Ver pagos ${UI.icon('arrow-right', 15)}</a>
+      </div>` : ''}
+
+      ${recentlyApproved.length ? `<div class="banner banner-success">
+        <span class="banner-icon">${UI.icon('check-circle', 20)}</span>
+        <div><strong>${recentlyApproved.length === 1 ? 'Tu pago fue aprobado' : recentlyApproved.length + ' pagos aprobados'}</strong><span>${recentlyApproved.map((p) => U.esc(p.concept) + (p.creditsToAdd ? ' · ' + p.creditsToAdd + ' sesiones activadas' : '')).join(' · ')}</span></div>
+        <button class="btn btn-ghost btn-sm" data-action="dismiss-approved-banner">${UI.icon('x', 15)}</button>
       </div>` : ''}
 
       <div class="dash-grid">
@@ -1292,6 +1327,13 @@
     RS.ui.booking.policy = false;
     RS.App.render();
     window.location.href = 'gracias.html?ref=' + encodeURIComponent(payment.ref) + '&amount=' + encodeURIComponent(payment.amount) + '&concept=' + encodeURIComponent(payment.concept);
+  };
+
+  RS.actions['dismiss-approved-banner'] = () => {
+    const user = me();
+    const approved = st().payments.filter((p) => p.userId === user.id && p.status === 'aprobado');
+    markApprovedSeen(approved.map((p) => p.id));
+    RS.App.render();
   };
 
   RS.actions['download-ics'] = (el) => {
