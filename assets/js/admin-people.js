@@ -680,7 +680,7 @@
       setHead('Descargar rutina (PDF)', 'Para enviársela a alguien que aún no se registra en la página');
       bodyEl.innerHTML = `<div class="routine-pdf-form">
         <div class="field"><label for="pdf-client">Nombre del cliente</label><input class="input" id="pdf-client" value="${U.esc(user.name || '')}" maxlength="80" placeholder="Ej: Nombre y apellido"></div>
-        <div class="callout callout-blue">${UI.icon('info', 17)}<span>El PDF incluirá tu nombre, tu profesión y el nombre del studio, junto con la pauta completa (ejercicios y estiramientos). Se abrirá la ventana de impresión: elige “Guardar como PDF”.</span></div>
+        <div class="callout callout-blue">${UI.icon('info', 17)}<span>El PDF muestra el nombre del cliente en el encabezado y tu nombre con profesión (Mg.) en el pie, junto con la pauta completa (ejercicios y estiramientos). Se abrirá la ventana de impresión: elige “Guardar como PDF”.</span></div>
       </div>`;
       footEl.innerHTML = `<button class="btn btn-ghost" data-r-pdf-back>${UI.icon('arrow-left', 16)} Volver</button><button class="btn btn-primary" data-r-pdf-generate>${UI.icon('printer', 16)} Generar PDF</button>`;
       const input = bodyEl.querySelector('#pdf-client');

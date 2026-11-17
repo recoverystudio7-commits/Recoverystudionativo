@@ -30,6 +30,20 @@
     return new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' });
   }
 
+  // El pie de página lleva el grado "Mg." (Magíster).
+  function footerProfession(profession) {
+    return String(profession || '').trim().replace(/Mag[íi]ster/gi, 'Mg.');
+  }
+
+  // Los pesos numéricos se muestran con la unidad "kg".
+  function withKg(load) {
+    const value = String(load || '').trim();
+    if (!value) return '';
+    if (/\d\s*(kg|kilos|lb|libras)\b/i.test(value)) return value;
+    if (/^[-+]?\d+(?:[.,]\d+)?$/.test(value)) return value + ' kg';
+    return value;
+  }
+
   function build(routine, opts) {
     const o = opts || {};
     const id = coachInfo();
@@ -47,7 +61,7 @@
         .map((it, ii) => {
           const sets = String(it.sets || '').trim();
           const reps = String(it.reps || '').trim();
-          const load = String(it.load || '').trim();
+          const load = withKg(it.load);
           const rest = String(it.rest || '').trim();
           const params = [];
           if (sets || reps) params.push([sets, reps].filter(Boolean).join(' × '));
@@ -207,8 +221,8 @@
   <header class="cover">
     <div class="cover-logo">RS</div>
     <div class="cover-text">
-      <h1>${esc(id.studioName)}</h1>
-      <p>${esc(id.coachName)} · ${esc(id.coachProfession)}</p>
+      <h1>${esc(client)}</h1>
+      <p>${esc(id.studioName)} · Pauta de entrenamiento</p>
     </div>
     <div class="cover-date">${esc(todayLabel())}</div>
   </header>
@@ -222,7 +236,7 @@
     </div>
   </div>
   ${daysHtml}
-  <div class="foot"><span>${esc(id.studioName)}</span><span>${esc(id.coachName)} · ${esc(id.coachProfession)}</span></div>
+  <div class="foot"><span>${esc(id.studioName)}</span><span>${esc(id.coachName)} · ${esc(footerProfession(id.coachProfession))}</span></div>
 </div>
 <script>
 window.addEventListener("load", function () {

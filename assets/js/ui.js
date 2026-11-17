@@ -359,6 +359,9 @@
         ${icon('info', 15)}
         <span>Envía el comprobante al WhatsApp <strong>${U.esc(RS.BRAND.whatsappDisplay)}</strong> o súbelo en la app.</span>
       </div>
+      <a class="btn btn-outline btn-block btn-sm bank-whatsapp" href="${U.esc(RS.data.whatsappUrl('Hola Recovery Studio, necesito los datos bancarios para hacer una transferencia. ¿Pueden enviármelos? Gracias.'))}" target="_blank" rel="noopener">
+        ${icon('whatsapp', 15)} Pedir datos por WhatsApp
+      </a>
     </div>`;
   }
 
