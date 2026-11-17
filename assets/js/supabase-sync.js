@@ -370,6 +370,23 @@
         source: 'supabase',
       });
     });
+
+    // Elimina del dispositivo los usuarios que ya no existen en Supabase.
+    // Solo afecta a usuarios sincronizados (con supabaseUserId) y nunca al admin actual.
+    const remoteIds = new Set(rows.map((r) => r.id));
+    const toRemove = state.users
+      .filter((u) => {
+        if (u.id === me().id) return false;
+        if (!u.supabaseUserId) return false;
+        return !remoteIds.has(u.supabaseUserId);
+      })
+      .map((u) => u.id);
+    if (toRemove.length) {
+      const removed = new Set(toRemove);
+      state.users = state.users.filter((u) => !removed.has(u.id));
+      state.sessions = (state.sessions || []).filter((s) => !removed.has(s.userId));
+      state.payments = (state.payments || []).filter((p) => !removed.has(p.userId));
+    }
     return merged;
   }
 
