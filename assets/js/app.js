@@ -8,13 +8,13 @@
   const U = RS.util;
   const UI = RS.UI;
 
-  const USER_ROUTES = ['inicio', 'agendar', 'reservas', 'planes', 'pagos', 'entrenamiento', 'perfil'];
+  const USER_ROUTES = ['inicio', 'reservas', 'planes', 'pagos', 'entrenamiento', 'perfil'];
   const ADMIN_ROUTES = [
     'admin', 'admin/agenda', 'admin/usuarios', 'admin/club', 'admin/alertas', 'admin/planes', 'admin/pagos',
     'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/resenas', 'admin/biblioteca',
     'admin/configuracion', 'admin/seguridad', 'admin/contenido',
   ];
-  const PUBLIC_ROUTES = ['login', 'cotizar', 'cotizar-gracias', 'resenas', 'sauna', 'capsulas'];
+  const PUBLIC_ROUTES = ['login', 'cotizar', 'cotizar-gracias', 'resenas', 'sauna', 'capsulas', 'agendar'];
 
   const TITLES = {
     login: 'Ingresar',
@@ -331,7 +331,11 @@
     }
 
     if (PUBLIC_ROUTES.includes(route)) {
-      app.innerHTML = content;
+      if (route === 'agendar' && session) {
+        app.innerHTML = renderShell(session.role, content);
+      } else {
+        app.innerHTML = content;
+      }
     } else {
       app.innerHTML = renderShell(session.role, content);
     }

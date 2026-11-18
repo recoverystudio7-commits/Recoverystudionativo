@@ -411,6 +411,9 @@
     if (!b.policy) b.policy = false;
     if (!b.method) b.method = 'Transferencia';
     if (!('trial' in b)) b.trial = false;
+    if (!('guestName' in b)) b.guestName = '';
+    if (!('guestPhone' in b)) b.guestPhone = '';
+    if (!('guestEmail' in b)) b.guestEmail = '';
     return b;
   }
 
@@ -422,9 +425,9 @@
     const service = RS.data.getService(b.serviceId);
     const slots = RS.data.availableSlots(b.date, b.serviceId);
     const price = service ? Number(service.price) : 0;
-    const useCredit = !!b.useCredit && user.credits > 0;
+    const useCredit = !!b.useCredit && (user ? user.credits > 0 : false);
     const total = useCredit ? 0 : price;
-    const hasSessions = RS.data.userSessions(user.id).length > 0;
+    const hasSessions = user ? RS.data.userSessions(user.id).length > 0 : false;
     const trialService = st().services.find((s) => s.id === 'srv-training' && s.active);
     const trialEligible = !!trialService && !hasSessions && st().settings.freeTrialEnabled !== false;
     const trial = !!b.trial && trialEligible;
@@ -433,9 +436,9 @@
     const dates = openDates(21);
     const today = U.todayISO();
 
-    return `<div class="view view-booking">
+    const bookingHtml = `<div class="view view-booking">
       <div class="page-head">
-        <div><span class="eyebrow">Agenda online</span><h1 class="page-title">Reserva tu sesión</h1><p class="page-sub">Elige el servicio, el horario y confirma. Así de simple.</p></div>
+        <div><span class="eyebrow">Agenda online</span><h1 class="page-title">Reserva tu sesión</h1><p class="page-sub">Elige tu servicio, fecha y hora. ${user ? 'Así de simple.' : 'Sin registros complicados.'}</p></div>
         <div class="head-chip">${UI.icon('shield-check', 16)} Reserva segura</div>
       </div>
 
@@ -490,9 +493,37 @@
           </section>
 
           <section class="card">
-            <div class="card-head"><div class="step-head"><span class="step-num">3</span><div><h2 class="card-title">Confirma tu reserva</h2><p class="card-sub">Revisa las condiciones antes de continuar.</p></div></div></div>
+            <div class="card-head"><div class="step-head"><span class="step-num">3</span><div><h2 class="card-title">Confirma tu reserva</h2><p class="card-sub">${user ? 'Revisa las condiciones antes de continuar.' : 'Ingresa tus datos de contacto para enviarte la confirmación.'}</p></div></div></div>
             <div class="card-body">
-              ${user.credits > 0 ? `<div class="pay-choice">
+              ${!user ? `
+              <div class="callout callout-green" style="margin-bottom:16px;">
+                <strong>${UI.icon('check-circle', 15)} Reserva directa:</strong> Agenda tu hora sin necesidad de crear una cuenta previa.
+              </div>
+              <div class="field" style="margin-bottom:14px;">
+                <label for="booking-guest-name"><strong>Tu nombre completo *</strong></label>
+                <div class="input-icon">
+                  ${UI.icon('user', 18)}
+                  <input class="input" id="booking-guest-name" name="guestName" type="text" placeholder="Ej: María González" value="${U.esc(b.guestName || '')}" autocomplete="name" data-input="booking-guest-name" required>
+                </div>
+              </div>
+              <div class="grid grid-2 gap-sm" style="margin-bottom:14px;">
+                <div class="field">
+                  <label for="booking-guest-phone"><strong>WhatsApp / Teléfono *</strong></label>
+                  <div class="input-icon">
+                    ${UI.icon('phone', 18)}
+                    <input class="input" id="booking-guest-phone" name="guestPhone" type="tel" placeholder="+56 9 1234 5678" value="${U.esc(b.guestPhone || '')}" autocomplete="tel" data-input="booking-guest-phone" required>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="booking-guest-email"><strong>Correo electrónico *</strong></label>
+                  <div class="input-icon">
+                    ${UI.icon('mail', 18)}
+                    <input class="input" id="booking-guest-email" name="guestEmail" type="email" placeholder="tu@correo.cl" value="${U.esc(b.guestEmail || '')}" autocomplete="email" data-input="booking-guest-email" required>
+                  </div>
+                </div>
+              </div>` : ''}
+
+              ${user && user.credits > 0 ? `<div class="pay-choice">
                 <label class="choice-card ${useCredit ? 'selected' : ''}">
                   <input type="radio" name="paymode" value="credit" ${useCredit ? 'checked' : ''} data-change="booking-credit" data-value="credit">
                   <span class="choice-icon">${UI.icon('layers', 18)}</span>
@@ -546,7 +577,7 @@
               <div class="summary-grand"><span>Total a pagar</span><strong>${U.fmtMoney(displayTotal)}</strong></div>
             </div>
             ${useCredit ? `<p class="summary-note">${UI.icon('layers', 14)} Se descontará 1 sesión de tu plan al confirmar.</p>` : `<p class="summary-note">${UI.icon('info', 14)} Si eliges transferencia, podrás adjuntar el comprobante al finalizar.</p>`}
-            <button class="btn btn-accent btn-block btn-lg" data-action="book-confirm" ${b.time && b.policy ? '' : 'disabled'}>
+            <button class="btn btn-accent btn-block btn-lg" data-action="book-confirm">
               ${UI.icon('calendar-check', 18)} ${useCredit ? 'Confirmar con mi plan' : (trial ? 'Confirmar mi clase gratis' : 'Confirmar reserva')}
             </button>
             <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes. ${UI.icon('mail', 14)} Enviaremos confirmaci��n por correo cuando sea posible.</p>
@@ -559,6 +590,28 @@
         </aside>
       </div>
     </div>`;
+
+    if (!user) {
+      return `<div class="public-page">
+        <header class="public-nav">
+          <a class="brand-link" href="#/agendar" aria-label="Recovery Studio">${UI.logoLockup({ size: 40 })}</a>
+          <div class="public-nav-actions">
+            <span class="public-nav-note">${UI.icon('sparkles', 14)} Agenda directa online</span>
+            <a class="btn btn-outline btn-sm" href="#/login">${UI.icon('user', 15)} Ya tengo cuenta</a>
+            <a class="btn btn-ghost btn-sm" href="${RS.data.whatsappUrl('Hola Recovery Studio, necesito ayuda para agendar.')}" target="_blank" rel="noopener">${UI.icon('whatsapp', 16)} WhatsApp</a>
+          </div>
+        </header>
+        <main class="public-main">
+          ${bookingHtml}
+        </main>
+        <footer class="public-foot">
+          <span>© ${new Date().getFullYear()} Recovery Studio · ${U.esc(RS.DB.get().settings.address)}</span>
+          <span>${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</span>
+        </footer>
+      </div>`;
+    }
+
+    return bookingHtml;
   }
 
   function showBookingSuccess(session) {
@@ -1251,11 +1304,13 @@
     RS.App.render();
   };
 
+  RS.inputs['booking-guest-name'] = (el) => { bookingState().guestName = el.value; };
+  RS.inputs['booking-guest-phone'] = (el) => { bookingState().guestPhone = el.value; };
+  RS.inputs['booking-guest-email'] = (el) => { bookingState().guestEmail = el.value; };
+
   RS.changes['booking-policy'] = (el) => {
     const b = bookingState();
     b.policy = el.checked;
-    const btn = document.querySelector('[data-action="book-confirm"]');
-    if (btn) btn.disabled = !(b.time && b.policy);
   };
 
   RS.actions['book-trial'] = () => {
@@ -1265,19 +1320,78 @@
   };
 
   RS.actions['book-confirm'] = () => {
-    const user = me();
+    let user = me();
     const b = bookingState();
     const service = RS.data.getService(b.serviceId);
-    if (!service) return UI.toast('Selecciona un servicio.', 'error');
-    if (!b.time) return UI.toast('Selecciona un horario.', 'error');
-    if (!b.policy) return UI.toast('Debes aceptar la política de reagendamiento.', 'error');
+    if (!service) return UI.toast('Por favor selecciona un servicio.', 'error');
+    if (!b.time) return UI.toast('Por favor selecciona un horario disponible.', 'error');
+
+    // Validación para usuarios sin cuenta previa (invitados)
+    if (!user) {
+      const nameEl = document.getElementById('booking-guest-name');
+      const phoneEl = document.getElementById('booking-guest-phone');
+      const emailEl = document.getElementById('booking-guest-email');
+      const name = (nameEl ? nameEl.value : b.guestName || '').trim();
+      const phone = (phoneEl ? phoneEl.value : b.guestPhone || '').trim();
+      const email = (emailEl ? emailEl.value : b.guestEmail || '').trim().toLowerCase();
+
+      b.guestName = name;
+      b.guestPhone = phone;
+      b.guestEmail = email;
+
+      if (!name) {
+        if (nameEl) nameEl.focus();
+        return UI.toast('Por favor ingresa tu nombre completo.', 'error');
+      }
+      if (!phone || phone.length < 8) {
+        if (phoneEl) phoneEl.focus();
+        return UI.toast('Por favor ingresa tu WhatsApp o teléfono de contacto.', 'error');
+      }
+      if (!email || !email.includes('@')) {
+        if (emailEl) emailEl.focus();
+        return UI.toast('Por favor ingresa un correo electrónico válido.', 'error');
+      }
+    }
+
+    if (!b.policy) {
+      const policyEl = document.getElementById('booking-policy');
+      if (policyEl) {
+        policyEl.focus();
+        policyEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return UI.toast('Debes aceptar la política de reagendamiento marcando la casilla.', 'error');
+    }
+
     const available = RS.data.availableSlots(b.date, b.serviceId).find((s) => s.time === b.time && s.available);
     if (!available) {
-      UI.toast('Ese horario ya no está disponible. Elige otro.', 'error');
+      UI.toast('Ese horario ya no está disponible. Por favor elige otro.', 'error');
       b.time = null;
       RS.App.render(true);
       return;
     }
+
+    // Si es invitado, buscamos si ya existe por email o creamos nuevo usuario
+    if (!user) {
+      let existing = st().users.find((u) => u.email && u.email.toLowerCase() === b.guestEmail);
+      if (!existing) {
+        existing = {
+          id: U.uid('usr'),
+          name: b.guestName,
+          email: b.guestEmail,
+          phone: b.guestPhone,
+          role: 'user',
+          active: true,
+          credits: 0,
+          createdAt: new Date().toISOString(),
+        };
+        st().users.push(existing);
+      } else {
+        if (b.guestPhone && !existing.phone) existing.phone = b.guestPhone;
+      }
+      user = existing;
+      RS.Auth.startSession(user);
+    }
+
     const useCredit = b.useCredit && user.credits > 0;
     const hasSessions = RS.data.userSessions(user.id).length > 0;
     const trialService = st().services.find((s) => s.id === 'srv-training' && s.active);
