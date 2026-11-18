@@ -3,39 +3,39 @@
    ========================================================================== */
 
 :root {
-  /* Dirección visual "Madera y vapor": arena, terracota y pino */
-  --sand: #f0e8db;
-  --sand-2: #e6dac7;
-  --sand-3: #f8f3ea;
-  --ink: #2b241d;
-  --ink-soft: #574b3f;
-  --clay: #9c4526;
-  --clay-soft: #c06a45;
-  --clay-deep: #7a3319;
-  --pine: #2e4238;
-  --pine-deep: #1e2c25;
-  --pine-soft: #4a6152;
+  /* Dirección visual "Nordic Athletic Sanctuary": pino profundo, arcilla y arena cálida */
+  --sand: #f7f4ee;
+  --sand-2: #ebdccb;
+  --sand-3: #fbfbf9;
+  --ink: #14221a;
+  --ink-soft: #6a7b72;
+  --clay: #b5603c;
+  --clay-soft: #d27c56;
+  --clay-deep: #8f4426;
+  --pine: #1e2e25;
+  --pine-deep: #14221a;
+  --pine-soft: #3a6351;
 
   --navy: var(--pine);
   --navy-700: var(--pine-deep);
   --navy-600: var(--pine-soft);
   --blue: var(--pine-soft);
   --blue-600: var(--pine);
-  --blue-50: #e7ebe6;
+  --blue-50: #e8f0ea;
   --orange: var(--clay);
   --orange-600: var(--clay-deep);
-  --orange-50: #f6e7de;
+  --orange-50: #fbece4;
   --bg: var(--sand);
   --surface: var(--sand-3);
-  --surface-2: #efe6d7;
-  --border: #e0d5c4;
-  --border-strong: #cdbfa9;
+  --surface-2: #f7f4ee;
+  --border: rgba(30, 46, 37, 0.12);
+  --border-strong: rgba(30, 46, 37, 0.28);
   --text: var(--ink);
   --text-2: var(--ink-soft);
-  --muted: #6b5d4e;
-  --muted-2: #6f6152;
-  --success: #3f6b4f;
-  --success-50: #e8f0e7;
+  --muted: #6a7b72;
+  --muted-2: #6a7b72;
+  --success: #3a6351;
+  --success-50: #e8f0ea;
   --warning: #d97706;
   --warning-50: #fff7e6;
   --danger: #dc2626;
@@ -49,8 +49,8 @@
   --shadow-sm: 0 1px 2px rgba(43, 36, 29, 0.05), 0 6px 16px -10px rgba(43, 36, 29, 0.16);
   --shadow-md: 0 18px 40px -20px rgba(43, 36, 29, 0.28);
   --shadow-lg: 0 30px 70px -30px rgba(30, 44, 37, 0.34);
-  --font: 'Karla', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --serif: 'Bitter', Georgia, 'Times New Roman', serif;
+  --font: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
   --mono: 'DM Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --sidebar-w: 264px;
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);

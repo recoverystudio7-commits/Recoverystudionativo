@@ -12,9 +12,9 @@
   --line-strong: rgba(214, 205, 188, 0.24);
   --text: #efe7da;
   --muted: #a69c8c;
-  --volt: #dfa76a;
-  --volt-soft: rgba(223, 167, 106, 0.12);
-  --electric: #c2704a;
+  --volt: #d27c56;
+  --volt-soft: rgba(210, 124, 86, 0.12);
+  --electric: #b5603c;
   --danger: #ec7360;
   --sheet-text: #1f1a14;
   --sheet-muted: #6e6659;
@@ -35,11 +35,11 @@ body {
   margin: 0;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 12% -8%, rgba(223, 167, 106, 0.075), transparent 28rem),
-    radial-gradient(circle at 92% 8%, rgba(194, 112, 74, 0.07), transparent 30rem),
+    radial-gradient(circle at 12% -8%, rgba(210, 124, 86, 0.075), transparent 28rem),
+    radial-gradient(circle at 92% 8%, rgba(181, 96, 60, 0.07), transparent 30rem),
     var(--bg);
   color: var(--text);
-  font-family: "Karla", system-ui, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
