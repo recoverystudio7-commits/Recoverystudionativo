@@ -62,6 +62,23 @@
       'Rodilla (flexión / extensión)',
       'Tobillo (dorsiflexión / plantarflexión)',
     ].map((name) => `<tr><td class="m-side">${esc(name)}</td><td class="m-num"></td><td class="m-num"></td><td class="m-obs"></td></tr>`).join('');
+    const functional = [
+      'Test de empuje estático de extensión',
+      'Test de palidez/centrado en articulación',
+      'Prueba de flexor funcional (músculos agonistas)',
+      'Prueba de fuerza en rango',
+      'Prueba de alta / especial',
+    ].map((name) => `<tr><td>${esc(name)}</td><td class="m-obs2"></td><td class="m-num2"></td><td class="m-obs"></td></tr>`).join('');
+    const evaRows = [
+      'Cuello', 'Hombro', 'Cadera', 'Rodilla', 'Tobillo', 'Vuelo / costado',
+    ].map((region) => `<tr><td class="m-side">${esc(region)}</td><td class="m-num"></td><td class="m-obs"></td></tr>`).join('');
+    const evaTable = `
+      <h2>EVA (Escala Visual Analógica)</h2>
+      <table><thead><tr><th>Región</th><th>MDC EVA (0–10)</th><th>Observaciones</th></tr></thead><tbody>${evaRows}</tbody></table>
+      <p class="hint">EVA: 0 = nada, 1-3 leve, 4-6 moderado, 7-8 fuerte, 9-10 intenso. MDC = máxima dolor que puede interpretar en escala 0 a 10.</p>`;
+    const romTables = (title, bodyRows) => `
+      <h2>${esc(title)}</h2>
+      <table><thead><tr><th>Región</th><th>Movimiento / Prueba</th><th>De °</th><th>A °</th><th>Observaciones</th></tr></thead><tbody>${bodyRows}</tbody></table>`;
     return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ficha clínica Kinésica · ${esc(u.name || '')}</title>
     <style>
@@ -75,9 +92,11 @@
       h2{font-size:13px;font-weight:700;border-bottom:1px solid #999;padding-bottom:2px;margin:14px 0 6px}
       .kv{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0 0 10px;font-size:11px}
       .kv b{font-weight:700}
+      .hint{font-size:10px;color:#555;margin:4px 0 10px}
       table{width:100%;border-collapse:collapse;margin-top:4px}
       td{border:1px solid #999;padding:3px 4px;font-size:11px}
       td.m-side{width:46%}td.m-num{width:16%;text-align:center}td.m-obs{width:38%;font-size:10px}
+      td.m-num2{width:26%;text-align:center}td.m-obs2{width:28%;font-size:10px}
       .obs-area{min-height:42px;border:1px solid #999;margin:8px 0}
       .sign{margin-top:18px;font-size:11px}
       .printbar{margin-top:20px;text-align:right}
@@ -86,7 +105,7 @@
     </style></head><body>
       ${studioHeader()}
       <h1>FICHA CLÍNICA KINÉSICA · MINSAL SIS</h1>
-      <p class="cf-sub">Evaluación de movilidad y recuperación · Fecha: ${esc(todayISO())}</p>
+      <p class="cf-sub">Evaluación clínica · Fecha: ${esc(todayISO())}</p>
       <h2>Datos del usuario</h2>
       <div class="kv">
         <span>Nombre: <b>${esc(u.name || '')}</b></span>
@@ -95,10 +114,20 @@
         <span>Inscripción: <b>${esc(created || '—')}</b></span>
         <span>Objetivo: <b>${esc(u.goal || '—')}</b></span>
       </div>
-      <h2>Evaluación kinésica (MINSAL SIS)</h2>
-      <table><thead><tr><th>Sección</th><th>De °</th><th>A °</th><th>Observaciones</th></tr></thead><tbody>${rows}</tbody></table>
-      <h2>Fuerza y control funcional</h2>
-      <div class="kv"><span>Tono: <b>_____</b></span><span>Cadencia / Fuerza sujetadora: <b>_____</b></span></div>
+      <h2>Diagnóstico y clasificación clínica</h2>
+      <div class="kv">
+        <span>Diagnóstico / Evaluado: <b>_____</b></span>
+        <span>Mecanismo de lesión: <b>_____</b></span>
+        <span>Tiempo desde el inicio: <b>_____</b> (ej. hace 2 semanas)</span>
+        <span>Fase clínica: <b>ACUOSO · SUBAGUDO · CRÓNICO</b></span>
+      </div>
+      <p class="hint">Fases con ejemplos de tiempo (conceptos estándar de Kinésica Clínica): Acuoso (hasta 72 h tras traumatismo agudo); Subagudo (de ~2 semanas a 6 semanas tras lesión aguda); Crónico (a partir de ~6 semanas o más de 6 semanas tras lesión repetitiva o recaída).</p>
+      ${evaTable}
+      ${romTables('Rango de movimiento según región (De ° a °)', rows)}
+      <h2>Pruebas funcionales</h2>
+      <table><thead><tr><th>Prueba</th><th>Resultado / Observación</th><th>Estado</th><th>Notas</th></tr></thead><tbody>${functional}</tbody></table>
+      <h2>Fuerza y control</h2>
+      <div class="kv"><span>Máximo estimado (P): <b>_____</b></span><span>Máximo SNC: <b>_____</b></span><span>Rango de recuperación: <b>_____</b></span></div>
       <h2>Observaciones del profesional</h2>
       <div class="obs-area"></div>
       <div class="sign">Firma del coach / evaluado: _________________________ · ${esc(id.coachName || 'Coach')} · ${esc(id.coachProfession || '')} · Fecha: ${esc(todayISO())}</div>
