@@ -7,7 +7,16 @@
 
   const RS = (window.RS = window.RS || {});
 
-  const APP_VERSION = 1;
+  // Stub por defecto para sincronización con Supabase. Si supabase-sync.js
+  // se carga, sobrescribe esta implementación con la versión real.
+  RS.SupabaseSync = RS.SupabaseSync || {
+    configured: () => false,
+    pull: () => Promise.resolve({ ok: false, reason: 'no-module' }),
+    push: () => Promise.resolve({ ok: false, reason: 'no-module' }),
+    supabaseUserId: () => null,
+  };
+
+  const APP_VERSION = 2;
   const STORAGE_KEY = 'recoveryStudio.state.v1';
   const SESSION_KEY = 'recoveryStudio.session.v1';
 
@@ -18,7 +27,7 @@
     whatsapp: '56965058439',
     whatsappDisplay: '+56 9 6505 8439',
     adminEmail: 'recoverystudio7@gmail.com',
-    city: 'Gorbea, La Araucanía',
+    city: 'Gorbea, Chile',
   };
 
   const MONTHS = [
@@ -289,84 +298,169 @@
     });
   }
 
-  /* ------------------------------- datos demo ------------------------------ */
+  /* ----------------------------- cat?logo inicial -------------------------- */
 
   const SERVICE_SEED = [
     {
+      id: 'srv-eval',
+      name: 'Evaluación inicial + plan personalizado',
+      kind: 'Sesión',
+      price: 40000,
+      duration: 75,
+      sessions: 1,
+      companyPrice: 36000,
+      description: 'Punto de partida: evaluamos tu movilidad, fuerza y objetivos, y te llevas una pauta hecha a tu medida.',
+      features: ['Evaluación funcional', 'Pauta de entrenamiento', 'Definición de maximales'],
+      active: true,
+      popular: false,
+    },
+    {
       id: 'srv-recovery',
-      name: 'Sesión Recovery',
+      name: 'Recuperación muscular',
       kind: 'Sesión',
       price: 35000,
       duration: 60,
       sessions: 1,
       companyPrice: 32000,
-      description: 'Masoterapia deportiva, movilidad asistida y descarga muscular para volver a entrenar mejor.',
+      description: 'Masoterapia deportiva y movilidad asistida para soltar la tensión, bajar el dolor y volver a entrenar mejor.',
       features: ['Evaluación rápida del día', 'Masoterapia + movilidad', 'Recomendaciones post sesión'],
       active: true,
       popular: true,
     },
     {
       id: 'srv-training',
-      name: 'Entrenamiento 1:1',
+      name: 'Entrenamiento personal',
       kind: 'Sesión',
       price: 30000,
       duration: 60,
       sessions: 1,
       companyPrice: 28000,
-      description: 'Entrenamiento personalizado en sala, con corrección técnica y foco en tus objetivos.',
+      description: 'Entrenamiento 1:1 en sala, con corrección técnica en cada repetición para que progreses seguro.',
       features: ['Plan de la sesión', 'Corrección técnica', 'Registro de cargas'],
       active: true,
       popular: false,
     },
     {
-      id: 'srv-eval',
-      name: 'Evaluación + pauta',
+      id: 'srv-sauna',
+      name: 'Sauna húmedo',
       kind: 'Sesión',
-      price: 40000,
-      duration: 75,
+      price: 10000,
+      duration: 30,
       sessions: 1,
-      companyPrice: 36000,
-      description: 'Evaluación funcional completa, definición de objetivos y entrega de tu pauta inicial.',
-      features: ['Evaluación funcional', 'Pauta de entrenamiento', 'Definición de maximales'],
+      companyPrice: 0,
+      description: 'Sesión de calor húmedo con protocolo de hidratación y tiempos controlados para soltar tensión y descansar.',
+      features: ['Protocolo de hidratación', 'Tiempos controlados'],
       active: true,
       popular: false,
-    },
-    {
-      id: 'plan-recovery-8',
-      name: 'Plan Recovery 8',
-      kind: 'Plan',
-      price: 220000,
-      duration: 60,
-      sessions: 8,
-      companyPrice: 0,
-      description: 'Ocho sesiones de recuperación para sostener tu carga de entrenamiento durante el mes.',
-      features: ['8 sesiones Recovery', 'Vigencia 30 días', 'Seguimiento de progreso', 'Prioridad de agenda'],
-      active: true,
-      popular: false,
-    },
-    {
-      id: 'plan-performance-12',
-      name: 'Plan Performance 12',
-      kind: 'Plan',
-      price: 300000,
-      duration: 60,
-      sessions: 12,
-      companyPrice: 0,
-      description: 'El plan completo: recuperación, entrenamiento y pauta personalizada para rendir al máximo.',
-      features: ['12 sesiones combinadas', 'Rutina actualizada', 'Control de maximales', 'Asesoría por WhatsApp'],
-      active: true,
-      popular: true,
     },
     {
       id: 'srv-online',
-      name: 'Asesoría online',
+      name: 'Asesoría a distancia',
       kind: 'Asesoría',
       price: 18000,
       duration: 30,
       sessions: 1,
       companyPrice: 15000,
-      description: 'Videollamada de 30 minutos para resolver dudas de entrenamiento, cargas o recuperación.',
+      description: 'Videollamada para resolver dudas de tu rutina, cargas o recuperación, estés donde estés.',
       features: ['Videollamada 30 min', 'Resumen escrito', 'Seguimiento por WhatsApp'],
+      active: true,
+      popular: false,
+    },
+    {
+      id: 'plan-inicio',
+      name: 'Plan Inicio',
+      kind: 'Plan',
+      price: 45000,
+      duration: 60,
+      sessions: 4,
+      validityDays: 30,
+      companyPrice: 0,
+      description: 'Para crear el hábito: 1 entrenamiento a la semana, a tu ritmo.',
+      features: ['1 vez por semana', 'Vigencia 30 días', 'Seguimiento de progreso'],
+      active: true,
+      popular: false,
+    },
+    {
+      id: 'plan-progreso',
+      name: 'Plan Progreso',
+      kind: 'Plan',
+      price: 80000,
+      duration: 60,
+      sessions: 8,
+      validityDays: 30,
+      companyPrice: 0,
+      description: 'El favorito: 2 entrenamientos por semana para ver cambios reales.',
+      features: ['2 veces por semana', 'Vigencia 30 días', 'Prioridad de agenda', 'Seguimiento de progreso'],
+      active: true,
+      popular: true,
+    },
+    {
+      id: 'plan-libre',
+      name: 'Plan Libre',
+      kind: 'Plan',
+      price: 120000,
+      duration: 60,
+      sessions: 12,
+      validityDays: 30,
+      companyPrice: 0,
+      description: 'Entrena 3 veces por semana y lleva tu progreso al máximo.',
+      features: ['3 veces por semana', 'Vigencia 30 días', 'Rutina actualizada', 'Asesoría por WhatsApp'],
+      active: true,
+      popular: false,
+    },
+    {
+      id: 'plan-dupla',
+      name: 'Plan Dupla',
+      kind: 'Plan',
+      price: 120000,
+      duration: 60,
+      sessions: 8,
+      validityDays: 30,
+      companyPrice: 0,
+      description: 'Entrena en pareja: 2 personas, 2 veces por semana. Más barato que ir por separado.',
+      features: ['2 personas', '2 veces por semana', 'Vigencia 30 días'],
+      active: true,
+      popular: false,
+    },
+    {
+      id: 'plan-full-inicio',
+      name: 'Full Inicio',
+      kind: 'Plan',
+      price: 65000,
+      duration: 60,
+      sessions: 4,
+      validityDays: 30,
+      companyPrice: 0,
+      description: '1 entrenamiento a la semana + sauna después de cada sesión.',
+      features: ['1 vez por semana', 'Sauna después de cada sesión', 'Vigencia 30 días'],
+      active: true,
+      popular: false,
+    },
+    {
+      id: 'plan-full-progreso',
+      name: 'Full Progreso',
+      kind: 'Plan',
+      price: 120000,
+      duration: 60,
+      sessions: 8,
+      validityDays: 30,
+      companyPrice: 0,
+      description: '2 entrenamientos por semana + sauna después de cada sesión.',
+      features: ['2 veces por semana', 'Sauna después de cada sesión', 'Vigencia 30 días'],
+      active: true,
+      popular: false,
+    },
+    {
+      id: 'plan-full-libre',
+      name: 'Full Libre',
+      kind: 'Plan',
+      price: 180000,
+      duration: 60,
+      sessions: 12,
+      validityDays: 30,
+      companyPrice: 0,
+      description: '3 entrenamientos por semana + sauna después de cada sesión. El plan completo.',
+      features: ['3 veces por semana', 'Sauna después de cada sesión', 'Vigencia 30 días', 'Rutina actualizada'],
       active: true,
       popular: false,
     },
@@ -385,518 +479,83 @@
     },
   ];
 
-  function demoProof(amount, name, refCode) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="900" viewBox="0 0 720 900">
-      <rect width="720" height="900" fill="#eef2f7"/>
-      <rect x="60" y="60" width="600" height="780" rx="18" fill="#ffffff"/>
-      <rect x="60" y="60" width="600" height="96" rx="18" fill="#0a2342"/>
-      <rect x="60" y="120" width="600" height="36" fill="#0a2342"/>
-      <text x="96" y="120" font-family="Arial, sans-serif" font-size="26" font-weight="bold" fill="#ffffff">Banco BCI</text>
-      <text x="96" y="146" font-family="Arial, sans-serif" font-size="14" fill="#9fb6d0">Comprobante de transferencia</text>
-      <text x="96" y="220" font-family="Arial, sans-serif" font-size="14" fill="#64748b">MONTO TRANSFERIDO</text>
-      <text x="96" y="266" font-family="Arial, sans-serif" font-size="46" font-weight="bold" fill="#0a2342">${fmtMoney(amount)}</text>
-      <line x1="96" y1="300" x2="624" y2="300" stroke="#e2e8f0" stroke-width="2"/>
-      <text x="96" y="344" font-family="Arial, sans-serif" font-size="13" fill="#64748b">DESTINATARIO</text>
-      <text x="96" y="370" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0f172a">Daniel Esteban Barrueto</text>
-      <text x="96" y="394" font-family="Arial, sans-serif" font-size="14" fill="#475569">RUT 17.375.282-2 · Banco BCI</text>
-      <text x="96" y="416" font-family="Arial, sans-serif" font-size="14" fill="#475569">Cuenta Corriente 72771619</text>
-      <text x="96" y="462" font-family="Arial, sans-serif" font-size="13" fill="#64748b">ORDENANTE</text>
-      <text x="96" y="488" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0f172a">${esc(name)}</text>
-      <text x="96" y="534" font-family="Arial, sans-serif" font-size="13" fill="#64748b">REFERENCIA</text>
-      <text x="96" y="560" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ff7a18">${esc(refCode)}</text>
-      <rect x="96" y="610" width="528" height="54" rx="10" fill="#f0fdf4"/>
-      <circle cx="122" cy="637" r="10" fill="#0e9f6e"/>
-      <path d="M118 637l3 3 6-7" stroke="#ffffff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="144" y="642" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#0e9f6e">Transferencia exitosa</text>
-      <text x="96" y="714" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">Comprobante simulado con fines de demostración.</text>
-      <text x="96" y="736" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">Recovery Studio · Gorbea, Chile</text>
-    </svg>`;
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-  }
-
-  function at(now, offset, time) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
-    return { date: iso(d), time };
-  }
-
   async function buildSeed() {
-    const now = new Date();
-    const today = iso(now);
-    const thisMonth = monthKey(now);
+    const now = new Date().toISOString();
+    const adminPasswordHash = await hashPassword('Recovery2026!');
+    const adminPinHash = await hashPassword('2468');
+    const hoursByDay = {
+      0: { enabled: false, start: '17:30', end: '22:30' },
+      1: { enabled: true, start: '17:30', end: '22:30' },
+      2: { enabled: true, start: '17:30', end: '22:30' },
+      3: { enabled: true, start: '17:30', end: '22:30' },
+      4: { enabled: true, start: '17:30', end: '22:30' },
+      5: { enabled: true, start: '15:00', end: '19:30' },
+      6: { enabled: false, start: '17:30', end: '22:30' },
+    };
+    const openDays = Object.keys(hoursByDay).map(Number).filter((day) => hoursByDay[day].enabled);
 
-    const passAdmin = await hashPassword('Recovery2026!');
-    const passDemo = await hashPassword('demo1234');
-    const pin = await hashPassword('2468');
-
-    const services = SERVICE_SEED.map((s) => ({ ...s }));
-
-    const users = [
-      {
+    return {
+      version: APP_VERSION,
+      meta: { initializedAt: now, app: 'Recovery Studio' },
+      users: [{
         id: 'usr-admin',
         role: 'admin',
-        name: 'Daniel Esteban Barrueto',
+        name: 'Daniel Esteban Barrueto Jopia',
         email: BRAND.adminEmail,
         phone: '+56 9 6505 8439',
-        passwordHash: passAdmin,
+        passwordHash: adminPasswordHash,
         active: true,
         credits: 0,
         planLabel: 'Administrador',
         goal: '',
-        notes: 'Perfil administrador del studio.',
-        createdAt: `${thisMonth}-01T09:00:00`,
-        source: 'admin',
-      },
-      {
-        id: 'usr-valentina',
-        role: 'user',
-        name: 'Valentina Rojas',
-        email: 'valentina@demo.cl',
-        phone: '+56 9 8123 4455',
-        passwordHash: passDemo,
-        active: true,
-        credits: 5,
-        planLabel: 'Plan Performance 12',
-        goal: 'Volver a correr sin dolor y mejorar movilidad de cadera.',
-        notes: 'Prefiere horarios de mañana. Molestia previa en isquiotibial derecho.',
-        createdAt: `${addMonths(today, -2).slice(0, 7)}-12T10:30:00`,
-        source: 'demo',
-      },
-      {
-        id: 'usr-matias',
-        role: 'user',
-        name: 'Matías Fuentes',
-        email: 'matias@demo.cl',
-        phone: '+56 9 7456 2210',
-        passwordHash: passDemo,
-        active: true,
-        credits: 2,
-        planLabel: 'Plan Recovery 8',
-        goal: 'Ganar fuerza en sentadilla y cuidar zona lumbar.',
-        notes: 'Entrena 4 veces por semana. Trabaja hasta las 18:30.',
-        createdAt: `${addMonths(today, -1).slice(0, 7)}-03T16:20:00`,
-        source: 'demo',
-      },
-      {
-        id: 'usr-carolina',
-        role: 'user',
-        name: 'Carolina Soto',
-        email: 'carolina@demo.cl',
-        phone: '+56 9 6332 7788',
-        passwordHash: passDemo,
-        active: true,
-        credits: 0,
-        planLabel: 'Sin plan activo',
-        goal: 'Recuperación post competencia de CrossFit.',
-        notes: 'Llegó por recomendación. Pago pendiente de validación.',
-        createdAt: `${thisMonth}-01T12:00:00`,
-        source: 'admin',
-      },
-    ];
-
-    const sessions = [
-      // Próximas
-      { ...at(now, 2, '10:00'), id: 'ses_1001', userId: 'usr-valentina', serviceId: 'srv-recovery', status: 'confirmada', payment: 'plan', notes: 'Trabajo de descarga en isquiotibiales.', coach: 'Daniel Barrueto', createdAt: `${today}T09:12:00` },
-      { ...at(now, 2, '19:00'), id: 'ses_1002', userId: 'usr-matias', serviceId: 'srv-training', status: 'confirmada', payment: 'pendiente', notes: 'Sesión de fuerza, foco sentadilla.', coach: 'Daniel Barrueto', createdAt: `${today}T10:40:00` },
-      { ...at(now, 4, '18:00'), id: 'ses_1003', userId: 'usr-valentina', serviceId: 'srv-training', status: 'confirmada', payment: 'plan', notes: 'Progresión de fuerza.', coach: 'Daniel Barrueto', createdAt: `${today}T11:05:00` },
-      { ...at(now, 6, '09:00'), id: 'ses_1004', userId: 'usr-matias', serviceId: 'srv-recovery', status: 'confirmada', payment: 'plan', notes: 'Descarga de tren inferior.', coach: 'Daniel Barrueto', createdAt: `${today}T11:20:00` },
-      { ...at(now, 8, '12:00'), id: 'ses_1005', userId: 'usr-carolina', serviceId: 'srv-eval', status: 'pendiente', payment: 'pendiente', notes: 'Primera evaluación.', coach: 'Daniel Barrueto', createdAt: `${today}T12:10:00` },
-      { ...at(now, 11, '17:00'), id: 'ses_1006', userId: 'usr-valentina', serviceId: 'srv-online', status: 'confirmada', payment: 'plan', notes: 'Revisión de rutina.', coach: 'Daniel Barrueto', createdAt: `${today}T12:30:00` },
-      // Historial
-      { ...at(now, -2, '10:00'), id: 'ses_0901', userId: 'usr-valentina', serviceId: 'srv-recovery', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -9)}T10:00:00` },
-      { ...at(now, -3, '19:00'), id: 'ses_0902', userId: 'usr-matias', serviceId: 'srv-training', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -10)}T19:00:00` },
-      { ...at(now, -8, '11:00'), id: 'ses_0903', userId: 'usr-valentina', serviceId: 'srv-training', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -15)}T11:00:00` },
-      { ...at(now, -12, '18:00'), id: 'ses_0904', userId: 'usr-valentina', serviceId: 'srv-recovery', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -19)}T18:00:00` },
-      { ...at(now, -18, '09:00'), id: 'ses_0905', userId: 'usr-matias', serviceId: 'srv-recovery', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -25)}T09:00:00` },
-      { ...at(now, -23, '12:00'), id: 'ses_0906', userId: 'usr-valentina', serviceId: 'srv-eval', status: 'completada', payment: 'plan', notes: '', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -30)}T12:00:00` },
-      { ...at(now, -30, '10:00'), id: 'ses_0907', userId: 'usr-carolina', serviceId: 'srv-recovery', status: 'cancelada', payment: 'cortesia', notes: 'Cancelada por la clienta.', coach: 'Daniel Barrueto', createdAt: `${addDays(today, -38)}T10:00:00` },
-    ];
-
-    // Sesión de hoy si aún hay margen horario
-    if (now.getHours() < 16) {
-      sessions.unshift({
-        id: 'ses_1000',
-        userId: 'usr-matias',
-        serviceId: 'srv-training',
-        date: today,
-        time: '18:30',
-        status: 'confirmada',
-        payment: 'plan',
-        notes: 'Sesión de hoy.',
-        coach: 'Daniel Barrueto',
-        createdAt: `${today}T08:00:00`,
-      });
-    }
-
-    /* ------------------------------ pagos demo ----------------------------- */
-    const payments = [];
-    const monthEntries = [
-      { concept: 'Plan Performance 12', category: 'Planes', amount: 300000, day: 4, name: 'Valentina Rojas', userId: 'usr-valentina', credits: 12 },
-      { concept: 'Plan Recovery 8', category: 'Planes', amount: 220000, day: 9, name: 'Matías Fuentes', userId: 'usr-matias', credits: 8 },
-      { concept: 'Sesión Recovery', category: 'Sesiones', amount: 35000, day: 12, name: 'Valentina Rojas', userId: 'usr-valentina', credits: 0 },
-      { concept: 'Entrenamiento 1:1', category: 'Sesiones', amount: 30000, day: 15, name: 'Matías Fuentes', userId: 'usr-matias', credits: 0 },
-      { concept: 'Sesión Recovery', category: 'Sesiones', amount: 35000, day: 17, name: 'Carolina Soto', userId: 'usr-carolina', credits: 1 },
-      { concept: 'Evaluación + pauta', category: 'Sesiones', amount: 40000, day: 20, name: 'Carolina Soto', userId: 'usr-carolina', credits: 0 },
-      { concept: 'Asesoría online', category: 'Asesorías', amount: 18000, day: 23, name: 'Valentina Rojas', userId: 'usr-valentina', credits: 0 },
-      { concept: 'Sesión Recovery', category: 'Sesiones', amount: 35000, day: 26, name: 'Matías Fuentes', userId: 'usr-matias', credits: 0 },
-    ];
-
-    for (let back = 5; back >= 0; back -= 1) {
-      const base = new Date(now.getFullYear(), now.getMonth() - back, 1);
-      const isCurrent = back === 0;
-      const monthFactor = [0.86, 1.04, 0.93, 1.16, 0.98, 1.06][5 - back];
-      monthEntries.forEach((entry, index) => {
-        let day = entry.day;
-        if (isCurrent) {
-          const maxDay = now.getDate();
-          day = Math.max(1, Math.min(maxDay, 1 + Math.round(index * Math.max(0.4, (maxDay - 1) / monthEntries.length))));
-        }
-        const d = new Date(base.getFullYear(), base.getMonth(), day);
-        if (d > now) d.setTime(now.getTime());
-        const date = iso(d);
-        const amount = Math.round((entry.amount * monthFactor) / 1000) * 1000;
-        const pRef = `PAG-${String(1000 + back * 20 + index)}`;
-        payments.push({
-          id: `pay_seed_${back}_${index}`,
-          ref: pRef,
-          userId: entry.userId,
-          userName: entry.name,
-          concept: entry.concept,
-          category: entry.category,
-          amount,
-          date,
-          status: 'aprobado',
-          method: 'Transferencia',
-          proof: demoProof(amount, entry.name, pRef),
-          proofName: 'comprobante-demo.svg',
-          creditsToAdd: 0,
-          creditsAdded: entry.credits,
-          note: '',
-          createdAt: `${date}T10:00:00`,
-          approvedAt: `${date}T11:00:00`,
-        });
-      });
-    }
-
-    // Pendientes de validación
-    const pendRef1 = 'PAG-2081';
-    const pendRef2 = 'PAG-2082';
-    const pendRef3 = 'PAG-2083';
-    payments.push(
-      {
-        id: 'pay_pending_1',
-        ref: pendRef1,
-        userId: 'usr-carolina',
-        userName: 'Carolina Soto',
-        concept: 'Plan Recovery 8',
-        category: 'Planes',
-        amount: 220000,
-        date: today,
-        status: 'pendiente',
-        method: 'Transferencia',
-        proof: demoProof(220000, 'Carolina Soto', pendRef1),
-        proofName: 'comprobante-carolina.svg',
-        creditsToAdd: 8,
-        creditsAdded: 0,
-        note: 'Transferencia realizada hoy.',
-        createdAt: `${today}T09:30:00`,
-        approvedAt: null,
-      },
-      {
-        id: 'pay_pending_2',
-        ref: pendRef2,
-        userId: 'usr-matias',
-        userName: 'Matías Fuentes',
-        concept: 'Entrenamiento 1:1',
-        category: 'Sesiones',
-        amount: 30000,
-        date: today,
-        status: 'pendiente',
-        method: 'Transferencia',
-        proof: demoProof(30000, 'Matías Fuentes', pendRef2),
-        proofName: 'comprobante-matias.svg',
-        creditsToAdd: 0,
-        creditsAdded: 0,
-        note: 'Pago de sesión individual.',
-        createdAt: `${today}T10:10:00`,
-        approvedAt: null,
-      },
-      {
-        id: 'pay_pending_3',
-        ref: pendRef3,
-        userId: 'usr-valentina',
-        userName: 'Valentina Rojas',
-        concept: 'Asesoría online',
-        category: 'Asesorías',
-        amount: 18000,
-        date: today,
-        status: 'pendiente',
-        method: 'Transferencia',
-        proof: demoProof(18000, 'Valentina Rojas', pendRef3),
-        proofName: 'comprobante-valentina.svg',
-        creditsToAdd: 0,
-        creditsAdded: 0,
-        note: '',
-        createdAt: `${today}T11:00:00`,
-        approvedAt: null,
-      }
-    );
-
-    /* ------------------------------ gastos demo ---------------------------- */
-    const expenses = [];
-    const expCats = [
-      { category: 'Arriendo', description: 'Arriendo studio', amount: 380000, day: 2 },
-      { category: 'Insumos', description: 'Aceites, toallas e insumos de masoterapia', amount: 65000, day: 6 },
-      { category: 'Marketing', description: 'Campaña redes sociales', amount: 75000, day: 10 },
-      { category: 'Servicios básicos', description: 'Luz, agua e internet', amount: 42000, day: 14 },
-      { category: 'Mantención', description: 'Mantención de equipamiento', amount: 38000, day: 21 },
-    ];
-    for (let back = 5; back >= 0; back -= 1) {
-      const base = new Date(now.getFullYear(), now.getMonth() - back, 1);
-      const isCurrent = back === 0;
-      expCats.forEach((e, i) => {
-        if (isCurrent && i > 2) return;
-        const day = isCurrent ? Math.min(now.getDate(), e.day) : e.day;
-        const d = new Date(base.getFullYear(), base.getMonth(), day);
-        expenses.push({
-          id: `exp_seed_${back}_${i}`,
-          date: iso(d),
-          category: e.category,
-          description: e.description,
-          amount: e.amount,
-          method: 'Transferencia',
-        });
-      });
-    }
-
-    /* ----------------------------- honorarios ------------------------------ */
-    const boletas = [];
-    for (let back = 5; back >= 0; back -= 1) {
-      const base = new Date(now.getFullYear(), now.getMonth() - back, 1);
-      const isCurrent = back === 0;
-      if (isCurrent && now.getDate() < 5) {
-        // igual dejamos una boleta del mes en curso para el demo
-      }
-      const gross = [580000, 650000, 780000, 720000, 840000, 610000][5 - back] || 650000;
-      const day = isCurrent ? Math.min(now.getDate(), 3) : 28;
-      boletas.push({
-        id: `bol_seed_${back}`,
-        number: String(241 + back * 7),
-        date: iso(new Date(base.getFullYear(), base.getMonth(), day)),
-        client: 'Recovery Studio SpA',
-        gross,
-        retentionRate: 15.25,
-        notes: 'Boleta de honorarios por servicios profesionales.',
-      });
-    }
-
-    /* ----------------------------- cotizaciones ---------------------------- */
-    const quotes = [
-      {
-        id: 'qte_seed_1',
-        ref: 'COT-4821',
-        company: 'Clínica Andes',
-        rut: '76.543.210-8',
-        contact: 'Paula Herrera',
-        email: 'paula.herrera@clinicaandes.cl',
-        phone: '+56 9 8877 2211',
-        people: 18,
-        serviceIds: ['srv-recovery', 'srv-online'],
-        date: addDays(today, 20),
-        message: 'Buscamos un programa mensual de recuperación para el equipo de kinesiología.',
-        status: 'nueva',
-        estimate: 846000,
-        finalAmount: 0,
         notes: '',
-        createdAt: `${today}T08:40:00`,
+        createdAt: now,
+        source: 'admin',
+      }],
+      services: SERVICE_SEED.map((service) => ({ ...service, features: [...service.features] })),
+      videoCapsules: [],
+      sessions: [],
+      blockedSlots: [],
+      recurringBlocks: [],
+      payments: [],
+      expenses: [],
+      boletas: [],
+      quotes: [],
+      maxes: [],
+      routines: [],
+      settings: {
+        openDays,
+        hoursByDay,
+        start: '17:30',
+        end: '22:30',
+        slot: 30,
+        leadHours: 2,
+        policyHours: 12,
+        horizonDays: 45,
+        autoLockMin: 15,
+        retention: 15.25,
+        whatsapp: BRAND.whatsapp,
+        address: 'Gorbea, Región de la Araucanía',
+        clubRecoveryReward: 'Sesión de sauna',
+        clubRecoveryStamps: 5,
+        clubRecoveryConsistencyMonths: 3,
+        coachName: 'Daniel Barrueto Jopia',
+        coachProfession: 'Kinesiólogo · Magíster',
+        studioName: 'Recovery Studio',
+        discountCodes: [],
+        freeTrialEnabled: true,
+        settingsUpdatedAt: 0,
+        // Los datos bancarios NO se guardan en el código (repo público).
+        // Se cargan desde Supabase (studio_settings.config) y los llena el admin en Configuración.
+        bank: { holder: '', rut: '', bankName: '', accountType: '', account: '', email: '' },
       },
-      {
-        id: 'qte_seed_2',
-        ref: 'COT-4820',
-        company: 'Constructora Vertex',
-        rut: '77.112.334-5',
-        contact: 'Rodrigo Salas',
-        email: 'rsalas@vertex.cl',
-        phone: '+56 9 6655 1122',
-        people: 35,
-        serviceIds: ['srv-recovery'],
-        date: addDays(today, 12),
-        message: 'Programa de pausas activas y recuperación para obra.',
-        status: 'enviada',
-        estimate: 1008000,
-        finalAmount: 1180000,
-        notes: 'Se envió propuesta con 2 jornadas mensuales.',
-        createdAt: `${addDays(today, -3)}T15:20:00`,
-      },
-      {
-        id: 'qte_seed_3',
-        ref: 'COT-4817',
-        company: 'TechNova',
-        rut: '76.888.901-2',
-        contact: 'Fernanda Lagos',
-        email: 'flagos@technova.io',
-        phone: '+56 9 5544 3322',
-        people: 24,
-        serviceIds: ['srv-recovery', 'srv-training'],
-        date: addDays(today, 30),
-        message: 'Beneficio de bienestar para el equipo de desarrollo.',
-        status: 'aceptada',
-        estimate: 1296000,
-        finalAmount: 1250000,
-        notes: 'Aceptada. Inicio el próximo mes.',
-        createdAt: `${addDays(today, -12)}T11:10:00`,
-      },
-    ];
-
-    /* ------------------------------ maximales ------------------------------ */
-    const maxes = [
-      { id: 'mx_1', userId: 'usr-valentina', exercise: 'Sentadilla', current: 85, previous: 80, unit: 'kg', updatedAt: addDays(today, -8) },
-      { id: 'mx_2', userId: 'usr-valentina', exercise: 'Peso muerto', current: 100, previous: 95, unit: 'kg', updatedAt: addDays(today, -8) },
-      { id: 'mx_3', userId: 'usr-valentina', exercise: 'Press banca', current: 45, previous: 42.5, unit: 'kg', updatedAt: addDays(today, -15) },
-      { id: 'mx_4', userId: 'usr-valentina', exercise: 'Press militar', current: 30, previous: 27.5, unit: 'kg', updatedAt: addDays(today, -15) },
-      { id: 'mx_5', userId: 'usr-matias', exercise: 'Sentadilla', current: 130, previous: 125, unit: 'kg', updatedAt: addDays(today, -10) },
-      { id: 'mx_6', userId: 'usr-matias', exercise: 'Peso muerto', current: 160, previous: 155, unit: 'kg', updatedAt: addDays(today, -10) },
-      { id: 'mx_7', userId: 'usr-matias', exercise: 'Press banca', current: 95, previous: 92.5, unit: 'kg', updatedAt: addDays(today, -17) },
-      { id: 'mx_8', userId: 'usr-carolina', exercise: 'Sentadilla', current: 70, previous: 68, unit: 'kg', updatedAt: addDays(today, -25) },
-    ];
-
-    /* -------------------------------- rutinas ------------------------------ */
-    const routines = [
-      {
-        id: 'rt_1',
-        userId: 'usr-valentina',
-        title: 'Base sólida · Fase 2',
-        objective: 'Reconstruir capacidad de carrera y fuerza de tren inferior sin irritar el isquiotibial derecho.',
-        weeks: 6,
-        updatedAt: addDays(today, -6),
-        days: [
-          {
-            id: 'd1',
-            name: 'Día 1',
-            focus: 'Fuerza tren inferior',
-            items: [
-              { name: 'Sentadilla goblet', sets: '4', reps: '8', load: '24 kg', rest: '90 s', notes: 'Tempo 3-1-1, sin dolor.' },
-              { name: 'Peso muerto rumano', sets: '3', reps: '10', load: '40 kg', rest: '90 s', notes: 'Bisagra de cadera controlada.' },
-              { name: 'Puente de glúteo', sets: '3', reps: '12', load: 'Peso corporal', rest: '60 s', notes: 'Pausa de 2 s arriba.' },
-              { name: 'Plancha frontal', sets: '3', reps: '30 s', load: '—', rest: '45 s', notes: '' },
-            ],
-          },
-          {
-            id: 'd2',
-            name: 'Día 2',
-            focus: 'Movilidad y recuperación',
-            items: [
-              { name: 'Movilidad de cadera 90/90', sets: '3', reps: '8 por lado', load: '—', rest: '30 s', notes: 'Respirar en cada posición.' },
-              { name: 'Estiramiento isquiotibial asistido', sets: '3', reps: '40 s', load: '—', rest: '30 s', notes: 'Sin rebotes.' },
-              { name: 'Foam roller cuádriceps', sets: '2', reps: '60 s', load: '—', rest: '30 s', notes: 'Zona tolerada.' },
-              { name: 'Caminata suave', sets: '1', reps: '25 min', load: '—', rest: '—', notes: 'Ritmo conversacional.' },
-            ],
-          },
-          {
-            id: 'd3',
-            name: 'Día 3',
-            focus: 'Potencia y core',
-            items: [
-              { name: 'Hip thrust', sets: '4', reps: '8', load: '50 kg', rest: '90 s', notes: 'Empuje explosivo.' },
-              { name: 'Step-up', sets: '3', reps: '10 por lado', load: '12 kg', rest: '60 s', notes: 'Controlar bajada.' },
-              { name: 'Pallof press', sets: '3', reps: '12 por lado', load: '10 kg', rest: '45 s', notes: '' },
-              { name: 'Trote progresivo', sets: '1', reps: '15 min', load: '—', rest: '—', notes: 'Máximo 4/10 de esfuerzo.' },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'rt_2',
-        userId: 'usr-matias',
-        title: 'Fuerza · Bloque de acumulación',
-        objective: 'Aumentar fuerza en básicos cuidando la zona lumbar y mantener movilidad torácica.',
-        weeks: 8,
-        updatedAt: addDays(today, -12),
-        days: [
-          {
-            id: 'm1',
-            name: 'Día 1',
-            focus: 'Sentadilla',
-            items: [
-              { name: 'Sentadilla trasera', sets: '5', reps: '5', load: '105 kg', rest: '3 min', notes: 'Subir 2,5 kg por semana.' },
-              { name: 'Prensa 45°', sets: '3', reps: '10', load: '160 kg', rest: '2 min', notes: '' },
-              { name: 'Curl femoral', sets: '3', reps: '12', load: '35 kg', rest: '60 s', notes: '' },
-              { name: 'Plancha lateral', sets: '3', reps: '35 s por lado', load: '—', rest: '45 s', notes: '' },
-            ],
-          },
-          {
-            id: 'm2',
-            name: 'Día 2',
-            focus: 'Empuje',
-            items: [
-              { name: 'Press banca', sets: '5', reps: '5', load: '80 kg', rest: '3 min', notes: 'Escápulas retraídas.' },
-              { name: 'Press militar', sets: '3', reps: '8', load: '45 kg', rest: '2 min', notes: '' },
-              { name: 'Remo con mancuerna', sets: '3', reps: '10', load: '32 kg', rest: '90 s', notes: '' },
-              { name: 'Face pull', sets: '3', reps: '15', load: '20 kg', rest: '60 s', notes: '' },
-            ],
-          },
-          {
-            id: 'm3',
-            name: 'Día 3',
-            focus: 'Peso muerto',
-            items: [
-              { name: 'Peso muerto convencional', sets: '4', reps: '4', load: '135 kg', rest: '3 min', notes: 'Técnica antes que carga.' },
-              { name: 'Remo barra', sets: '4', reps: '8', load: '70 kg', rest: '90 s', notes: '' },
-              { name: 'Hip thrust', sets: '3', reps: '10', load: '90 kg', rest: '90 s', notes: '' },
-              { name: 'Dead bug', sets: '3', reps: '10 por lado', load: '—', rest: '45 s', notes: '' },
-            ],
-          },
-        ],
-      },
-    ];
-
-    const settings = {
-      openDays: [1, 2, 3, 4, 5, 6],
-      start: '08:00',
-      end: '20:00',
-      slot: 60,
-      leadHours: 2,
-      policyHours: 12,
-      horizonDays: 45,
-      autoLockMin: 15,
-      retention: 15.25,
-      whatsapp: BRAND.whatsapp,
-      address: 'Gorbea, La Araucanía',
-      bank: {
-        holder: 'DANIEL ESTEBAN BARRUETO',
-        rut: '17.375.282-2',
-        bankName: 'Banco BCI',
-        accountType: 'Cuenta Corriente',
-        account: '72771619',
-        email: BRAND.adminEmail,
-      },
-    };
-
-    const audits = [
-      { id: 'aud_seed_1', at: `${today}T08:00:00`, actor: 'Sistema', action: 'Inicio de demo', detail: 'Datos de demostración cargados correctamente.' },
-      { id: 'aud_seed_2', at: `${addDays(today, -1)}T17:42:00`, actor: 'Daniel Barrueto', action: 'Pago aprobado', detail: 'Se aprobó el pago PAG-2068 por $300.000.' },
-      { id: 'aud_seed_3', at: `${addDays(today, -2)}T11:20:00`, actor: 'Daniel Barrueto', action: 'Sesión reagendada', detail: 'Se movió una sesión de Matías Fuentes al viernes 18:00.' },
-    ];
-
-    return {
-      version: APP_VERSION,
-      meta: { seededAt: new Date().toISOString(), app: 'Recovery Studio' },
-      users,
-      services,
-      sessions,
-      payments,
-      expenses,
-      boletas,
-      quotes,
-      maxes,
-      routines,
-      settings,
-      audits,
+      audits: [],
       security: {
-        adminPinHash: pin,
+        adminPinHash,
         pinFailures: 0,
         pinLockUntil: 0,
         securityStamp: uid('stamp'),
-        lastPasswordChange: new Date().toISOString(),
+        lastPasswordChange: now,
       },
       ui: {},
     };
@@ -906,6 +565,46 @@
 
   let state = null;
   let quotaWarned = false;
+
+  function normalizePlanData() {
+    let changed = false;
+    (state.services || []).forEach((service) => {
+      if (service.kind === 'Plan' && !Number(service.validityDays)) {
+        service.validityDays = 30;
+        changed = true;
+      }
+    });
+    (state.users || []).forEach((user) => {
+      if (user.role !== 'user') return;
+      const label = String(user.planLabel || '').trim();
+      const hasPlan = !!label && label !== 'Sin plan activo';
+      if (!hasPlan) {
+        if (user.planStart || user.planExpires) {
+          user.planStart = null;
+          user.planExpires = null;
+          changed = true;
+        }
+        return;
+      }
+      if (user.planStart && user.planExpires) return;
+      const credits = Math.max(0, Number(user.credits) || 0);
+      if (credits <= 0) return;
+      const payment = (state.payments || [])
+        .filter((p) => p.userId === user.id && p.status === 'aprobado' && (Number(p.creditsToAdd) > 0 || isPlanLabel(p.concept)))
+        .sort((a, b) => {
+          const da = new Date(a.approvedAt || a.date || a.createdAt || 0).getTime();
+          const db = new Date(b.approvedAt || b.date || b.createdAt || 0).getTime();
+          return db - da;
+        })[0];
+      const base = payment
+        ? iso(new Date(payment.approvedAt || payment.date || payment.createdAt || Date.now()))
+        : todayISO();
+      user.planStart = base;
+      user.planExpires = addDays(base, planValidityDays(label));
+      changed = true;
+    });
+    return changed;
+  }
 
   const DB = {
     async init() {
@@ -921,10 +620,31 @@
           if (parsed && parsed.version === APP_VERSION && Array.isArray(parsed.users)) {
             state = parsed;
             state.settings = Object.assign({}, parsed.settings || {});
-            if (/Providencia|Santiago/i.test(String(state.settings.address || ''))) {
-              state.settings.address = 'Gorbea, La Araucanía';
-              DB.save();
+            state.settings.discountCodes = Array.isArray(state.settings.discountCodes) ? state.settings.discountCodes : [];
+            state.settings.clubRecoveryReward = String(state.settings.clubRecoveryReward || 'Sesión de sauna');
+            state.settings.clubRecoveryStamps = Math.max(1, Number(state.settings.clubRecoveryStamps) || 5);
+            state.settings.clubRecoveryConsistencyMonths = Math.max(1, Number(state.settings.clubRecoveryConsistencyMonths) || 3);
+            state.settings.coachName = state.settings.coachName === 'Daniel Barrueto'
+              ? 'Daniel Barrueto Jopia'
+              : String(state.settings.coachName || 'Daniel Barrueto Jopia');
+            state.settings.coachProfession = state.settings.coachProfession && state.settings.coachProfession !== 'Kinesiólogo'
+              ? String(state.settings.coachProfession)
+              : 'Kinesiólogo · Magíster';
+            state.settings.studioName = String(state.settings.studioName || BRAND.name);
+            state.settings.freeTrialEnabled = state.settings.freeTrialEnabled !== false;
+            state.settings.settingsUpdatedAt = Number(state.settings.settingsUpdatedAt) || 0;
+            // Dirección oficial: corrige datos antiguos guardados en el navegador.
+            if (!state.settings.address || /providencia/i.test(String(state.settings.address))) {
+              state.settings.address = 'Gorbea, Región de la Araucanía';
             }
+            // Bloques de agenda en 30 minutos.
+            if (!state.settings.slot || Number(state.settings.slot) === 60) {
+              state.settings.slot = 30;
+            }
+            state.videoCapsules = Array.isArray(parsed.videoCapsules) ? parsed.videoCapsules : [];
+            state.recurringBlocks = Array.isArray(parsed.recurringBlocks) ? parsed.recurringBlocks : [];
+            normalizePlanData();
+            DB.save();
             return state;
           }
         } catch (e) {
@@ -932,6 +652,7 @@
         }
       }
       state = await buildSeed();
+      normalizePlanData();
       DB.save();
       return state;
     },
@@ -953,13 +674,6 @@
     update(fn) {
       fn(state);
       return DB.save();
-    },
-    async reset() {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(SESSION_KEY);
-      state = await buildSeed();
-      DB.save();
-      return state;
     },
     export() {
       return JSON.stringify(state, null, 2);
@@ -993,6 +707,214 @@
     return state.sessions.filter((s) => s.userId === userId);
   }
 
+  function loyaltyProgress(userId) {
+    const completed = userSessions(userId).filter((session) => session.status === 'completada');
+    const activeMonths = new Set(completed
+      .filter((session) => /^\d{4}-\d{2}-\d{2}$/.test(String(session.date || '')))
+      .map((session) => monthKey(session.date)));
+    const month = new Date();
+    month.setDate(1);
+    let activeMonthStreak = 0;
+    while (activeMonths.has(monthKey(month))) {
+      activeMonthStreak += 1;
+      month.setMonth(month.getMonth() - 1);
+    }
+    const goal = Math.max(1, Number((state && state.settings && state.settings.clubRecoveryStamps)) || 5);
+    const consistencyMonths = Math.max(1, Number((state && state.settings && state.settings.clubRecoveryConsistencyMonths)) || 3);
+    const consistencyStamps = Math.floor(activeMonthStreak / consistencyMonths);
+    const stamps = completed.length + consistencyStamps;
+    const nextRewardProgress = stamps % goal;
+    return {
+      completedSessions: completed.length,
+      activeMonthStreak,
+      consistencyMonths,
+      consistencyStamps,
+      stamps,
+      goal,
+      earnedRewards: Math.floor(stamps / goal),
+      stampsToNextReward: goal - nextRewardProgress,
+      nextRewardProgress,
+      reward: (state && state.settings && state.settings.clubRecoveryReward) || 'Sesión de sauna',
+    };
+  }
+
+  /* ------------------------------ planes ---------------------------------- */
+
+  function planService(label) {
+    if (!label) return null;
+    const target = normalize(label);
+    return state.services.find((service) => service.kind === 'Plan' && normalize(service.name) === target) || null;
+  }
+
+  function isPlanLabel(label) {
+    return !!planService(label);
+  }
+
+  function planValidityDays(label) {
+    const service = planService(label);
+    return Math.max(1, Number(service && service.validityDays) || 30);
+  }
+
+  function planStatus(user) {
+    const credits = Math.max(0, Number(user && user.credits) || 0);
+    const label = String((user && user.planLabel) || '').trim();
+    const ignored = !label || label === 'Sin plan activo' || label === 'Administrador';
+    const hasPlan = credits > 0 || !ignored;
+    const expires = /^\d{4}-\d{2}-\d{2}$/.test(String((user && user.planExpires) || '')) ? user.planExpires : null;
+    const start = /^\d{4}-\d{2}-\d{2}$/.test(String((user && user.planStart) || '')) ? user.planStart : null;
+    const daysLeft = expires ? daysBetween(todayISO(), expires) : null;
+    const expired = daysLeft !== null && daysLeft < 0;
+    const expiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 7;
+    const noSessions = credits <= 0;
+    let status = 'active';
+    if (expired) status = 'expired';
+    else if (noSessions) status = 'no-sessions';
+    else if (expiringSoon) status = 'expiring';
+    else if (credits === 1) status = 'low';
+    return {
+      hasPlan,
+      label: label || 'Sin plan activo',
+      start,
+      expires,
+      daysLeft,
+      expired,
+      expiringSoon,
+      noSessions,
+      status,
+      credits,
+      validityDays: planValidityDays(label),
+      needsAttention: hasPlan && (expired || noSessions || expiringSoon || credits === 1),
+      urgent: hasPlan && (expired || noSessions || (daysLeft !== null && daysLeft <= 3)),
+    };
+  }
+
+  function planAlerts() {
+    const rank = { expired: 0, 'no-sessions': 1, expiring: 2, low: 3 };
+    return state.users
+      .filter((user) => user.role === 'user')
+      .map((user) => ({ user, plan: planStatus(user) }))
+      .filter(({ plan }) => plan.needsAttention)
+      .sort((a, b) => {
+        const ra = rank[a.plan.status] == null ? 9 : rank[a.plan.status];
+        const rb = rank[b.plan.status] == null ? 9 : rank[b.plan.status];
+        if (ra !== rb) return ra - rb;
+        const da = a.plan.daysLeft == null ? 9999 : a.plan.daysLeft;
+        const db = b.plan.daysLeft == null ? 9999 : b.plan.daysLeft;
+        return da - db;
+      });
+  }
+
+  function planAlertCounts() {
+    const alerts = planAlerts();
+    const count = (status) => alerts.filter(({ plan }) => plan.status === status).length;
+    return {
+      total: alerts.length,
+      expired: count('expired'),
+      noSessions: count('no-sessions'),
+      expiring: count('expiring'),
+      low: count('low'),
+      urgent: alerts.filter(({ plan }) => plan.urgent).length,
+    };
+  }
+
+  function startPlan(user, label, options) {
+    if (!user) return null;
+    const opts = options || {};
+    const planLabel = label || user.planLabel;
+    if (!planLabel || planLabel === 'Sin plan activo') return null;
+    const today = opts.date || todayISO();
+    const days = Math.max(1, Number(opts.validityDays) || planValidityDays(planLabel));
+    const currentExpiry = /^\d{4}-\d{2}-\d{2}$/.test(String(user.planExpires || '')) ? user.planExpires : null;
+    const samePlan = normalize(user.planLabel || '') === normalize(planLabel);
+    const canExtend = opts.extend !== false && samePlan && currentExpiry && daysBetween(today, currentExpiry) >= 0;
+    const base = canExtend ? currentExpiry : today;
+    user.planLabel = planLabel;
+    user.planStart = base;
+    user.planExpires = addDays(base, days);
+    delete user.lastPlanNoticeAt;
+    delete user.lastPlanNoticeChannel;
+    delete user.lastPlanNoticeStatus;
+    return { start: user.planStart, expires: user.planExpires };
+  }
+
+  function clearPlanDates(user) {
+    if (!user) return;
+    user.planStart = null;
+    user.planExpires = null;
+    delete user.lastPlanNoticeAt;
+    delete user.lastPlanNoticeChannel;
+    delete user.lastPlanNoticeStatus;
+  }
+
+  function normalizePhone(phone) {
+    let digits = String(phone || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('56')) return digits;
+    if (digits.length === 9 && digits.startsWith('9')) return `56${digits}`;
+    if (digits.length === 8) return `569${digits}`;
+    return digits;
+  }
+
+  function whatsappUrlTo(phone, message) {
+    const number = normalizePhone(phone);
+    if (!number) return '';
+    return `https://wa.me/${number}?text=${encodeURIComponent(message || '')}`;
+  }
+
+  function contactWhatsappUrl(user, message) {
+    return whatsappUrlTo(user && user.phone, message) || whatsappUrl(message);
+  }
+
+  function planNoticeMessage(user, plan) {
+    const name = String((user && user.name) || 'hola').split(' ')[0];
+    const p = plan || planStatus(user);
+    const expires = p.expires ? fmtDate(p.expires, 'long') : '';
+    const credits = p.credits;
+    if (p.status === 'expired') {
+      return `Hola ${name}, tu ${p.label} venció el ${expires}. ${credits > 0 ? `Aún te quedan ${credits} sesión(es), pero necesitamos renovar la vigencia para que no las pierdas.` : 'Ya no tiene sesiones disponibles.'} ¿Te ayudo a reactivarlo? — Recovery Studio`;
+    }
+    if (p.status === 'no-sessions') {
+      return `Hola ${name}, ya usaste las sesiones de tu ${p.label}. ¿Te preparo la renovación para seguir con tu proceso? — Recovery Studio`;
+    }
+    if (p.status === 'expiring') {
+      return `Hola ${name}, tu ${p.label} vence en ${p.daysLeft} día(s) (${expires}) y te quedan ${credits} sesión(es). ¿Agendamos tus próximas sesiones antes de que venza? — Recovery Studio`;
+    }
+    if (p.status === 'low') {
+      return `Hola ${name}, te queda 1 sesión en tu ${p.label}. ¿Te preparo la renovación para no cortar tu proceso? — Recovery Studio`;
+    }
+    return `Hola ${name}, revisemos la vigencia de tu ${p.label}. — Recovery Studio`;
+  }
+
+  function planNoticeEmail(user, plan) {
+    const p = plan || planStatus(user);
+    const name = String((user && user.name) || '').split(' ')[0] || 'Hola';
+    const subjects = {
+      expired: `Tu ${p.label} venció — Recovery Studio`,
+      'no-sessions': `Renueva tu ${p.label} — Recovery Studio`,
+      expiring: `Tu ${p.label} está por vencer — Recovery Studio`,
+      low: `Te queda 1 sesión en tu ${p.label} — Recovery Studio`,
+    };
+    const subject = subjects[p.status] || 'Tu plan en Recovery Studio';
+    const body = [
+      `Hola ${name},`,
+      '',
+      planNoticeMessage(user, p),
+      '',
+      'Puedes reservar o renovar en https://www.recoverystudio.cl',
+      'Si prefieres, respóndenos por WhatsApp y lo coordinamos.',
+    ].join('\n');
+    return { subject, body };
+  }
+
+  function markPlanNotice(userId, channel, status) {
+    const user = getUser(userId);
+    if (!user) return;
+    user.lastPlanNoticeAt = new Date().toISOString();
+    user.lastPlanNoticeChannel = channel;
+    user.lastPlanNoticeStatus = status || planStatus(user).status;
+    DB.save();
+  }
+
   function upcomingSessions(userId) {
     const now = new Date();
     return state.sessions
@@ -1018,33 +940,94 @@
   function availableSlots(date, serviceId, opts) {
     const options = opts || {};
     const settings = state.settings;
-    const day = parseISO(date).getDay();
-    if (!settings.openDays.includes(day)) return [];
-    const startMin = timeToMin(settings.start);
-    const endMin = timeToMin(settings.end);
+    const dayHours = hoursForDay(date);
+    if (!dayHours.enabled) return [];
+    const startMin = timeToMin(dayHours.start);
+    const endMin = timeToMin(dayHours.end);
     const step = Number(settings.slot) || 60;
     const service = getService(serviceId);
     const duration = service ? Number(service.duration) || 60 : 60;
-    const sameDay = sessionsOn(date).filter((s) => s.id !== options.ignoreSessionId);
+    // Solo bloquean cupo las sesiones activas: una sesión completada o no
+    // asistida (sobre todo si quedó marcada por error en una fecha futura)
+    // no debe impedir que otro cliente reserve ese horario.
+    const sameDay = sessionsOn(date).filter((s) => s.id !== options.ignoreSessionId
+      && s.status !== 'completada' && s.status !== 'no_asistio');
+    const blocks = (state.blockedSlots || []).filter((block) => block.date === date);
+    const recurring = recurringBlocksFor(date);
     const now = new Date();
     const list = [];
-    for (let minute = startMin; minute + Math.min(duration, step) <= endMin; minute += step) {
+    for (let minute = startMin; minute + duration <= endMin; minute += step) {
       const overlap = sameDay.some((s) => {
         const sStart = timeToMin(s.time);
         const sEnd = sessionEndMinutes(s);
         return minute < sEnd && minute + duration > sStart;
       });
+      const blocked = blocks.find((block) => {
+        const blockStart = timeToMin(block.time);
+        const blockEnd = blockStart + (Number(block.duration) || step);
+        return minute < blockEnd && minute + duration > blockStart;
+      });
+      const recurringBlock = recurring.find((block) => {
+        const blockStart = timeToMin(block.startTime);
+        const blockEnd = timeToMin(block.endTime);
+        return minute < blockEnd && minute + duration > blockStart;
+      });
       let reason = '';
       if (overlap) reason = 'Ocupado';
+      else if (blocked || recurringBlock) reason = 'Bloqueado por administrador';
       const dt = dateTime(date, minToTime(minute));
       const lead = Number(settings.leadHours) || 0;
       if (dt.getTime() - now.getTime() < lead * 3600000) {
         reason = reason || 'Fuera de plazo';
       }
-      if (options.ignoreRules) reason = overlap ? 'Ocupado' : '';
+      if (options.ignoreRules) reason = overlap ? 'Ocupado' : (blocked || recurringBlock) ? 'Bloqueado por administrador' : '';
       list.push({ time: minToTime(minute), available: !reason, reason });
     }
     return list;
+  }
+
+  function hoursForDay(value) {
+    const day = typeof value === 'number' ? value : parseISO(value).getDay();
+    const configured = state.settings.hoursByDay && state.settings.hoursByDay[day];
+    if (configured) return configured;
+    return {
+      enabled: (state.settings.openDays || []).includes(day),
+      start: state.settings.start || '17:30',
+      end: state.settings.end || '22:30',
+    };
+  }
+
+  function blockSlot(date, time, actor) {
+    const existing = state.blockedSlots.find((block) => block.date === date && block.time === time);
+    if (existing) return existing;
+    const block = { id: uid('block'), date, time, duration: Number(state.settings.slot) || 60, actor: actor || '' };
+    state.blockedSlots.push(block);
+    DB.save();
+    return block;
+  }
+
+  function unblockSlot(id) {
+    const block = state.blockedSlots.find((item) => item.id === id);
+    if (!block) return null;
+    state.blockedSlots = state.blockedSlots.filter((item) => item.id !== id);
+    DB.save();
+    return block;
+  }
+
+  function blockedSlotsOn(date) {
+    return (state.blockedSlots || [])
+      .filter((block) => block.date === date)
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }
+
+  /* Bloqueos recurrentes: se repiten cada semana (0 = domingo).
+     Un bloqueo con weekday null aplica todos los días. */
+  function recurringBlocksFor(date) {
+    const day = parseISO(date).getDay();
+    return (state.recurringBlocks || [])
+      .filter((block) => block && block.active !== false
+        && (block.weekday === null || block.weekday === undefined || Number(block.weekday) === day))
+      .sort((a, b) => String(a.startTime || '').localeCompare(String(b.startTime || '')));
   }
 
   function userMaxes(userId) {
@@ -1102,15 +1085,19 @@
 
   function addAudit(actor, action, detail) {
     if (!state) return;
-    state.audits.unshift({
+    const entry = {
       id: uid('aud'),
       at: new Date().toISOString(),
       actor: actor || 'Sistema',
       action,
       detail: detail || '',
-    });
+    };
+    state.audits.unshift(entry);
     state.audits = state.audits.slice(0, 300);
     DB.save();
+    if (RS.SupabaseSync && RS.SupabaseSync.pushAudit) {
+      RS.SupabaseSync.pushAudit(entry).catch(() => { /* la app sigue sin conexión */ });
+    }
   }
 
   function whatsappUrl(message) {
@@ -1119,13 +1106,17 @@
   }
 
   function bankData() {
-    return (state && state.settings.bank) || {
-      holder: 'DANIEL ESTEBAN BARRUETO',
-      rut: '17.375.282-2',
-      bankName: 'Banco BCI',
-      accountType: 'Cuenta Corriente',
-      account: '72771619',
-      email: BRAND.adminEmail,
+    return (state && state.settings && state.settings.bank) || {
+      holder: '', rut: '', bankName: '', accountType: '', account: '', email: BRAND.adminEmail,
+    };
+  }
+
+  function coachInfo() {
+    const s = (state && state.settings) || {};
+    return {
+      coachName: String(s.coachName || 'Daniel Barrueto Jopia'),
+      coachProfession: String(s.coachProfession || 'Kinesiólogo · Magíster'),
+      studioName: String(s.studioName || BRAND.name),
     };
   }
 
@@ -1148,8 +1139,325 @@
   };
   RS.data = {
     getUser, getService, serviceName, servicePrice, userSessions, upcomingSessions,
-    nextSession, sessionsOn, availableSlots, userMaxes, userRoutine, approvalsInMonth,
+    nextSession, sessionsOn, availableSlots, hoursForDay, blockSlot, unblockSlot, blockedSlotsOn, recurringBlocksFor, userMaxes, userRoutine, approvalsInMonth,
+    loyaltyProgress,
+    planService, isPlanLabel, planValidityDays, planStatus, planAlerts, planAlertCounts,
+    startPlan, clearPlanDates, normalizePhone, whatsappUrlTo, contactWhatsappUrl,
+    planNoticeMessage, planNoticeEmail, markPlanNotice,
     expensesInMonth, boletasInMonth, financeSummary, monthsBack, addAudit, whatsappUrl,
-    bankData, demoProof,
+    bankData,
+    coachInfo,
+    appointmentConfirmationEmail,
+    sendAppointmentEmail,
+    sendEmail,
+    sendAdminNotification,
+    googleCalendarUrl,
+    calendarFeedUrl,
+    bookingNotification,
+    rescheduleNotification,
+    cancellationNotification,
+    planPurchaseNotification,
+    paymentProofNotification,
+    paymentApprovedNotification,
+    paymentRejectedNotification,
   };
 })();
+
+/* ==========================================================================
+   Correo de confirmación de cita (plantilla simple, sin backend)
+   ========================================================================== */
+function appointmentConfirmationEmail(session, user, service, settings) {
+  const U = RS.util;
+  const BRAND = RS.BRAND;
+  const dateLabel = U.fmtDate(session.date, 'long');
+  const coach = session.coach || 'Daniel Barrueto Jopia';
+  const address = STUDIO_ADDRESS;
+  const whatsapp = (settings && settings.whatsappDisplay) || BRAND.whatsappDisplay;
+
+  const subject = '¡Cita confirmada! 🗓️ Tu sesión en Recovery Studio';
+
+  const body = `Hola ${user.name},\n\nTu cita ha sido agendada con éxito en nuestra plataforma. A continuación, te detallamos los datos de tu próxima sesión de recuperación:\n\n• 📅 Fecha: ${dateLabel}\n• ⏰ Hora de inicio: ${session.time} (Te recomendamos llegar 5 minutos antes)\n• 📍 Lugar / Modalidad: ${address}\n• 🩺 Profesional: ${coach}\n\n⚠️ INFORMACIÓN IMPORTANTE SOBRE TU AGENDA (Respaldo de Servicio)\n\nPara garantizar la disponibilidad de nuestros profesionales y el respeto por el tiempo de todos nuestros pacientes, te recordamos brevemente nuestras políticas aceptadas al crear tu cuenta:\n1. ¿Necesitas cambiar o cancelar tu hora?: Debes hacerlo con un mínimo de 12 horas de anticipación a través de tu perfil web o respondiendo a nuestros canales oficiales.\n2. Cancelaciones tardías o inasistencias: Si cancelas con menos de 12 horas de aviso o no te presentas, no se realizarán devoluciones de dinero ni reagendamientos. La sesión se considerará como realizada.\n3. Política de puntualidad: Si llegas tarde, tu sesión terminará en el horario originalmente programado para no retrasar al siguiente paciente. El valor total de la sesión se cobrará de igual manera.\n\nAgradecemos enormemente tu puntualidad y compromiso con tu proceso de rehabilitación. ¡Nos vemos pronto para seguir con tu recuperación!\n\nAtentamente,\nEquipo Recovery Studio 🩺✨\nSi tienes alguna duda urgente, puedes contactarnos directamente respondiendo a este correo o vía WhatsApp al ${whatsapp}.`;
+
+  return { to: user.email, subject, body };
+}
+
+/* ==========================================================================
+   Envío de correo vía Edge Function de Supabase + Resend
+   ========================================================================== */
+
+// Correo del administrador que recibe las notificaciones del studio.
+const ADMIN_EMAIL = 'recoverystudio7@gmail.com';
+const STUDIO_ADDRESS = 'Gorbea, Región de la Araucanía';
+const STUDIO_LOCATION = 'Recovery Studio · Gorbea';
+const STUDIO_REPLY_TO = ADMIN_EMAIL;
+
+async function supabaseSessionToken() {
+  const session = RS.Supabase && RS.Supabase.ensureSession
+    ? await RS.Supabase.ensureSession()
+    : (RS.Supabase && RS.Supabase.readSession ? RS.Supabase.readSession() : null);
+  return session && session.access_token ? session.access_token : '';
+}
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
+}
+
+function emailShell(title, intro, rows, footer) {
+  const table = (rows || [])
+    .filter((row) => row && row[1] !== undefined && row[1] !== null && row[1] !== '')
+    .map((row) => `<tr><td style="padding:6px 0;color:#64748b;font-size:14px">${row[0]}</td><td style="padding:6px 0;color:#0A2342;font-size:14px;font-weight:600;text-align:right">${row[1]}</td></tr>`)
+    .join('');
+  return `<!doctype html><html lang="es"><body style="margin:0;background:#f1f5f9;font-family:Inter,Arial,sans-serif;color:#0f172a">
+  <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
+    <div style="background:#0A2342;padding:22px 26px">
+      <div style="color:#fff;font-size:20px;font-weight:800">Recovery Studio</div>
+      <div style="color:#93c5fd;font-size:13px;margin-top:2px">Entrena. Recupera. Rinde.</div>
+    </div>
+    <div style="padding:26px">
+      <h1 style="margin:0 0 12px;font-size:20px;color:#0A2342">${title}</h1>
+      <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#334155">${intro}</p>
+      ${table ? `<table style="width:100%;border-collapse:collapse;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;margin:0 0 18px">${table}</table>` : ''}
+      ${footer || ''}
+      <p style="margin:22px 0 0;font-size:12px;color:#94a3b8">Recovery Studio · ${STUDIO_ADDRESS}<br>WhatsApp +56 9 6505 8439</p>
+    </div>
+  </div></body></html>`;
+}
+
+function sessionRows(session, service, extra) {
+  const U = RS.util;
+  const rows = [
+    ['Servicio', U.esc(service ? service.name : 'Sesión')],
+    ['Fecha', U.esc(U.fmtDate(session.date, 'long'))],
+    ['Hora', `${U.esc(session.time)} h`],
+    ['Profesional', U.esc(session.coach || 'Daniel Barrueto Jopia')],
+    ['Lugar', STUDIO_ADDRESS],
+  ];
+  return rows.concat(extra || []);
+}
+
+async function sendEmail(to, subject, body, options) {
+  const config = RS.SupabaseConfig;
+  if (!config || !config.url) throw new Error('Supabase no está configurado.');
+  const token = await supabaseSessionToken();
+  if (!token) throw new Error('Tu sesión expiró. Vuelve a ingresar para enviar correos.');
+
+  const payload = {
+    to,
+    subject,
+    text: body,
+    html: options && options.html ? options.html : undefined,
+    replyTo: (options && options.replyTo) || STUDIO_REPLY_TO,
+  };
+
+  let res;
+  try {
+    res = await fetch(`${config.url.replace(/\/$/, '')}/functions/v1/send-email`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: config.anonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    throw new Error('No pudimos conectar con el servicio de correos.');
+  }
+
+  let data = null;
+  try { data = await res.json(); } catch (error) { data = null; }
+  if (!res.ok || !data || !data.success) {
+    const detail = data && (data.error || data.message);
+    throw new Error(typeof detail === 'string' ? detail : 'El servicio de correos rechazó el envío.');
+  }
+  return data;
+}
+
+async function sendAppointmentEmail(to, subject, body, options) {
+  return sendEmail(to, subject, body, options);
+}
+
+function sendAdminNotification(subject, body, options) {
+  const to = ADMIN_EMAIL || (RS.Auth.getUser() && RS.Auth.getUser().email);
+  if (!to) {
+    return Promise.reject(new Error('No hay correo de admin configurado para notificaciones.'));
+  }
+  return sendEmail(to, subject, body, options);
+}
+
+/* Envía al cliente y al admin. Nunca lanza: devuelve el detalle de cada envío. */
+async function notifyBoth(client, subject, text, html, adminSubject, adminText) {
+  const results = { client: null, admin: null };
+  if (client) {
+    try {
+      await sendEmail(client, subject, text, { html });
+      results.client = { ok: true };
+    } catch (error) {
+      results.client = { ok: false, error: error.message };
+      console.error('Correo al cliente falló:', error);
+    }
+  }
+  try {
+    await sendAdminNotification(adminSubject || subject, adminText || text);
+    results.admin = { ok: true };
+  } catch (error) {
+    results.admin = { ok: false, error: error.message };
+    console.error('Correo al admin falló:', error);
+  }
+  return results;
+}
+
+function bookingNotification(session, user, service, settings) {
+  const U = RS.util;
+  const mail = appointmentConfirmationEmail(session, user, service, settings);
+  const cal = googleCalendarUrl(session);
+  const html = emailShell(
+    'Tu cita está confirmada',
+    `Hola ${U.esc(user.name)}, tu sesión quedó reservada. Te esperamos en ${STUDIO_ADDRESS}.`,
+    sessionRows(session, service, [['Pago', session.payment === 'plan' ? 'Incluida en tu plan' : 'Pendiente de validación']]),
+    `<p style="margin:0 0 14px"><a href="${cal}" style="display:inline-block;background:#FF7A18;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700;font-size:14px">Agregar a Google Calendar</a></p>
+     <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px;font-size:13px;line-height:1.6;color:#7c2d12">
+       <strong>Política de cambios:</strong> puedes reagendar o cancelar hasta ${(settings && settings.policyHours) || 12} horas antes. Llega 5 minutos antes; si llegas tarde, la sesión termina en su horario original.
+     </div>`
+  );
+  const adminText = `Nueva reserva en Recovery Studio\n\n• Cliente: ${user.name} (${user.email})\n• Servicio: ${service ? service.name : 'Sesión'}\n• Fecha: ${U.fmtDate(session.date, 'long')} a las ${session.time} h\n• Pago: ${session.payment === 'plan' ? 'Con sesión del plan' : 'Pendiente de validación'}\n• Estado: ${session.status}\n\nRevisa la agenda en el panel de administración.`;
+  return notifyBoth(user.email, mail.subject, mail.body, html, `Nueva reserva · ${user.name} · ${U.fmtDate(session.date, 'short')} ${session.time}`, adminText);
+}
+
+function rescheduleNotification(session, user, service, settings, previous) {
+  const U = RS.util;
+  const rows = sessionRows(session, service);
+  const html = emailShell(
+    'Tu sesión fue reagendada',
+    `Hola ${U.esc(user.name)}, actualizamos el horario de tu sesión${previous ? ` (antes: ${U.esc(previous.date)} ${U.esc(previous.time)} h)` : ''}.`,
+    rows,
+    `<p style="margin:0 0 14px"><a href="${googleCalendarUrl(session)}" style="display:inline-block;background:#FF7A18;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700;font-size:14px">Actualizar en Google Calendar</a></p>`
+  );
+  const text = `Hola ${user.name},\n\nTu sesión fue reagendada.\n\n• Servicio: ${service ? service.name : 'Sesión'}\n• Nueva fecha: ${U.fmtDate(session.date, 'long')}\n• Nueva hora: ${session.time} h\n• Lugar: ${STUDIO_ADDRESS}\n${previous ? `• Horario anterior: ${previous.date} ${previous.time} h\n` : ''}\nSi no reconoces este cambio, responde a este correo o escríbenos por WhatsApp.\n\nRecovery Studio`;
+  const adminText = `Reagendamiento\n\n• Cliente: ${user.name} (${user.email})\n• Servicio: ${service ? service.name : 'Sesión'}\n• Nuevo horario: ${U.fmtDate(session.date, 'long')} ${session.time} h\n${previous ? `• Horario anterior: ${previous.date} ${previous.time} h\n` : ''}\nRevisa la agenda en el panel de administración.`;
+  return notifyBoth(user.email, 'Tu sesión en Recovery Studio fue reagendada', text, html, `Sesión reagendada · ${user.name} · ${session.date} ${session.time}`, adminText);
+}
+
+function cancellationNotification(session, user, service, settings, byAdmin, reason) {
+  const U = RS.util;
+  const html = emailShell(
+    byAdmin ? 'Tu sesión fue cancelada por el studio' : 'Tu sesión fue cancelada',
+    `Hola ${U.esc(user.name)}, la sesión de ${U.esc(service ? service.name : 'Recovery Studio')} del ${U.esc(U.fmtDate(session.date, 'long'))} a las ${U.esc(session.time)} h quedó cancelada.${reason ? ` Motivo: ${U.esc(reason)}.` : ''}`,
+    [['Servicio', U.esc(service ? service.name : 'Sesión')], ['Fecha', U.esc(U.fmtDate(session.date, 'long'))], ['Hora', `${U.esc(session.time)} h`], ['Saldo del plan', session.payment === 'plan' ? 'Sesión devuelta a tu plan' : 'Sin devolución']],
+    `<p style="margin:0;font-size:13px;color:#475569">Puedes volver a agendar cuando quieras desde tu perfil. Si corresponde devolución de dinero, el equipo te contactará.</p>`
+  );
+  const text = `Hola ${user.name},\n\nTu sesión fue cancelada.\n\n• Servicio: ${service ? service.name : 'Sesión'}\n• Fecha: ${U.fmtDate(session.date, 'long')} a las ${session.time} h\n• Saldo del plan: ${session.payment === 'plan' ? 'sesión devuelta' : 'sin devolución'}\n${reason ? `• Motivo: ${reason}\n` : ''}\nPuedes volver a agendar desde tu perfil.\n\nRecovery Studio`;
+  const adminText = `Sesión cancelada${byAdmin ? ' por el admin' : ' por el cliente'}\n\n• Cliente: ${user.name} (${user.email})\n• Servicio: ${service ? service.name : 'Sesión'}\n• Fecha: ${U.fmtDate(session.date, 'long')} ${session.time} h\n• Sesión devuelta al plan: ${session.payment === 'plan' ? 'Sí' : 'No'}\n${reason ? `• Motivo: ${reason}\n` : ''}`;
+  return notifyBoth(user.email, 'Tu sesión en Recovery Studio fue cancelada', text, html, `Sesión cancelada · ${user.name} · ${session.date} ${session.time}`, adminText);
+}
+
+function planPurchaseNotification(payment, user) {
+  const U = RS.util;
+  const html = emailShell(
+    'Recibimos tu orden de pago',
+    `Hola ${U.esc(user.name)}, registramos tu compra de <strong>${U.esc(payment.concept)}</strong>. Para activar tus sesiones, transfiere el monto y adjunta el comprobante en tu perfil.`,
+    [['Concepto', U.esc(payment.concept)], ['Monto', U.fmtMoney(payment.amount)], ['Referencia', U.esc(payment.ref || payment.id)], ['Sesiones a activar', payment.creditsToAdd ? `${payment.creditsToAdd}` : 'Según el servicio'], ['Estado', 'Pendiente de comprobante']],
+    `<p style="margin:0;font-size:13px;color:#475569">Cuando validemos tu pago, te avisaremos por correo y las sesiones quedarán disponibles para agendar.</p>`
+  );
+  const text = `Hola ${user.name},\n\nRecibimos tu orden de pago.\n\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Referencia: ${payment.ref || payment.id}\n• Sesiones a activar: ${payment.creditsToAdd || 'según el servicio'}\n\nTransfiere el monto y adjunta tu comprobante en tu perfil para activar las sesiones.\n\nRecovery Studio`;
+  const adminText = `Nueva orden de pago\n\n• Cliente: ${user.name} (${user.email})\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Referencia: ${payment.ref || payment.id}\n• Sesiones a activar: ${payment.creditsToAdd || 0}\n\nRevisa el pago en el panel de administración.`;
+  return notifyBoth(user.email, 'Recibimos tu orden de pago · Recovery Studio', text, html, `Nueva compra de plan · ${user.name} · ${U.fmtMoney(payment.amount)}`, adminText);
+}
+
+function paymentProofNotification(payment, user) {
+  const U = RS.util;
+  const adminText = `Comprobante recibido\n\n• Cliente: ${user.name} (${user.email})\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Referencia: ${payment.ref || payment.id}\n\nIngresa al panel de administración para validar el pago.`;
+  const html = emailShell(
+    'Recibimos tu comprobante',
+    `Hola ${U.esc(user.name)}, tu comprobante quedó en revisión. Te avisaremos por correo cuando el pago sea validado.`,
+    [['Concepto', U.esc(payment.concept)], ['Monto', U.fmtMoney(payment.amount)], ['Referencia', U.esc(payment.ref || payment.id)], ['Estado', 'En revisión']]
+  );
+  const text = `Hola ${user.name},\n\nRecibimos tu comprobante para ${payment.concept} por ${U.fmtMoney(payment.amount)}. Quedó en revisión y te avisaremos cuando sea validado.\n\nRecovery Studio`;
+  return notifyBoth(user.email, 'Comprobante recibido · Recovery Studio', text, html, `Comprobante recibido · ${user.name} · ${U.fmtMoney(payment.amount)}`, adminText);
+}
+
+function paymentApprovedNotification(payment, user) {
+  const U = RS.util;
+  const html = emailShell(
+    'Tu pago fue aprobado',
+    `Hola ${U.esc(user.name)}, validamos tu pago. ${payment.creditsAdded ? `Se activaron <strong>${payment.creditsAdded} sesiones</strong> en tu cuenta.` : 'Tu reserva quedó confirmada.'}`,
+    [['Concepto', U.esc(payment.concept)], ['Monto', U.fmtMoney(payment.amount)], ['Referencia', U.esc(payment.ref || payment.id)], ['Sesiones activadas', payment.creditsAdded ? `${payment.creditsAdded}` : '—'], ['Saldo actual', user.credits != null ? `${user.credits} sesiones` : '—']],
+    `<p style="margin:0 0 14px"><a href="https://www.recoverystudio.cl" style="display:inline-block;background:#FF7A18;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700;font-size:14px">Agendar mi próxima sesión</a></p>`
+  );
+  const text = `Hola ${user.name},\n\nTu pago fue aprobado.\n\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Referencia: ${payment.ref || payment.id}\n${payment.creditsAdded ? `• Sesiones activadas: ${payment.creditsAdded}\n• Saldo actual: ${user.credits} sesiones\n` : ''}\nYa puedes agendar desde https://www.recoverystudio.cl\n\nRecovery Studio`;
+  const adminText = `Pago aprobado\n\n• Cliente: ${user.name} (${user.email})\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Referencia: ${payment.ref || payment.id}\n• Sesiones activadas: ${payment.creditsAdded || 0}\n• Saldo actual: ${user.credits || 0}`;
+  return notifyBoth(user.email, 'Pago aprobado · Recovery Studio', text, html, `Pago aprobado · ${user.name} · ${U.fmtMoney(payment.amount)}`, adminText);
+}
+
+function paymentRejectedNotification(payment, user, reason) {
+  const U = RS.util;
+  const html = emailShell(
+    'Revisemos tu comprobante',
+    `Hola ${U.esc(user.name)}, no pudimos validar tu pago de ${U.esc(payment.concept)}.`,
+    [['Concepto', U.esc(payment.concept)], ['Monto', U.fmtMoney(payment.amount)], ['Referencia', U.esc(payment.ref || payment.id)], ['Motivo', U.esc(reason || 'Comprobante ilegible o monto no coincide')]],
+    `<p style="margin:0;font-size:13px;color:#475569">Puedes subir un nuevo comprobante desde tu perfil o responder a este correo para ayudarte.</p>`
+  );
+  const text = `Hola ${user.name},\n\nNo pudimos validar tu pago.\n\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Referencia: ${payment.ref || payment.id}\n• Motivo: ${reason || 'Comprobante ilegible o monto no coincide'}\n\nSube un nuevo comprobante desde tu perfil o responde a este correo.\n\nRecovery Studio`;
+  const adminText = `Pago rechazado\n\n• Cliente: ${user.name} (${user.email})\n• Concepto: ${payment.concept}\n• Monto: ${U.fmtMoney(payment.amount)}\n• Referencia: ${payment.ref || payment.id}\n• Motivo: ${reason || 'Sin motivo especificado'}`;
+  return notifyBoth(user.email, 'Necesitamos revisar tu comprobante · Recovery Studio', text, html, `Pago rechazado · ${user.name} · ${U.fmtMoney(payment.amount)}`, adminText);
+}
+
+/* Enlace privado de suscripción al calendario (Google Calendar / Apple / Outlook). */
+async function calendarFeedUrl(user) {
+  const config = RS.SupabaseConfig;
+  if (!config || !config.url) throw new Error('Supabase no está configurado.');
+  const target = user || RS.Auth.getUser();
+  if (!target) throw new Error('No hay una sesión activa.');
+  const uid = target.supabaseUserId || (isUuid(target.id) ? target.id : '');
+  if (!uid) throw new Error('Esta cuenta aún no está vinculada a Supabase. Ingresa con tu correo registrado.');
+  const token = await supabaseSessionToken();
+  if (!token) throw new Error('Tu sesión expiró. Vuelve a ingresar.');
+
+  const rows = await RS.Supabase.request(
+    `/rest/v1/calendar_feeds?user_id=eq.${encodeURIComponent(uid)}&select=token`,
+    { method: 'GET' },
+    token
+  );
+  let feedToken = Array.isArray(rows) && rows[0] ? rows[0].token : '';
+  if (!feedToken) {
+    const created = await RS.Supabase.request('/rest/v1/calendar_feeds', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ user_id: uid }),
+    }, token);
+    feedToken = Array.isArray(created) && created[0] ? created[0].token : '';
+  }
+  if (!feedToken) throw new Error('No pudimos generar tu enlace de calendario.');
+  const base = config.url.replace(/\/$/, '');
+  const url = `${base}/functions/v1/calendar-ics?token=${encodeURIComponent(feedToken)}`;
+  const webcal = url.replace(/^https:\/\//, 'webcal://');
+  return {
+    url,
+    webcal,
+    google: `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal)}`,
+  };
+}
+
+/* ==========================================================================
+   Google Calendar (enlace para agregar el evento al calendario del usuario)
+   ========================================================================== */
+
+function googleCalendarUrl(session) {
+  const U = RS.util;
+  const service = RS.data.getService(session.serviceId);
+  const start = U.dateTime(session.date, session.time);
+  const duration = service ? Number(service.duration) || 60 : 60;
+  const end = new Date(start.getTime() + duration * 60000);
+  const fmt = (d) => {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+  };
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `${service ? service.name : 'Sesión'} · Recovery Studio`,
+    dates: `${fmt(start)}/${fmt(end)}`,
+    details: `Sesión en Recovery Studio con ${session.coach || 'Daniel Barrueto Jopia'}.\nServicio: ${service ? service.name : ''}.\nFecha: ${U.fmtDate(session.date, 'long')} a las ${session.time} h.\nLugar: ${STUDIO_ADDRESS}.\n\nPolítica: cancela con 12 h de anticipación. Llega 5 minutos antes.`,
+    location: STUDIO_LOCATION,
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}

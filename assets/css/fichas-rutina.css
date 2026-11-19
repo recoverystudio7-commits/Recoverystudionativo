@@ -5,20 +5,20 @@
 
 :root {
   color-scheme: dark;
-  --bg: #080c12;
-  --surface: #0c121b;
-  --surface-raised: #101925;
-  --line: rgba(148, 163, 184, 0.14);
-  --line-strong: rgba(148, 163, 184, 0.24);
-  --text: #e8edf5;
-  --muted: #8d9aad;
-  --volt: #d8ff4f;
-  --volt-soft: rgba(216, 255, 79, 0.12);
-  --electric: #5b8cff;
-  --danger: #ff6b7a;
-  --sheet-text: #111820;
-  --sheet-muted: #647067;
-  --sheet-line: #e2e7dd;
+  --bg: #0f0d0a;
+  --surface: #15120e;
+  --surface-raised: #1b1712;
+  --line: rgba(214, 205, 188, 0.14);
+  --line-strong: rgba(214, 205, 188, 0.24);
+  --text: #efe7da;
+  --muted: #a69c8c;
+  --volt: #d27c56;
+  --volt-soft: rgba(210, 124, 86, 0.12);
+  --electric: #b5603c;
+  --danger: #ec7360;
+  --sheet-text: #1f1a14;
+  --sheet-muted: #6e6659;
+  --sheet-line: #e2dacb;
   --sheet-bg: #ffffff;
 }
 
@@ -35,11 +35,11 @@ body {
   margin: 0;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 12% -8%, rgba(216, 255, 79, 0.075), transparent 28rem),
-    radial-gradient(circle at 92% 8%, rgba(91, 140, 255, 0.07), transparent 30rem),
+    radial-gradient(circle at 12% -8%, rgba(210, 124, 86, 0.075), transparent 28rem),
+    radial-gradient(circle at 92% 8%, rgba(181, 96, 60, 0.07), transparent 30rem),
     var(--bg);
   color: var(--text);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -59,7 +59,7 @@ body::before {
 
 ::selection {
   background: var(--volt);
-  color: #0a0e06;
+  color: #171207;
 }
 
 .ambient-bg {
@@ -130,7 +130,7 @@ body::before {
   z-index: 50;
   height: 72px;
   border-bottom: 1px solid var(--line);
-  background: rgba(8, 12, 18, 0.82);
+  background: rgba(15, 13, 10, 0.82);
   backdrop-filter: blur(18px) saturate(140%);
 }
 
@@ -149,9 +149,9 @@ body::before {
   height: 38px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(216, 255, 79, 0.34);
+  border: 1px solid rgba(223, 167, 106, 0.34);
   border-radius: 12px;
-  background: linear-gradient(145deg, rgba(216, 255, 79, 0.18), rgba(216, 255, 79, 0.04));
+  background: linear-gradient(145deg, rgba(223, 167, 106, 0.18), rgba(223, 167, 106, 0.04));
   color: var(--volt);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
@@ -178,7 +178,7 @@ body::before {
 .brand-title {
   margin-top: 2px;
   color: #fff;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Bitter", Georgia, serif;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -201,25 +201,25 @@ body::before {
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #62e39a;
-  box-shadow: 0 0 0 3px rgba(98, 227, 154, 0.12);
+  background: #93c08a;
+  box-shadow: 0 0 0 3px rgba(147, 192, 138, 0.12);
   transition: background 180ms ease, box-shadow 180ms ease;
 }
 
 .save-status.is-saving .save-dot {
   background: var(--electric);
-  box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.14);
+  box-shadow: 0 0 0 3px rgba(194, 112, 74, 0.14);
   animation: save-pulse 900ms ease-in-out infinite;
 }
 
 .save-status.is-error {
-  color: #ffb0b8;
-  border-color: rgba(255, 107, 122, 0.3);
+  color: #ffb3a6;
+  border-color: rgba(236, 115, 96, 0.3);
 }
 
 .save-status.is-error .save-dot {
   background: var(--danger);
-  box-shadow: 0 0 0 3px rgba(255, 107, 122, 0.12);
+  box-shadow: 0 0 0 3px rgba(236, 115, 96, 0.12);
 }
 
 /* ---------------------------------------------------------
@@ -270,16 +270,16 @@ body::before {
 .btn-primary {
   border-color: rgba(255, 255, 255, 0.16);
   background: var(--volt);
-  color: #0a0e06;
+  color: #171207;
   box-shadow:
-    0 10px 30px -12px rgba(216, 255, 79, 0.55),
+    0 10px 30px -12px rgba(223, 167, 106, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
 .btn-primary:hover {
-  background: #e4ff83;
+  background: #edbf87;
   box-shadow:
-    0 14px 36px -12px rgba(216, 255, 79, 0.65),
+    0 14px 36px -12px rgba(223, 167, 106, 0.65),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transform: translateY(-1px);
 }
@@ -287,7 +287,7 @@ body::before {
 .btn-ghost {
   border-color: var(--line);
   background: rgba(255, 255, 255, 0.035);
-  color: #cdd5e0;
+  color: #d3cabd;
 }
 
 .btn-ghost:hover {
@@ -354,10 +354,10 @@ body::before {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  border: 1px solid rgba(216, 255, 79, 0.2);
+  border: 1px solid rgba(223, 167, 106, 0.2);
   border-radius: 999px;
   padding: 6px 10px;
-  background: rgba(216, 255, 79, 0.055);
+  background: rgba(223, 167, 106, 0.055);
   color: var(--volt);
   font-size: 10px;
   font-weight: 700;
@@ -375,7 +375,7 @@ body::before {
   padding: 20px;
   background:
     linear-gradient(150deg, rgba(255, 255, 255, 0.035), transparent 38%),
-    rgba(12, 18, 27, 0.84);
+    rgba(21, 18, 14, 0.84);
   box-shadow:
     0 24px 70px -38px rgba(0, 0, 0, 0.95),
     inset 0 1px 0 rgba(255, 255, 255, 0.035);
@@ -397,19 +397,19 @@ body::before {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.035);
-  color: #a9b6c8;
+  color: #b7ac9e;
 }
 
 .panel-icon-volt {
-  border-color: rgba(216, 255, 79, 0.22);
-  background: rgba(216, 255, 79, 0.07);
+  border-color: rgba(223, 167, 106, 0.22);
+  background: rgba(223, 167, 106, 0.07);
   color: var(--volt);
 }
 
 .panel-title {
   margin: 0;
-  color: #f6f8fb;
-  font-family: "Space Grotesk", sans-serif;
+  color: #f7f2e9;
+  font-family: "Bitter", Georgia, serif;
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.025em;
@@ -426,7 +426,7 @@ body::before {
   border-radius: 999px;
   padding: 3px 7px;
   background: var(--volt);
-  color: #0b0f06;
+  color: #171207;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -445,7 +445,7 @@ body::before {
 .field-label {
   display: block;
   margin-bottom: 7px;
-  color: #c8d1dd;
+  color: #d0c6b9;
   font-size: 11px;
   font-weight: 600;
   line-height: 1.3;
@@ -462,8 +462,8 @@ body::before {
   border: 1px solid var(--line);
   border-radius: 11px;
   padding: 10px 12px;
-  background: rgba(5, 9, 14, 0.62);
-  color: #f1f5fa;
+  background: rgba(12, 10, 8, 0.62);
+  color: #f2ede4;
   font-family: inherit;
   font-size: 13px;
   line-height: 1.45;
@@ -471,7 +471,7 @@ body::before {
 }
 
 .input::placeholder {
-  color: #5f6b7d;
+  color: #70665b;
 }
 
 .input:hover {
@@ -479,15 +479,15 @@ body::before {
 }
 
 .input:focus {
-  border-color: rgba(216, 255, 79, 0.62);
+  border-color: rgba(223, 167, 106, 0.62);
   outline: none;
-  background: rgba(5, 9, 14, 0.88);
-  box-shadow: 0 0 0 3px rgba(216, 255, 79, 0.09);
+  background: rgba(12, 10, 8, 0.88);
+  box-shadow: 0 0 0 3px rgba(223, 167, 106, 0.09);
 }
 
 .input.is-invalid {
-  border-color: rgba(255, 107, 122, 0.7);
-  box-shadow: 0 0 0 3px rgba(255, 107, 122, 0.08);
+  border-color: rgba(236, 115, 96, 0.7);
+  box-shadow: 0 0 0 3px rgba(236, 115, 96, 0.08);
 }
 
 .textarea {
@@ -512,11 +512,11 @@ body::before {
 }
 
 .field-hint {
-  color: #667386;
+  color: #9a9184;
 }
 
 .field-error {
-  color: #ff9aa5;
+  color: #ffa496;
 }
 
 .form-footnote {
@@ -525,7 +525,7 @@ body::before {
   justify-content: center;
   gap: 6px;
   margin: 0;
-  color: #5e6c80;
+  color: #6f655a;
   font-size: 10px;
 }
 
@@ -536,7 +536,7 @@ body::before {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 2px 7px;
-  color: #8593a7;
+  color: #9e9486;
   font-size: 8.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -550,21 +550,21 @@ body::before {
   min-height: 118px;
   place-items: center;
   overflow: hidden;
-  border: 1px dashed rgba(148, 163, 184, 0.28);
+  border: 1px dashed rgba(214, 205, 188, 0.28);
   border-radius: 12px;
   background:
-    linear-gradient(135deg, rgba(216, 255, 79, 0.025), transparent),
-    rgba(5, 9, 14, 0.58);
+    linear-gradient(135deg, rgba(223, 167, 106, 0.025), transparent),
+    rgba(12, 10, 8, 0.58);
   cursor: pointer;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
 .media-dropzone:hover,
 .media-dropzone.is-dragging {
-  border-color: rgba(216, 255, 79, 0.58);
+  border-color: rgba(223, 167, 106, 0.58);
   background:
-    linear-gradient(135deg, rgba(216, 255, 79, 0.06), transparent),
-    rgba(5, 9, 14, 0.82);
+    linear-gradient(135deg, rgba(223, 167, 106, 0.06), transparent),
+    rgba(12, 10, 8, 0.82);
 }
 
 .media-dropzone.is-loading::after {
@@ -573,7 +573,7 @@ body::before {
   display: grid;
   place-items: center;
   content: "Optimizando imagen…";
-  background: rgba(6, 10, 15, 0.82);
+  background: rgba(12, 10, 8, 0.82);
   color: var(--volt);
   font-size: 10px;
   font-weight: 600;
@@ -593,14 +593,14 @@ body::before {
   align-items: center;
   gap: 8px;
   padding: 12px;
-  color: #617087;
+  color: #9a9184;
   text-align: center;
   font-size: 10px;
   line-height: 1.35;
 }
 
 .media-placeholder .icon {
-  color: #76869d;
+  color: #a79d8e;
 }
 
 .media-clear {
@@ -613,8 +613,8 @@ body::before {
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
-  background: rgba(8, 12, 18, 0.82);
-  color: #d9e1eb;
+  background: rgba(15, 13, 10, 0.82);
+  color: #dcd3c6;
   cursor: pointer;
   backdrop-filter: blur(8px);
   transition: background 150ms ease, color 150ms ease;
@@ -635,7 +635,7 @@ body::before {
   border-radius: 9px;
   padding: 0 9px;
   background: rgba(255, 255, 255, 0.035);
-  color: #c7d1de;
+  color: #cfc5b8;
   font-size: 10px;
   font-weight: 600;
   cursor: pointer;
@@ -643,8 +643,8 @@ body::before {
 }
 
 .upload-btn:hover {
-  border-color: rgba(216, 255, 79, 0.35);
-  background: rgba(216, 255, 79, 0.06);
+  border-color: rgba(223, 167, 106, 0.35);
+  background: rgba(223, 167, 106, 0.06);
   color: var(--volt);
 }
 
@@ -657,13 +657,13 @@ body::before {
   border: 1px solid var(--line);
   border-radius: 9px;
   padding: 0 9px;
-  background: rgba(5, 9, 14, 0.58);
-  color: #617087;
+  background: rgba(12, 10, 8, 0.58);
+  color: #9a9184;
   transition: border-color 150ms ease;
 }
 
 .url-input-wrap:focus-within {
-  border-color: rgba(216, 255, 79, 0.48);
+  border-color: rgba(223, 167, 106, 0.48);
 }
 
 .url-input {
@@ -673,19 +673,19 @@ body::before {
   border: 0;
   outline: 0;
   background: transparent;
-  color: #dce5f0;
+  color: #ded6c9;
   font-family: inherit;
   font-size: 10px;
 }
 
 .url-input::placeholder {
-  color: #536075;
+  color: #6b6156;
 }
 
 .media-status {
   margin: 6px 0 0;
   overflow: hidden;
-  color: #5d6a7e;
+  color: #a69c8c;
   font-size: 9.5px;
   line-height: 1.3;
   text-overflow: ellipsis;
@@ -710,13 +710,13 @@ body::before {
   height: 7px;
   border-radius: 999px;
   background: var(--volt);
-  box-shadow: 0 0 0 4px rgba(216, 255, 79, 0.1);
+  box-shadow: 0 0 0 4px rgba(223, 167, 106, 0.1);
 }
 
 .live-dot::after {
   position: absolute;
   inset: -4px;
-  border: 1px solid rgba(216, 255, 79, 0.5);
+  border: 1px solid rgba(223, 167, 106, 0.5);
   border-radius: 999px;
   content: "";
   animation: live-ring 2.2s ease-out infinite;
@@ -727,7 +727,7 @@ body::before {
   border-radius: 999px;
   padding: 5px 9px;
   background: rgba(255, 255, 255, 0.03);
-  color: #9aa8ba;
+  color: #aea396;
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
@@ -758,7 +758,7 @@ body::before {
   position: absolute;
   inset: 0 0 auto;
   height: 5px;
-  background: linear-gradient(90deg, var(--volt) 0 32%, #111820 32% 100%);
+  background: linear-gradient(90deg, var(--volt) 0 32%, #1f1a14 32% 100%);
 }
 
 .sheet-header {
@@ -782,7 +782,7 @@ body::before {
   height: 38px;
   place-items: center;
   border-radius: 10px;
-  background: #101820;
+  background: #15120e;
   color: var(--volt);
 }
 
@@ -793,8 +793,8 @@ body::before {
 
 .sheet-brand-name {
   margin: 0;
-  color: #101820;
-  font-family: "Space Grotesk", sans-serif;
+  color: #15120e;
+  font-family: "Bitter", Georgia, serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -802,7 +802,7 @@ body::before {
 
 .sheet-brand-sub {
   margin: 1px 0 0;
-  color: #849087;
+  color: #6e6659;
   font-size: 8px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -819,7 +819,7 @@ body::before {
 }
 
 .sheet-doc-type span {
-  color: #7a857c;
+  color: #6e6659;
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -828,7 +828,7 @@ body::before {
 
 .sheet-doc-type strong {
   margin-top: 4px;
-  color: #2c372f;
+  color: #302a23;
   font-size: 11px;
   font-weight: 650;
 }
@@ -842,7 +842,7 @@ body::before {
   align-items: center;
   gap: 8px;
   margin: 0 0 8px;
-  color: #617066;
+  color: #655e53;
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -858,8 +858,8 @@ body::before {
 
 .sheet-client {
   margin: 0;
-  color: #0e1610;
-  font-family: "Space Grotesk", sans-serif;
+  color: #14110c;
+  font-family: "Bitter", Georgia, serif;
   font-size: clamp(27px, 4.6vw, 40px);
   font-weight: 650;
   line-height: 1.02;
@@ -872,8 +872,8 @@ body::before {
   margin: 10px 0 0;
   border-radius: 999px;
   padding: 5px 10px;
-  background: #f0f3eb;
-  color: #465248;
+  background: #f1ece3;
+  color: #4a443b;
   font-size: 9.5px;
   font-weight: 650;
   letter-spacing: 0.01em;
@@ -885,7 +885,7 @@ body::before {
   overflow: hidden;
   border: 1px solid var(--sheet-line);
   border-radius: 10px;
-  background: #f8f9f6;
+  background: #f9f5ee;
 }
 
 .sheet-meta-item {
@@ -904,7 +904,7 @@ body::before {
 
 .sheet-meta-item span {
   margin-bottom: 2px;
-  color: #8b948c;
+  color: #6e6659;
   font-size: 7.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -913,7 +913,7 @@ body::before {
 
 .sheet-meta-item strong {
   overflow: hidden;
-  color: #26312a;
+  color: #2a251e;
   font-size: 11px;
   font-weight: 650;
   text-overflow: ellipsis;
@@ -925,14 +925,14 @@ body::before {
   border-left: 3px solid var(--volt);
   border-radius: 0 8px 8px 0;
   padding: 10px 13px;
-  background: #f7f8f3;
+  background: #f8f3ec;
 }
 
 .sheet-note-label {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #5f6b62;
+  color: #635c52;
   font-size: 7.5px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -941,7 +941,7 @@ body::before {
 
 .sheet-note p {
   margin: 4px 0 0;
-  color: #4d5850;
+  color: #514b42;
   font-size: 10px;
   line-height: 1.5;
   white-space: pre-line;
@@ -963,8 +963,8 @@ body::before {
 
 .sheet-section-heading h3 {
   margin: 0;
-  color: #202b23;
-  font-family: "Space Grotesk", sans-serif;
+  color: #241f19;
+  font-family: "Bitter", Georgia, serif;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -974,7 +974,7 @@ body::before {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #8a948c;
+  color: #6e6659;
   font-size: 7.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -996,8 +996,8 @@ body::before {
 }
 
 .routine-exercise:hover {
-  border-color: #cfd6c9;
-  box-shadow: 0 10px 26px -20px rgba(17, 24, 32, 0.6);
+  border-color: #d0c7b8;
+  box-shadow: 0 10px 26px -20px rgba(31, 26, 20, 0.6);
 }
 
 .exercise-head {
@@ -1021,7 +1021,7 @@ body::before {
   flex: 0 0 auto;
   place-items: center;
   border-radius: 8px;
-  background: #111820;
+  background: #1f1a14;
   color: var(--volt);
   font-size: 9px;
   font-weight: 800;
@@ -1031,8 +1031,8 @@ body::before {
 .exercise-title {
   margin: 0;
   overflow: hidden;
-  color: #172019;
-  font-family: "Space Grotesk", sans-serif;
+  color: #1c1813;
+  font-family: "Bitter", Georgia, serif;
   font-size: 13.5px;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -1062,7 +1062,7 @@ body::before {
   border: 1px solid transparent;
   border-radius: 7px;
   background: transparent;
-  color: #768078;
+  color: #7b7368;
   cursor: pointer;
   transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
@@ -1073,15 +1073,15 @@ body::before {
 }
 
 .icon-btn:hover {
-  border-color: #e2e7dd;
-  background: #f2f4ef;
-  color: #202b23;
+  border-color: #e2dacb;
+  background: #f3eee6;
+  color: #241f19;
 }
 
 .icon-btn.is-danger:hover {
-  border-color: #ffd7db;
-  background: #fff1f2;
-  color: #d83a4b;
+  border-color: #f6d3c6;
+  background: #fff3ec;
+  color: #c24a34;
 }
 
 .icon-btn:disabled {
@@ -1092,7 +1092,7 @@ body::before {
 .icon-btn:disabled:hover {
   border-color: transparent;
   background: transparent;
-  color: #768078;
+  color: #7b7368;
 }
 
 .exercise-media-grid {
@@ -1107,9 +1107,9 @@ body::before {
   position: relative;
   margin: 0;
   overflow: hidden;
-  border: 1px solid #e5e9e0;
+  border: 1px solid #e6dfd2;
   border-radius: 8px;
-  background: #f2f4ef;
+  background: #f3eee6;
 }
 
 .movement-frame img {
@@ -1126,7 +1126,7 @@ body::before {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  color: #a0aaa1;
+  color: #6e6659;
   font-size: 8px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -1135,7 +1135,7 @@ body::before {
 .movement-placeholder .icon {
   width: 21px;
   height: 21px;
-  color: #b5beb6;
+  color: #bbb1a4;
 }
 
 .frame-chip {
@@ -1144,7 +1144,7 @@ body::before {
   left: 6px;
   border-radius: 999px;
   padding: 3px 7px;
-  background: #111820;
+  background: #1f1a14;
   color: #fff;
   font-size: 7px;
   font-weight: 750;
@@ -1154,7 +1154,7 @@ body::before {
 
 .frame-chip.is-end {
   background: var(--volt);
-  color: #0d1307;
+  color: #141008;
 }
 
 .movement-divider {
@@ -1168,10 +1168,10 @@ body::before {
   place-items: center;
   border: 3px solid #fff;
   border-radius: 999px;
-  background: #111820;
+  background: #1f1a14;
   color: var(--volt);
   transform: translate(-50%, -50%);
-  box-shadow: 0 2px 8px rgba(17, 24, 32, 0.24);
+  box-shadow: 0 2px 8px rgba(31, 26, 20, 0.24);
 }
 
 .movement-divider .icon {
@@ -1184,9 +1184,9 @@ body::before {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
   margin-top: 8px;
-  border: 1px solid #e5e9e0;
+  border: 1px solid #e6dfd2;
   border-radius: 8px;
-  background: #fafbf8;
+  background: #fbf7f1;
 }
 
 .exercise-param {
@@ -1196,7 +1196,7 @@ body::before {
 }
 
 .exercise-param + .exercise-param {
-  border-left: 1px solid #e5e9e0;
+  border-left: 1px solid #e6dfd2;
 }
 
 .exercise-param span,
@@ -1205,7 +1205,7 @@ body::before {
 }
 
 .exercise-param span {
-  color: #8f998f;
+  color: #6e6659;
   font-size: 6.5px;
   font-weight: 750;
   letter-spacing: 0.11em;
@@ -1215,7 +1215,7 @@ body::before {
 .exercise-param strong {
   overflow: hidden;
   margin-top: 1px;
-  color: #2b362e;
+  color: #2f2922;
   font-size: 10.5px;
   font-weight: 700;
   text-overflow: ellipsis;
@@ -1228,8 +1228,8 @@ body::before {
   margin: 8px 0 0;
   border-radius: 7px;
   padding: 7px 9px;
-  background: #f6f8f2;
-  color: #59635b;
+  background: #f7f2eb;
+  color: #5d564c;
   font-size: 8.5px;
   line-height: 1.48;
   white-space: pre-line;
@@ -1240,7 +1240,7 @@ body::before {
   height: 12px;
   flex: 0 0 auto;
   margin-top: 1px;
-  color: #8d988e;
+  color: #6e6659;
 }
 
 /* Estado vacío */
@@ -1250,10 +1250,10 @@ body::before {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1px dashed #d9dfd5;
+  border: 1px dashed #dad2c4;
   border-radius: 11px;
   padding: 28px;
-  background: #fafbf8;
+  background: #fbf7f1;
   text-align: center;
 }
 
@@ -1262,16 +1262,16 @@ body::before {
   width: 44px;
   height: 44px;
   place-items: center;
-  border: 1px solid #e0e5dc;
+  border: 1px solid #e1d9cc;
   border-radius: 12px;
   background: #fff;
-  color: #94a095;
+  color: #998f83;
 }
 
 .sheet-empty h4 {
   margin: 12px 0 3px;
-  color: #2a352d;
-  font-family: "Space Grotesk", sans-serif;
+  color: #2e2821;
+  font-family: "Bitter", Georgia, serif;
   font-size: 14px;
   font-weight: 650;
 }
@@ -1279,7 +1279,7 @@ body::before {
 .sheet-empty p {
   max-width: 260px;
   margin: 0;
-  color: #869088;
+  color: #6e6659;
   font-size: 9.5px;
   line-height: 1.5;
 }
@@ -1287,15 +1287,15 @@ body::before {
 .sheet-empty .btn {
   min-height: 32px;
   margin-top: 13px;
-  border-color: #d9dfd5;
+  border-color: #dad2c4;
   background: #fff;
-  color: #2b362e;
+  color: #2f2922;
   font-size: 10px;
 }
 
 .sheet-empty .btn:hover {
-  border-color: #bfc8bb;
-  background: #f5f7f2;
+  border-color: #c1b7a9;
+  background: #f6f1ea;
 }
 
 .sheet-footer {
@@ -1306,14 +1306,14 @@ body::before {
   margin-top: 28px;
   padding-top: 13px;
   border-top: 1px solid var(--sheet-line);
-  color: #8d978f;
+  color: #6e6659;
 }
 
 .sheet-footer-brand {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: #5e6961;
+  color: #625b51;
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -1346,8 +1346,8 @@ body::before {
   border: 1px solid var(--line-strong);
   border-radius: 12px;
   padding: 11px 12px;
-  background: rgba(16, 25, 37, 0.96);
-  color: #e6edf6;
+  background: rgba(27, 23, 18, 0.96);
+  color: #e9e1d4;
   font-size: 11.5px;
   box-shadow: 0 18px 46px -14px rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(14px);
@@ -1366,7 +1366,7 @@ body::before {
   flex: 0 0 auto;
   place-items: center;
   border-radius: 7px;
-  background: rgba(216, 255, 79, 0.12);
+  background: rgba(223, 167, 106, 0.12);
   color: var(--volt);
 }
 
@@ -1376,8 +1376,8 @@ body::before {
 }
 
 .toast.is-error .toast-icon {
-  background: rgba(255, 107, 122, 0.12);
-  color: #ff9aa5;
+  background: rgba(236, 115, 96, 0.12);
+  color: #ffa496;
 }
 
 .toast-message {
@@ -1391,7 +1391,7 @@ body::before {
   border: 0;
   border-radius: 6px;
   padding: 4px 7px;
-  background: rgba(216, 255, 79, 0.12);
+  background: rgba(223, 167, 106, 0.12);
   color: var(--volt);
   font: inherit;
   font-size: 10px;
@@ -1400,7 +1400,7 @@ body::before {
 }
 
 .toast-action:hover {
-  background: rgba(216, 255, 79, 0.2);
+  background: rgba(223, 167, 106, 0.2);
 }
 
 /* ---------------------------------------------------------
@@ -1439,7 +1439,7 @@ body::before {
 .sheet-scroll::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(214, 205, 188, 0.25);
   background-clip: padding-box;
 }
 
@@ -1647,7 +1647,7 @@ body::before {
     height: auto;
     overflow: visible !important;
     background: #fff !important;
-    color: #111820 !important;
+    color: #1f1a14 !important;
   }
 
   body::before,

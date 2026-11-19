@@ -152,11 +152,6 @@
           body: JSON.stringify({ email, password, data: metadata || {} }),
         });
       },
-      signInWithGoogle() {
-        const base = config().url.replace(/\/$/, '');
-        const redirectTo = encodeURIComponent(location.origin + location.pathname + location.search);
-        window.location.assign(`${base}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`);
-      },
       getUser,
       signOut(token) {
         return request('/auth/v1/logout', { method: 'POST' }, token);
