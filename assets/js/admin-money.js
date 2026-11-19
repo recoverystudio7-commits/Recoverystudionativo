@@ -423,6 +423,7 @@
               <span class="expense-cat">${U.esc(e.category)}</span>
               <div class="expense-info"><strong>${U.esc(e.description)}</strong><span>${U.fmtDate(e.date, 'compact')} · ${U.esc(e.method)}</span></div>
               <strong class="expense-amount">${U.fmtMoney(e.amount)}</strong>
+              <button class="icon-btn" data-action="admin-edit-expense" data-id="${e.id}" aria-label="Editar gasto">${UI.icon('edit', 15)}</button>
               <button class="icon-btn danger" data-action="admin-delete-expense" data-id="${e.id}" aria-label="Eliminar gasto">${UI.icon('trash', 15)}</button>
             </div>`).join('')}</div>` : UI.empty({ icon: 'wallet', title: 'Sin gastos registrados', text: 'Agrega los gastos del mes para calcular la utilidad.' })}
             <div class="expense-breakdown">
@@ -553,19 +554,21 @@
     </div>`;
   }
 
-  function openExpenseModal() {
+  function openExpenseModal(expense) {
+    const editing = Boolean(expense);
     UI.modal({
-      title: 'Agregar gasto',
-      subtitle: 'Registra un egreso del studio.',
+      title: editing ? 'Editar gasto' : 'Agregar gasto',
+      subtitle: editing ? 'Modifica el egreso registrado.' : 'Registra un egreso del studio.',
       size: 'sm',
       body: `<form data-form="admin-expense" id="expense-form">
+        <input type="hidden" name="expenseId" value="${editing ? U.esc(expense.id) : ''}">
         <div class="grid grid-2 gap-sm">
-          <div class="field"><label for="ex-date">Fecha *</label><input class="input" id="ex-date" name="date" type="date" value="${U.todayISO()}" required></div>
-          <div class="field"><label for="ex-amount">Monto *</label><input class="input" id="ex-amount" name="amount" type="number" min="0" step="100" required placeholder="0"></div>
-          <div class="field"><label for="ex-cat">Categoría</label><select class="input" id="ex-cat" name="category">${Admin.EXPENSE_CATEGORIES.map((c) => `<option>${c}</option>`).join('')}</select></div>
-          <div class="field"><label for="ex-method">Método</label><select class="input" id="ex-method" name="method"><option>Transferencia</option><option>Efectivo</option><option>Débito</option><option>Crédito</option></select></div>
+          <div class="field"><label for="ex-date">Fecha *</label><input class="input" id="ex-date" name="date" type="date" value="${U.esc(editing ? expense.date : U.todayISO())}" required></div>
+          <div class="field"><label for="ex-amount">Monto *</label><input class="input" id="ex-amount" name="amount" type="number" min="0" step="100" required placeholder="0" value="${U.esc(editing ? expense.amount : '')}"></div>
+          <div class="field"><label for="ex-cat">Categoría</label><select class="input" id="ex-cat" name="category">${Admin.EXPENSE_CATEGORIES.map((c) => `<option${c === (editing ? expense.category : '') ? ' selected' : ''}>${c}</option>`).join('')}</select></div>
+          <div class="field"><label for="ex-method">Método</label><select class="input" id="ex-method" name="method">${['Transferencia', 'Efectivo', 'Débito', 'Crédito'].map((m) => `<option${m === (editing ? expense.method : '') ? ' selected' : ''}>${m}</option>`).join('')}</select></div>
         </div>
-        <div class="field"><label for="ex-desc">Descripción *</label><input class="input" id="ex-desc" name="description" placeholder="Ej: arriendo de noviembre" required></div>
+        <div class="field"><label for="ex-desc">Descripción *</label><input class="input" id="ex-desc" name="description" placeholder="Ej: arriendo de noviembre" required value="${U.esc(editing ? expense.description : '')}"></div>
         <p class="form-error" id="expense-error" role="alert"></p>
       </form>`,
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" type="submit" form="expense-form">Guardar gasto</button>`,
@@ -583,17 +586,20 @@
       }
       return;
     }
+    const existingId = (form.expenseId && form.expenseId.value) || '';
+    const idx = existingId ? st().expenses.findIndex((e) => e.id === existingId) : -1;
     const expense = {
-      id: U.uid('exp'),
+      id: existingId || U.uid('exp'),
       date: form.date.value,
       category: form.category.value,
       description,
       amount,
       method: form.method.value,
     };
-    st().expenses.push(expense);
+    if (idx >= 0) st().expenses[idx] = expense;
+    else st().expenses.push(expense);
     RS.DB.save();
-    RS.data.addAudit(me().name, 'Gasto registrado', `${description} · ${U.fmtMoney(amount)}.`);
+    RS.data.addAudit(me().name, idx >= 0 ? 'Gasto editado' : 'Gasto registrado', `${description} · ${U.fmtMoney(amount)}.`);
     if (RS.SupabaseSync && RS.SupabaseSync.saveExpense) {
       try {
         await RS.SupabaseSync.saveExpense(expense);
@@ -603,7 +609,7 @@
       }
     }
     UI.closeModal();
-    UI.toast('Gasto registrado.', 'success');
+    UI.toast(idx >= 0 ? 'Gasto editado.' : 'Gasto registrado.', 'success');
     RS.App.render(true);
   };
 
@@ -866,6 +872,11 @@
   };
 
   RS.actions['admin-add-expense'] = () => openExpenseModal();
+
+  RS.actions['admin-edit-expense'] = (el) => {
+    const expense = st().expenses.find((e) => e.id === el.dataset.id);
+    if (expense) openExpenseModal(expense);
+  };
 
   RS.actions['admin-delete-expense'] = (el) => {
     const expense = st().expenses.find((e) => e.id === el.dataset.id);

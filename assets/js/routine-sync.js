@@ -107,5 +107,11 @@
     }
   }
 
-  RS.TrainingRoutines = { load, save, supportsUserId };
+  async function deleteRoutine(userId) {
+    const session = RS.Supabase.readSession();
+    if (!session || !session.access_token) return;
+    await RS.Supabase.request(`/rest/v1/client_routines?user_id=eq.${encodeURIComponent(userId)}`, { method: 'DELETE' }, session.access_token);
+  }
+
+  RS.TrainingRoutines = { load, save, supportsUserId, delete: deleteRoutine };
 })();

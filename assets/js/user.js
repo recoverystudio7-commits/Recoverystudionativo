@@ -1154,6 +1154,10 @@
               <h2>${U.esc(routine.title)}</h2>
               <p>${U.esc(routine.objective)}</p>
             </div>
+            <div class="routine-head-actions">
+              <button class="btn btn-outline btn-sm" data-action="edit-routine"><strong>Editar rutina</strong></button>
+              <button class="btn btn-ghost btn-sm danger-text" data-action="delete-routine"><strong>Eliminar rutina</strong></button>
+            </div>
             <div class="routine-meta">
               <div><span>Semanas</span><strong>${routine.weeks}</strong></div>
               <div><span>Días / semana</span><strong>${routine.days.length}</strong></div>
@@ -1556,6 +1560,74 @@
 
   RS.actions['print-routine'] = () => {
     window.print();
+  };
+
+  function openEditRoutineModal() {
+    const routine = RS.data.userRoutine(me().id);
+    if (!routine) return;
+    const draft = JSON.parse(JSON.stringify(routine));
+    const root = UI.modal({
+      title: 'Editar rutina',
+      subtitle: `Modifica “${draft.title}”`,
+      size: 'sm',
+      body: `<div class="routine-editor-meta">
+        <div class="field"><label for="ur-title">Título de la pauta</label><input class="input" id="ur-title" value="${U.esc(draft.title)}"></div>
+        <div class="field"><label for="ur-objective">Objetivo</label><input class="input" id="ur-objective" value="${U.esc(draft.objective || '')}"></div>
+        <div class="field"><label for="ur-weeks">Semanas</label><input class="input" type="number" min="1" max="52" id="ur-weeks" value="${U.esc(draft.weeks)}"></div>
+      </div>
+      <p class="form-error" id="ur-error" role="alert"></p>`,
+      footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" id="ur-save">Guardar rutina</button>`,
+    });
+    if (!root) return;
+    root.querySelector('#ur-save').addEventListener('click', async () => {
+      draft.title = root.querySelector('#ur-title').value.trim() || 'Pauta de entrenamiento';
+      draft.objective = root.querySelector('#ur-objective').value.trim();
+      draft.weeks = Math.max(1, Number(root.querySelector('#ur-weeks').value) || draft.weeks || 4);
+      draft.updatedAt = U.todayISO();
+      const idx = st().routines.findIndex((r) => r.userId === me().id);
+      if (idx >= 0) st().routines[idx] = draft;
+      else st().routines.push(draft);
+      if (RS.TrainingRoutines && RS.TrainingRoutines.save && RS.TrainingRoutines.supportsUserId(me().id)) {
+        try {
+          await RS.TrainingRoutines.save(me().id, draft, me().id);
+        } catch (error) {
+          const errEl = root.querySelector('#ur-error');
+          if (errEl) {
+            errEl.textContent = `No pudimos sincronizar la rutina: ${error.message}`;
+            errEl.classList.add('show');
+          }
+          return;
+        }
+      }
+      RS.DB.save();
+      RS.data.addAudit(me().name, 'Rutina modificada', `${draft.title} · ${draft.weeks} semanas.`);
+      UI.closeModal();
+      UI.toast('Rutina modificada.', 'success');
+      RS.App.render(true);
+    });
+  }
+
+  RS.actions['edit-routine'] = () => openEditRoutineModal();
+
+  RS.actions['delete-routine'] = () => {
+    const routine = RS.data.userRoutine(me().id);
+    if (!routine) return;
+    UI.confirm({
+      title: 'Eliminar rutina',
+      message: `Se eliminará la rutina “${routine.title}” y todos sus días.`,
+      okText: 'Eliminar',
+      danger: true,
+    }).then(async (ok) => {
+      if (!ok) return;
+      if (RS.TrainingRoutines && RS.TrainingRoutines.delete) {
+        try { await RS.TrainingRoutines.delete(me().id); } catch (error) { console.warn('No se pudo eliminar la rutina en la nube:', error.message); }
+      }
+      st().routines = st().routines.filter((r) => r.userId !== me().id);
+      RS.DB.save();
+      RS.data.addAudit(me().name, 'Rutina eliminada', routine.title);
+      UI.toast('Rutina eliminada.', 'info');
+      RS.App.render(true);
+    });
   };
 
   RS.actions.logout = () => {
