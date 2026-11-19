@@ -1,614 +1,115 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = { darkMode: 'class', theme: { extend: { 'colors': { 'secondary': '#934a28', 'on-primary-fixed-variant': '#3a4b40', 'error': '#ba1a1a', 'on-tertiary': '#ffffff', 'on-secondary-container': '#783615', 'on-background': '#101e17', 'on-secondary': '#ffffff', 'tertiary-container': '#31291e', 'on-surface': '#101e17', 'tertiary-fixed': '#efe0cf', 'surface-container': '#e1f2e5', 'on-secondary-fixed-variant': '#753313', 'error-container': '#ffdad6', 'inverse-on-surface': '#e4f5e8', 'on-surface-variant': '#434844', 'surface': '#edfef0', 'on-tertiary-container': '#9c9081', 'surface-container-high': '#dcecdf', 'on-secondary-fixed': '#360f00', 'secondary-fixed-dim': '#ffb597', 'on-tertiary-fixed': '#221a10', 'tertiary-fixed-dim': '#d3c4b4', 'secondary-container': '#ffa179', 'primary-fixed-dim': '#b8cbbe', 'outline-variant': '#c3c8c2', 'tertiary': '#1c150b', 'surface-tint': '#516258', 'background': '#edfef0', 'on-tertiary-fixed-variant': '#4f4539', 'surface-container-lowest': '#ffffff', 'on-primary-fixed': '#0f1f16', 'surface-dim': '#cdded1', 'surface-bright': '#edfef0', 'outline': '#737874', 'inverse-surface': '#25342b', 'primary-fixed': '#d4e7d9', 'primary-container': '#1e2e25', 'surface-container-low': '#e7f8eb', 'primary': '#091911', 'surface-container-highest': '#d6e7da', 'on-primary-container': '#84968a', 'on-error': '#ffffff', 'surface-variant': '#d6e7da', 'on-error-container': '#93000a', 'inverse-primary': '#b8cbbe', 'on-primary': '#ffffff', 'secondary-fixed': '#ffdbcd' }, 'borderRadius': { 'DEFAULT': '0.25rem', 'lg': '0.5rem', 'xl': '0.75rem', 'full': '9999px' }, 'spacing': { 'space-sm': '0.5rem', 'margin-mobile': '1.25rem', 'space-md': '1rem', 'margin': '3rem', 'gutter': '1.5rem', 'space-xl': '2.5rem', 'gutter-sm': '1rem', 'space-lg': '1.5rem', 'space-xs': '0.25rem' }, 'fontFamily': { 'headline-sm': ['Plus Jakarta Sans'], 'body-lg': ['Plus Jakarta Sans'], 'headline-md': ['Newsreader'], 'label-sm': ['Plus Jakarta Sans'], 'caption-caps': ['Plus Jakarta Sans'], 'body-sm': ['Plus Jakarta Sans'], 'label-md': ['Plus Jakarta Sans'], 'body-md': ['Plus Jakarta Sans'], 'headline-lg-mobile': ['Newsreader'], 'headline-lg': ['Newsreader'], 'display': ['Newsreader'], 'display-mobile': ['Newsreader'] }, 'fontSize': { 'headline-sm': ['1.125rem', { 'lineHeight': '1.5rem', 'letterSpacing': '0em', 'fontWeight': '600' }], 'body-lg': ['1.125rem', { 'lineHeight': '1.75rem', 'letterSpacing': '0em', 'fontWeight': '400' }], 'headline-md': ['1.5rem', { 'lineHeight': '1.875rem', 'letterSpacing': '-0.005em', 'fontWeight': '500' }], 'label-sm': ['0.75rem', { 'lineHeight': '1rem', 'letterSpacing': '0.04em', 'fontWeight': '600' }], 'caption-caps': ['0.6875rem', { 'lineHeight': '0.875rem', 'letterSpacing': '0.14em', 'fontWeight': '700' }], 'body-sm': ['0.8125rem', { 'lineHeight': '1.25rem', 'letterSpacing': '0.01em', 'fontWeight': '400' }], 'label-md': ['0.875rem', { 'lineHeight': '1.25rem', 'letterSpacing': '0.01em', 'fontWeight': '600' }], 'body-md': ['0.9375rem', { 'lineHeight': '1.5rem', 'letterSpacing': '0em', 'fontWeight': '400' }], 'headline-lg-mobile': ['1.75rem', { 'lineHeight': '2.125rem', 'letterSpacing': '-0.01em', 'fontWeight': '400' }], 'headline-lg': ['2.25rem', { 'lineHeight': '2.625rem', 'letterSpacing': '-0.01em', 'fontWeight': '400' }], 'display': ['3.5rem', { 'lineHeight': '3.75rem', 'letterSpacing': '-0.02em', 'fontWeight': '400' }], 'display-mobile': ['2.5rem', { 'lineHeight': '2.75rem', 'letterSpacing': '-0.015em', 'fontWeight': '400' }] } } } };</script><title>Recovery Studio | Kinesiología y rendimiento en Gorbea</title><meta name="description" content="Kinesiología, recuperación y rendimiento deportivo en Gorbea, Araucanía."></head><body class="bg-surface text-on-surface font-body-md text-body-md"><header class="fixed top-0 left-0 right-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,34,26,0.04)]"><div class="h-20 max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between gap-4"><div class="flex items-center gap-3 shrink-0"><img alt="Recovery Studio Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrBRQSCSYMUbZbfcoR2wHMJhlsfdNFrWflBkCoNvYoaJFIMd-74mb8ngtJB2xCtksOrxQi67oemUL_kqY_FJ7VMr47TrbkQRCUnf-IaHSuuQ_DuQA4brHH0wmIPDw7ZNMHbp82bKu9Y7YBvNxv4odK2JxH4HXQWhv41PBPclLFOJDbUcnYC_5oslagEInGoBq9MKiGdzL5Ekqdqa7Iq32pFyX0X0_rkIzKWvJRbfZrAy6A"><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary tracking-tight">Recovery Studio</span><span class="font-caption-caps text-caption-caps text-on-surface-variant uppercase tracking-wider">Gorbea · Araucanía</span></div></div><nav class="hidden xl:flex items-center gap-6" data-active-classes="text-primary font-semibold"><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#agendamiento">Agendar Sesión</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#equipo">Kinesiólogo Titular</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#planes">Packs &amp; Precios</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#calculadora">Calculadora Atleta</a><a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#testimonios">Testimonios</a></nav><div class="flex items-center gap-3 shrink-0"><a class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container hover:text-on-secondary-container transition-all font-label-md text-label-md shadow-[0_2px_12px_-2px_rgba(147,74,40,0.2)]" href="https://wa.me/56965058439?text=Hola%20Recovery%20Studio,%20quiero%20coordinar%20mi%20sesi%C3%B3n%20en%20Gorbea" rel="noopener noreferrer" target="_blank"><span class="material-symbols-outlined text-[18px] mr-1.5">chat</span>WhatsApp Directo</a><a class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-all font-label-md text-label-md" href="#agendamiento"><span class="material-symbols-outlined text-[18px] mr-1.5">calendar_month</span>Reservar Turno</a></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full relative">
-<!-- Top Split Hero & Interactive Booking Portal -->
-<section class="w-full relative overflow-hidden bg-primary-container text-on-primary" id="agendamiento">
-<!-- Atmospheric Sauna Glow Effects -->
-<div class="absolute -top-32 right-1/4 w-[600px] h-[600px] rounded-full bg-secondary/15 blur-[140px] pointer-events-none"></div>
-<div class="absolute bottom-0 left-0 w-[450px] h-[450px] rounded-full bg-secondary-container/10 blur-[120px] pointer-events-none"></div>
-<div class="max-w-7xl mx-auto px-6 lg:px-12 py-12 lg:py-20 relative z-10">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-<!-- Left Column: Atmospheric Brand Story & Metrics -->
-<div class="lg:col-span-7 flex flex-col space-y-8">
-<!-- Category kicker -->
-<div class="flex items-center gap-3">
-<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-secondary/30 text-secondary-fixed">
-<span class="material-symbols-outlined text-[15px]">spa</span>
-</span>
-<span class="font-caption-caps text-caption-caps tracking-widest text-primary-fixed uppercase font-semibold">
-              Lord Cochrane 450 · Gorbea · Acreditación MINSAL
-            </span>
-</div>
-<!-- Main High-Contrast Headline -->
-<div class="space-y-3">
-<h1 class="font-display text-display text-surface-container-lowest leading-[1.08] tracking-tight">
-              Recupera mejor.<br>
-<em class="font-headline-lg italic font-normal text-secondary-container">Vuelve más fuerte.</em>
-</h1>
-<p class="font-body-lg text-body-lg text-primary-fixed-dim max-w-xl leading-relaxed pt-2">
-              Santuario de recuperación física de alta precisión para atletas y deportistas del sur de Chile. Kinesiología deportiva, punción seca, presoterapia Normatec y termoterapia de sauna finlandés en un solo lugar.
-            </p>
-</div>
-<!-- Value proposition list with custom checks -->
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-<div class="flex items-start gap-3 p-3.5 rounded-lg bg-surface/5 backdrop-blur-md">
-<span class="material-symbols-outlined text-secondary-container text-[20px] shrink-0 mt-0.5">verified</span>
-<p class="font-body-sm text-body-sm text-surface-bright">Reembolso con Fonasa e Isapres (boleta electrónica kinesiológica).</p>
-</div>
-<div class="flex items-start gap-3 p-3.5 rounded-lg bg-surface/5 backdrop-blur-md">
-<span class="material-symbols-outlined text-secondary-container text-[20px] shrink-0 mt-0.5">schedule</span>
-<p class="font-body-sm text-body-sm text-surface-bright">Reprogramación flexible y sin penalización con 12 h de aviso.</p>
-</div>
-<div class="flex items-start gap-3 p-3.5 rounded-lg bg-surface/5 backdrop-blur-md">
-<span class="material-symbols-outlined text-secondary-container text-[20px] shrink-0 mt-0.5">payments</span>
-<p class="font-body-sm text-body-sm text-surface-bright">Transferencia bancaria al instante o Mercado Pago en hasta 6 cuotas.</p>
-</div>
-<div class="flex items-start gap-3 p-3.5 rounded-lg bg-surface/5 backdrop-blur-md">
-<span class="material-symbols-outlined text-secondary-container text-[20px] shrink-0 mt-0.5">thermostat</span>
-<p class="font-body-sm text-body-sm text-surface-bright">Sauna seco/húmedo 85°C con esencias orgánicas de eucalipto sureño.</p>
-</div>
-</div>
-<!-- Stats Strip -->
-<div class="pt-4 grid grid-cols-3 gap-6 max-w-lg border-t border-surface/10">
-<div>
-<div class="font-headline-lg text-headline-lg font-headline-md text-surface-container-lowest">12 h</div>
-<div class="font-label-sm text-label-sm text-on-primary-container mt-1 uppercase tracking-wider">Garantía de cambio</div>
-</div>
-<div>
-<div class="font-headline-lg text-headline-lg font-headline-md text-surface-container-lowest">1:1</div>
-<div class="font-label-sm text-label-sm text-on-primary-container mt-1 uppercase tracking-wider">Atención Kinesiólogo</div>
-</div>
-<div>
-<div class="font-headline-lg text-headline-lg font-headline-md text-secondary-container">100%</div>
-<div class="font-label-sm text-label-sm text-on-primary-container mt-1 uppercase tracking-wider">Reembolsable salud</div>
-</div>
-</div>
-<!-- Next Available Turn Card -->
-<div class="p-5 rounded-xl bg-surface/10 backdrop-blur-xl border border-surface/15 shadow-xl max-w-xl">
-<div class="flex items-center justify-between text-caption-caps font-caption-caps tracking-widest text-on-primary-container mb-3">
-<span class="flex items-center gap-1.5 text-secondary-fixed">
-<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
-                DISPONIBILIDAD INMEDIATA HOY EN GORBEA
-              </span>
-<span class="text-surface-bright font-medium">Lord Cochrane 450</span>
-</div>
-<div class="flex items-center gap-4 bg-primary/50 p-3.5 rounded-lg">
-<div class="w-12 h-12 rounded-lg bg-surface-container-lowest text-primary flex flex-col items-center justify-center shrink-0">
-<span class="font-caption-caps text-caption-caps uppercase font-bold text-secondary">HOY</span>
-<span class="material-symbols-outlined text-[20px] text-primary">bolt</span>
-</div>
-<div class="flex-1 min-w-0">
-<h4 class="font-headline-sm text-headline-sm text-surface-container-lowest text-[15px] truncate">Cupos vespertinos abiertos · Kine + Sauna</h4>
-<p class="text-primary-fixed-dim text-body-sm text-[13px]">Atención individualizada por turno. Protocolo térmico incluido.</p>
-</div>
-<span class="px-2.5 py-1 rounded bg-secondary/30 text-secondary-fixed font-caption-caps text-caption-caps uppercase font-bold">2 cupos</span>
-</div>
-</div>
-</div>
-<!-- Right Column: Interactive Fast Booking Sanctuary Widget -->
-<div class="lg:col-span-5 w-full">
-<div class="bg-surface-container-lowest text-on-surface p-7 sm:p-8 rounded-2xl shadow-2xl relative border border-surface-container-high/60">
-<!-- Header Badge -->
-<div class="mb-5 p-3.5 rounded-xl bg-surface-container-low text-primary border border-surface-container flex items-center justify-between">
-<div class="flex items-center gap-2.5">
-<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-<span class="font-label-md text-label-md font-bold text-primary">Agendamiento Directo</span>
-</div>
-<span class="font-caption-caps text-caption-caps bg-surface text-secondary font-bold px-2 py-0.5 rounded border border-secondary/20">Sin esperas</span>
-</div>
-<div class="mb-5">
-<h2 class="font-headline-md text-headline-md text-primary">Reserva tu sesión personalizada</h2>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Selecciona el tratamiento kinesiológico, profesional y horario ideal.</p>
-</div>
-<!-- Interactive Booking Form Widget -->
-<form class="space-y-4" id="bookingWidgetForm" onsubmit="event.preventDefault(); const service = document.getElementById('selectedServiceInput').value; const date = document.getElementById('bookingDate').value || 'Fecha a convenir'; const time = document.getElementById('bookingTime').value; const msg = `¡Hola Daniel! Vengo desde la web de Recovery Studio. Quiero agendar y asegurar mi sesión kinésica:\n👤 Atleta / Paciente: [Nombre]\n📋 Modalidad: [Atención Kinésica a Domicilio / Presencial en Pasaje Uno, Gorbea]\n🎯 Motivo de consulta / Molestia: ${service}\n📅 Fecha solicitada: ${date} — ${time}\n💳 Método de confirmación: [Mercado Pago Oficial / Transferencia Bancaria]\n\nEntiendo que el cupo se confirma con el pago previo. Te adjunto aquí mi comprobante de pago para que registres mi hora y emitas mi boleta de honorarios (Giro SII 869092) para mi reembolso en Isapre/Fonasa.`; window.open('https://wa.me/56965058439?text=' + encodeURIComponent(msg), '_blank');">
-<!-- 1. Treatment Selector -->
-<div>
-<label class="block font-label-sm text-label-sm text-on-surface mb-1.5 font-semibold flex items-center justify-between">
-<span>1. Elige tu Terapia</span>
-<span class="text-secondary font-normal text-[11px]">*Todas incluyen evaluación inicial</span>
-</label>
-<div class="grid grid-cols-3 gap-2" id="serviceOptions">
-<button class="service-opt-btn p-2.5 rounded-lg border-2 border-primary bg-primary-fixed/30 text-primary text-left transition-all flex flex-col justify-between" onclick="selectService('kine', this)" type="button">
-<span class="material-symbols-outlined text-[20px] text-secondary">sports_and_outdoors</span>
-<span class="font-label-sm text-[12px] font-bold mt-1.5 leading-tight">Kinesiología Deportiva</span>
-<span class="text-[11px] text-on-surface-variant mt-0.5">60 min · $28.000</span>
-</button>
-<button class="service-opt-btn p-2.5 rounded-lg border border-surface-container-high bg-surface text-on-surface text-left transition-all hover:border-outline flex flex-col justify-between" onclick="selectService('sauna', this)" type="button">
-<span class="material-symbols-outlined text-[20px] text-secondary">thermostat</span>
-<span class="font-label-sm text-[12px] font-bold mt-1.5 leading-tight">Sauna Finlandés 85°</span>
-<span class="text-[11px] text-on-surface-variant mt-0.5">45 min · $18.000</span>
-</button>
-<button class="service-opt-btn p-2.5 rounded-lg border border-surface-container-high bg-surface text-on-surface text-left transition-all hover:border-outline flex flex-col justify-between" onclick="selectService('crio', this)" type="button">
-<span class="material-symbols-outlined text-[20px] text-secondary">ac_unit</span>
-<span class="font-label-sm text-[12px] font-bold mt-1.5 leading-tight">Crioterapia + Normatec</span>
-<span class="text-[11px] text-on-surface-variant mt-0.5">40 min · $22.000</span>
-</button>
-</div>
-<input id="selectedServiceInput" type="hidden" value="Kinesiología Deportiva &amp; Descarga">
-</div>
-<!-- 2. Professional Selector -->
-<div>
-<label class="block font-label-sm text-label-sm text-on-surface mb-1.5 font-semibold">2. Profesional Clínico Acreditado MINSAL</label>
-<div class="w-full"><label class="relative flex items-center justify-between p-3 rounded-lg border-2 border-primary bg-surface-container-low cursor-pointer transition-colors"><div class="flex items-center"><input checked="" class="text-primary focus:ring-primary accent-primary mr-2.5" name="kinesiologo" type="radio" value="Kgo. Daniel Barrueto Jopia"><div class="min-w-0"><span class="font-label-md text-label-md font-bold text-primary block">Kgo. Daniel Barrueto Jopia</span><span class="text-[11px] text-on-surface-variant block">Kinesiólogo Clínico Titular · Registro MINSAL N° 481920</span></div></div><span class="px-2 py-0.5 rounded-full bg-primary text-on-primary font-caption-caps text-caption-caps uppercase font-bold shrink-0">Titular Exclusivo</span></label></div>
-</div>
-<!-- 3. Date & Time Block -->
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-<div>
-<label class="block font-label-sm text-label-sm text-on-surface mb-1.5 font-semibold" for="bookingDate">Fecha preferida</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-3 text-[18px] text-outline">calendar_today</span>
-<input class="w-full h-11 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface text-body-sm font-body-sm border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/20" id="bookingDate" type="date" min="2026-11-18">
-</div>
-</div>
-<div>
-<label class="block font-label-sm text-label-sm text-on-surface mb-1.5 font-semibold" for="bookingTime">Bloque horario</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-3 text-[18px] text-outline">schedule</span>
-<select class="w-full h-11 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface text-body-sm font-body-sm border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/20" id="bookingTime">
-<option value="09:00 hrs">09:00 hrs (Mañana)</option>
-<option value="11:30 hrs">11:30 hrs (Mediodía)</option>
-<option value="16:00 hrs">16:00 hrs (Tarde)</option>
-<option selected="" value="18:30 hrs">18:30 hrs (Post-entreno)</option>
-<option value="19:30 hrs">19:30 hrs (Vespertino)</option>
-</select>
-</div>
-</div>
-</div>
-<!-- Health Insurance Reimbursement Banner -->
-<div class="p-3 rounded-lg bg-secondary-fixed/50 border border-secondary-container/40 flex items-center gap-2.5 text-on-secondary-fixed">
-<span class="material-symbols-outlined text-[20px] text-secondary shrink-0">receipt_long</span>
-<p class="text-[12px] leading-snug">
-<strong>Apto reembolso Fonasa e Isapres:</strong> Emitimos boleta electrónica de prestación kinesiológica certificada para tu seguro.
-</p>
-</div>
-<!-- Action Submit CTA -->
-<button class="w-full h-12 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center justify-center gap-2 transition-all shadow-md hover:-translate-y-0.5" type="submit"><span class="material-symbols-outlined text-[19px]">event_available</span><span>Confirmar y Enviar Comprobante por WhatsApp</span></button>
-<div class="flex items-center justify-between text-on-surface-variant text-[11px] pt-1">
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px] text-secondary">update</span>
-Reagendamiento libre con 12h
-</span>
-<span class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px] text-secondary">shield</span>
-Sin pago anticipado obligatorio
-</span>
-</div>
-</form>
-<div class="mt-4 pt-3 border-t border-surface-container-high text-center">
-<p class="font-body-sm text-[12px] text-on-surface-variant">
-¿Dudas con tu lesión o plan especial?
-<a class="font-semibold text-secondary hover:underline ml-1" href="https://wa.me/56965058439" rel="noopener noreferrer" target="_blank">Contactar al Kinesiólogo Jefe →</a>
-</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Clinical Team Section (MINSAL Accredited) -->
-<section class="w-full py-16 lg:py-24 bg-surface" id="equipo">
-<div class="max-w-7xl mx-auto px-6 lg:px-12">
-<div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-<div>
-<div class="flex items-center gap-2 mb-2">
-<span class="w-2 h-2 rounded-full bg-secondary"></span>
-<span class="font-caption-caps text-caption-caps text-secondary font-bold uppercase tracking-widest">Sede Gorbea · Lord Cochrane 450</span>
-</div>
-<h2 class="font-headline-lg text-headline-lg text-primary font-headline-md">Kinesiólogo Titular Acreditado MINSAL</h2>
-</div>
-<p class="font-body-md text-body-md text-on-surface-variant max-w-md">Dirección clínica exclusiva por Kgo. Daniel Barrueto Jopia. Especialista en biomecánica deportiva, descarga neuromuscular avanzada y readaptación de alta exigencia para atletas en Gorbea y la Araucanía.</p>
-</div>
-<div class="max-w-4xl mx-auto w-full"><div class="p-8 sm:p-10 rounded-2xl bg-surface-container-lowest border-2 border-primary/20 shadow-md flex flex-col justify-between relative overflow-hidden"><div class="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6"><div class="flex items-center gap-5"><div class="w-20 h-20 rounded-2xl bg-primary text-on-primary flex items-center justify-center font-headline-md text-headline-md font-bold shrink-0 shadow-sm">DB</div><div><div class="flex items-center gap-2"><h3 class="font-headline-md text-headline-md text-primary font-bold">Kgo. Daniel Barrueto Jopia</h3><span class="material-symbols-outlined text-secondary text-[22px]" title="Acreditado MINSAL">verified</span></div><p class="font-body-md text-body-md text-secondary font-semibold mt-0.5">Kinesiólogo Clínico Titular · Registro MINSAL N° 481920</p><p class="font-caption-caps text-caption-caps text-on-surface-variant mt-1">Director Clínico · Sede Gorbea &amp; Cobertura Araucanía</p></div></div><span class="px-3.5 py-1.5 rounded-full bg-primary text-on-primary text-[12px] font-bold uppercase tracking-wider shrink-0 self-start">Kinesiólogo Titular</span></div><p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-6">Especialista en modulación de sobrecargas de alto impacto, testeo de maximales musculares y readaptación biomecánica. Diseña y supervisa personalmente cada protocolo de descompresión neuromuscular, presoterapia Normatec, punción seca y recuperación térmica activa para corredores, ciclistas y atletas de toda la región.</p><div class="space-y-3 mb-8"><span class="font-caption-caps text-caption-caps text-on-surface uppercase tracking-wider block font-bold">Especialidades Clínicas &amp; Certificaciones:</span><div class="flex flex-wrap gap-2.5"><span class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-[13px] font-medium flex items-center gap-1.5"><span class="material-symbols-outlined text-[17px] text-secondary">fitness_center</span>Readaptación Deportiva &amp; Carga</span><span class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-[13px] font-medium flex items-center gap-1.5"><span class="material-symbols-outlined text-[17px] text-secondary">compress</span>Presoterapia Normatec 3</span><span class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-[13px] font-medium flex items-center gap-1.5"><span class="material-symbols-outlined text-[17px] text-secondary">healing</span>Punción Seca &amp; Descompresión Fascial</span><span class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-[13px] font-medium flex items-center gap-1.5"><span class="material-symbols-outlined text-[17px] text-secondary">analytics</span>Evaluación de Maximales</span><span class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-[13px] font-medium flex items-center gap-1.5"><span class="material-symbols-outlined text-[17px] text-secondary">thermostat</span>Termoterapia Sauna Finlandés</span></div></div><div class="pt-6 border-t border-surface-container flex flex-col sm:flex-row items-center justify-between gap-4"><span class="font-label-md text-label-md text-on-surface-variant font-medium">Atención Exclusiva: Lunes a Sábado (Previa reserva)</span><a class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-secondary hover:bg-secondary-container hover:text-on-secondary-container text-on-secondary font-label-md text-label-md font-semibold transition-all shadow-md" href="#agendamiento"><span>Agendar Sesión con Daniel</span><span class="material-symbols-outlined text-[18px]">arrow_forward</span></a></div></div></div>
-</div>
-</section>
-<!-- Athlete Recovery Packs & Pricing Comparison Table -->
-<section class="w-full py-16 lg:py-24 bg-surface-container-low" id="planes">
-<div class="max-w-7xl mx-auto px-6 lg:px-12">
-<div class="text-center max-w-2xl mx-auto mb-14">
-<span class="font-caption-caps text-caption-caps text-secondary font-bold uppercase tracking-widest block mb-2">Transparencia y Flexibilidad</span>
-<h2 class="font-headline-lg text-headline-lg text-primary font-headline-md">Packs &amp; Planes de Recuperación Atleta</h2>
-<p class="font-body-md text-body-md text-on-surface-variant mt-3">
-Elige la modalidad que calza con tu ciclo de entrenamientos o carreras de la temporada. Todas con reembolso Fonasa/Isapre.
-</p>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-<!-- Option 1: Sesión Individual -->
-<div class="p-8 rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-4">
-<span class="font-caption-caps text-caption-caps text-on-surface-variant uppercase tracking-wider font-bold">Pago por Uso</span>
-<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-surface-container text-on-surface">Sin ataduras</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm text-primary">Sesión Individual</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Para descargas puntuales post-carrera o chequeo kinesiológico.</p>
-<div class="my-6">
-<div class="flex items-baseline gap-1">
-<span class="text-3xl font-bold font-headline-md text-primary">$28.000</span>
-<span class="text-on-surface-variant text-body-sm">/ sesión</span>
-</div>
-<p class="text-[12px] text-secondary font-medium mt-1">Boleta reembolsable Fonasa / Isapre</p>
-</div>
-<ul class="space-y-3 font-body-sm text-body-sm text-on-surface-variant mb-8">
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>1 sesión de 60 min de Kinesiología</span>
-</li>
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>Evaluación inicial de sobrecarga articular</span>
-</li>
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>Técnicas miofasciales o presoterapia</span>
-</li>
-<li class="flex items-center gap-2.5 text-outline">
-<span class="material-symbols-outlined text-[18px] text-outline shrink-0">close</span>
-<span>Sauna finlandés (opcional +$10.000)</span>
-</li>
-</ul>
-</div>
-<a class="w-full py-3 rounded-lg border border-primary text-primary hover:bg-primary hover:text-on-primary transition-colors text-center font-label-md text-label-md font-semibold block" href="#agendamiento">
-Agendar Sesión Única
-</a>
-</div>
-<!-- Option 2: Pack Descarga x4 (Popular) -->
-<div class="p-8 rounded-2xl bg-surface-container-lowest border-2 border-secondary shadow-lg relative flex flex-col justify-between -translate-y-2">
-<div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-secondary text-on-secondary font-caption-caps text-caption-caps uppercase tracking-wider font-bold shadow-sm">
-Más Recomendado por Atletas
-</div>
-<div>
-<div class="flex items-center justify-between mb-4">
-<span class="font-caption-caps text-caption-caps text-secondary uppercase tracking-wider font-bold">Pack Intensivo</span>
-<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-secondary-container text-on-secondary-container">Ahorra 18%</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm text-primary">Pack Descarga x4</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">4 sesiones para preparar o recuperar un bloque fuerte de fondo.</p>
-<div class="my-6">
-<div class="flex items-baseline gap-1">
-<span class="text-3xl font-bold font-headline-md text-primary">$92.000</span>
-<span class="text-on-surface-variant text-body-sm">/ 4 sesiones</span>
-</div>
-<p class="text-[12px] text-secondary font-medium mt-1">Equivale a $23.000 por sesión · Válido 60 días</p>
-</div>
-<ul class="space-y-3 font-body-sm text-body-sm text-on-surface mb-8">
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<strong class="font-semibold">4 sesiones completas de 60 min</strong>
-</li>
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>Presoterapia Normatec 3 + Punción Seca</span>
-</li>
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>1 pase de cortesía a Sauna Finlandés 85°C</span>
-</li>
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>Reagenda flexible hasta 12 h antes</span>
-</li>
-</ul>
-</div>
-<a class="w-full py-3 rounded-lg bg-secondary hover:bg-secondary-container hover:text-on-secondary-container text-on-secondary transition-all text-center font-label-md text-label-md font-semibold block shadow-md" href="#agendamiento">
-Elegir Pack Descarga x4
-</a>
-</div>
-<!-- Option 3: Plan Performance Mensual x8 -->
-<div class="p-8 rounded-2xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-4">
-<span class="font-caption-caps text-caption-caps text-primary uppercase tracking-wider font-bold">Membresía Mensual</span>
-<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-primary-fixed text-primary font-bold">Máximo Ahorro</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm text-primary">Plan Performance x8</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Seguimiento kinésico integral con termoterapia continua ilimitada.</p>
-<div class="my-6">
-<div class="flex items-baseline gap-1">
-<span class="text-3xl font-bold font-headline-md text-primary">$165.000</span>
-<span class="text-on-surface-variant text-body-sm">/ mes</span>
-</div>
-<p class="text-[12px] text-secondary font-medium mt-1">8 sesiones mixtas ($20.625 c/u) · Prioridad de agenda</p>
-</div>
-<ul class="space-y-3 font-body-sm text-body-sm text-on-surface-variant mb-8">
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>8 sesiones personalizadas (Kine + Crio)</span>
-</li>
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>Acceso libre a Sauna Finlandés post-sesión</span>
-</li>
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>Monitoreo continuo de maximales y fatiga</span>
-</li>
-<li class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[18px] text-secondary shrink-0">check_circle</span>
-<span>Canal directo WhatsApp con el Kinesiólogo</span>
-</li>
-</ul>
-</div>
-<a class="w-full py-3 rounded-lg border border-primary text-primary hover:bg-primary hover:text-on-primary transition-colors text-center font-label-md text-label-md font-semibold block" href="https://wa.me/56965058439?text=Hola,%20me%20interesa%20inscribirme%20al%20Plan%20Performance%20Mensual" rel="noopener noreferrer" target="_blank">
-Consultar Plan Performance
-</a>
-</div>
-</div>
-<div class="mt-8 p-4 rounded-xl bg-surface-container border border-surface-container-high flex flex-col sm:flex-row items-center justify-between gap-4">
-<div class="flex items-center gap-3">
-<span class="material-symbols-outlined text-secondary text-[24px]">verified</span>
-<p class="text-body-sm text-on-surface"><strong>Garantía de Compromiso:</strong> Si tu plan de entrenamiento se modifica, reagendas sin costo con 12 horas de margen desde tu móvil.</p>
-</div>
-<a class="shrink-0 font-label-sm text-label-sm text-primary hover:text-secondary font-semibold flex items-center gap-1" href="https://link.mercadopago.cl/recoverystudiogorbea" rel="noopener noreferrer" target="_blank">
-<span>Pagar online con Mercado Pago</span>
-<span class="material-symbols-outlined text-[16px]">open_in_new</span>
-</a>
-</div>
-</div>
-</section>
-<!-- Interactive Recovery Calculator by Discipline -->
-<section class="w-full py-16 lg:py-24 bg-surface" id="calculadora">
-<div class="max-w-5xl mx-auto px-6 lg:px-12">
-<div class="p-8 sm:p-12 rounded-3xl bg-primary text-on-primary shadow-2xl relative overflow-hidden">
-<div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-secondary/20 blur-3xl pointer-events-none"></div>
-<div class="max-w-xl mb-8">
-<span class="font-caption-caps text-caption-caps text-secondary-container font-bold uppercase tracking-widest block mb-2">Herramienta Interactiva</span>
-<h2 class="font-headline-lg text-headline-lg font-headline-md text-surface-container-lowest">Recomendador de Protocolo de Recuperación</h2>
-<p class="font-body-sm text-body-sm text-primary-fixed-dim mt-2">
-Selecciona tu disciplina principal en la Araucanía y tu nivel de carga semanal para recibir la recomendación técnica exacta de nuestro equipo kinésico.
-</p>
-</div>
-<!-- Discipline Picker Tabs -->
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8" id="calcTabs">
-<button class="calc-tab-btn p-3.5 rounded-xl bg-surface-container-lowest text-primary font-label-md text-[13px] font-bold text-center flex flex-col items-center gap-2 transition-all" onclick="calcRecommend('running', this)" type="button">
-<span class="material-symbols-outlined text-[24px] text-secondary">directions_run</span>
-<span>Running &amp; Trail</span>
-</button>
-<button class="calc-tab-btn p-3.5 rounded-xl bg-surface/10 hover:bg-surface/20 text-surface-bright font-label-md text-[13px] font-semibold text-center flex flex-col items-center gap-2 transition-all" onclick="calcRecommend('cycling', this)" type="button">
-<span class="material-symbols-outlined text-[24px]">directions_bike</span>
-<span>Ciclismo / MTB</span>
-</button>
-<button class="calc-tab-btn p-3.5 rounded-xl bg-surface/10 hover:bg-surface/20 text-surface-bright font-label-md text-[13px] font-semibold text-center flex flex-col items-center gap-2 transition-all" onclick="calcRecommend('crossfit', this)" type="button">
-<span class="material-symbols-outlined text-[24px]">fitness_center</span>
-<span>Crossfit / Gimnasio</span>
-</button>
-<button class="calc-tab-btn p-3.5 rounded-xl bg-surface/10 hover:bg-surface/20 text-surface-bright font-label-md text-[13px] font-semibold text-center flex flex-col items-center gap-2 transition-all" onclick="calcRecommend('rehab', this)" type="button">
-<span class="material-symbols-outlined text-[24px]">healing</span>
-<span>Post-Lesión</span>
-</button>
-</div>
-<!-- Dynamic Result Card -->
-<div class="p-6 sm:p-8 rounded-2xl bg-surface-container-lowest text-on-surface shadow-xl" id="calcResult">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-container pb-5 mb-5">
-<div>
-<span class="font-caption-caps text-caption-caps text-secondary font-bold uppercase tracking-wider" id="calcCategory">Protocolo para Running &amp; Trail Running</span>
-<h3 class="font-headline-md text-headline-md text-primary mt-0.5" id="calcTitle">Descarga Impacto &amp; Retorno Venoso</h3>
-</div>
-<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-fixed text-on-secondary-fixed text-caption-caps font-bold uppercase" id="calcFrequency">
-Frecuencia: 1 a 2 veces por semana
-</span>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-<div class="p-4 rounded-xl bg-surface-container-low">
-<div class="flex items-center gap-2 text-secondary mb-1">
-<span class="material-symbols-outlined text-[20px]">compress</span>
-<h4 class="font-label-md text-label-md font-bold text-primary">Paso 1: Normatec</h4>
-</div>
-<p class="text-body-sm text-[13px] text-on-surface-variant" id="calcStep1">Presoterapia neumática 30 min para drenar lactato y edemas en gemelos y cuádriceps.</p>
-</div>
-<div class="p-4 rounded-xl bg-surface-container-low">
-<div class="flex items-center gap-2 text-secondary mb-1">
-<span class="material-symbols-outlined text-[20px]">spa</span>
-<h4 class="font-label-md text-label-md font-bold text-primary">Paso 2: Terapia Fascial</h4>
-</div>
-<p class="text-body-sm text-[13px] text-on-surface-variant" id="calcStep2">Descarga de banda iliotibial, fascia plantar y glúteos con terapia manual o punción seca.</p>
-</div>
-<div class="p-4 rounded-xl bg-surface-container-low">
-<div class="flex items-center gap-2 text-secondary mb-1">
-<span class="material-symbols-outlined text-[20px]">thermostat</span>
-<h4 class="font-label-md text-label-md font-bold text-primary">Paso 3: Sauna 85°C</h4>
-</div>
-<p class="text-body-sm text-[13px] text-on-surface-variant" id="calcStep3">15-20 min de calor finlandés para bajar el tono simpático y relajar el suelo pélvico.</p>
-</div>
-</div>
-<div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-<p class="text-body-sm text-on-surface-variant text-[13px]">
-Recomendado por <strong>Kgo. Daniel Barrueto</strong> · Gorbea
-</p>
-<a class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md font-semibold transition-all" href="#agendamiento">
-<span>Reservar este protocolo</span>
-<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-</a>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Visual Editorial Feature: High-End Sanctuary Atmosphere -->
-<section class="w-full py-16 bg-surface-container-low">
-<div class="max-w-7xl mx-auto px-6 lg:px-12">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-<!-- Photographic Visual Showcase -->
-<div class="lg:col-span-6 relative">
-<div class="relative overflow-hidden rounded-2xl shadow-xl aspect-[4/3]">
-<img class="w-full h-full object-cover" data-alt="Interior of an ultra-quiet luxury sports recovery sanctuary with deep dark green cedar accents, soft ambient warm lighting, polished slate floor, modern contrast bath and steam room mist, high-end athletic wellness aesthetic in the Chilean Araucanía region." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAab34nVKc_fUgcI0pIKMJzeDFivxkBGVOQUGosV90xvy-w9CDX3i6KgxPGa75yJnAzrTYez48pSlDr7NWSSq5LEVuuDQk6oBvpiclxm7a_CWpmp65WnlWHjfEg7cMWm4makxkDhd6kLThsmm2nh69R29QfER0lLQwmbCwtOYmdN1q0oFGMffotRvsPCixUo4OdABUkumzOgyalRZsYdhlMrwmmn-_QcVMprePATOhSb5NkjQGkoQEhZg">
-<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
-<div class="absolute bottom-6 left-6 right-6 text-on-primary">
-<span class="font-caption-caps text-caption-caps uppercase text-secondary-container tracking-wider block mb-1">Entorno Terapéutico Gorbea</span>
-<p class="font-headline-sm text-headline-sm">Diseñado para el descanso activo de máxima precisión</p>
-</div>
-</div>
-<!-- Overlapping Mini-Badge -->
-<div class="hidden sm:flex absolute -bottom-6 -right-6 p-4 rounded-xl bg-surface-container-lowest shadow-xl items-center gap-3 max-w-xs border border-surface-container">
-<div class="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0">
-<span class="material-symbols-outlined text-[20px]">thermostat</span>
-</div>
-<div>
-<p class="font-label-md text-label-md text-primary font-bold">Sauna Finlandés</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Calor seco y húmedo controlado a 85°C</p>
-</div>
-</div>
-</div>
-<!-- Editorial Copy & Clinic Strengths -->
-<div class="lg:col-span-6 space-y-6 lg:pl-8">
-<span class="font-caption-caps text-caption-caps text-secondary font-bold uppercase tracking-widest">Metodología Recovery Studio</span>
-<h2 class="font-headline-lg text-headline-lg text-primary font-headline-md">
-            El estándar de los atletas de resistencia en la Araucanía
-          </h2>
-<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-            Combinamos termoterapia húmeda, técnicas de descarga miofascial y análisis kinésico de tus maximales para reducir radicalmente el riesgo de sobreentrenamiento y acelerar tu regreso a las pistas.
-          </p>
-<div class="space-y-3 pt-2">
-<div class="flex items-start gap-3">
-<span class="w-6 h-6 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-bold text-label-sm shrink-0 mt-0.5">01</span>
-<div>
-<h4 class="font-headline-sm text-headline-sm text-primary">Evaluación personalizada de sobrecarga</h4>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Monitoreo de asimetrías y tensión residual tras ciclos de alto volumen en cerros y rutas.</p>
-</div>
-</div>
-<div class="flex items-start gap-3">
-<span class="w-6 h-6 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-bold text-label-sm shrink-0 mt-0.5">02</span>
-<div>
-<h4 class="font-headline-sm text-headline-sm text-primary">Contraste térmico y regeneración vascular</h4>
-<p class="font-body-sm text-body-sm text-on-surface-variant">El vapor a 85°C expande el lecho capilar periférico y disminuye el cortisol sistémico.</p>
-</div>
-</div>
-<div class="flex items-start gap-3">
-<span class="w-6 h-6 rounded-full bg-surface-container-highest text-primary flex items-center justify-center font-bold text-label-sm shrink-0 mt-0.5">03</span>
-<div>
-<h4 class="font-headline-sm text-headline-sm text-primary">Flexibilidad en agendamiento</h4>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Reagenda con 12 horas de margen sin penalización para adaptarse a tus horarios laborales.</p>
-</div>
-</div>
-</div>
-<div class="pt-4 flex flex-wrap items-center gap-4">
-<a class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold transition-all shadow-md" href="#agendamiento">
-<span class="material-symbols-outlined text-[18px]">event</span>
-<span>Agendar mi sesión en Gorbea</span>
-</a>
-<a class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-surface-container-lowest hover:bg-surface text-primary border border-surface-container-high font-label-md text-label-md font-semibold transition-all" href="https://wa.me/56965058439" rel="noopener noreferrer" target="_blank">
-<span class="material-symbols-outlined text-[18px] text-secondary">chat</span>
-<span>Consultar por WhatsApp</span>
-</a>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Social Proof & Google Review Showcase -->
-<section class="w-full py-16 bg-surface" id="testimonios"><div class="max-w-7xl mx-auto px-6 lg:px-12"><div class="text-center max-w-3xl mx-auto mb-10"><div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary-fixed/50 border border-secondary-container/40 text-on-secondary-fixed text-caption-caps uppercase tracking-wider font-bold mb-3"><span class="material-symbols-outlined text-[16px] text-secondary">verified</span><span>Calificación 4.9 / 5 basada en +50 testimonios verificados</span></div><h2 class="font-headline-lg text-headline-lg text-primary font-headline-md">Experiencias reales de atletas y pacientes en la Araucanía</h2><p class="font-body-md text-body-md text-on-surface-variant mt-2">Deportistas de Gorbea, Pitrufquén, Loncoche, Villarrica y Temuco respaldan la atención kinésica 1 a 1 de Daniel Barrueto, el sauna finlandés a 85°C, la puntualidad a domicilio y la boleta SII (Giro 869092) para reembolso en Fonasa e Isapres.</p></div><div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto mb-10"><div class="p-4 rounded-xl bg-surface-container-lowest border border-surface-container text-center shadow-sm"><div class="flex justify-center text-amber-500 mb-1"><span class="material-symbols-outlined text-[20px]">star</span><span class="material-symbols-outlined text-[20px]">star</span><span class="material-symbols-outlined text-[20px]">star</span><span class="material-symbols-outlined text-[20px]">star</span><span class="material-symbols-outlined text-[20px]">star</span></div><div class="font-headline-md text-primary font-bold">4.9 / 5.0</div><div class="font-caption-caps text-caption-caps text-on-surface-variant uppercase mt-0.5">52 Reseñas Verificadas</div></div><div class="p-4 rounded-xl bg-surface-container-lowest border border-surface-container text-center shadow-sm"><div class="font-headline-md text-secondary font-bold">100%</div><div class="font-label-sm font-semibold text-primary mt-1">Boleta SII Giro 869092</div><div class="font-caption-caps text-caption-caps text-on-surface-variant uppercase mt-0.5">Reembolso Fonasa / Isapre</div></div><div class="p-4 rounded-xl bg-surface-container-lowest border border-surface-container text-center shadow-sm"><div class="font-headline-md text-primary font-bold">1:1 Exclusivo</div><div class="font-label-sm font-semibold text-primary mt-1">Sin esperas ni salas llenas</div><div class="font-caption-caps text-caption-caps text-on-surface-variant uppercase mt-0.5">Lord Cochrane 450 y Hogar</div></div><div class="p-4 rounded-xl bg-surface-container-lowest border border-surface-container text-center shadow-sm"><div class="font-headline-md text-secondary font-bold">85°C Sauna</div><div class="font-label-sm font-semibold text-primary mt-1">Termoterapia Nórdica</div><div class="font-caption-caps text-caption-caps text-on-surface-variant uppercase mt-0.5">Eucalipto &amp; Normatec 3</div></div></div><div class="flex flex-wrap justify-center gap-2 mb-8" id="testimonialFilterGroup"><button class="px-4 py-2 rounded-xl text-label-sm font-bold bg-primary text-on-primary transition-all flex items-center gap-1.5" onclick="filterReviews('all', this)" type="button"><span class="material-symbols-outlined text-[16px]">grade</span><span>Todos (+50 testimonios)</span></button><button class="px-4 py-2 rounded-xl text-label-sm font-semibold bg-surface-container text-on-surface hover:bg-surface-container-highest transition-all flex items-center gap-1.5" onclick="filterReviews('running', this)" type="button"><span class="material-symbols-outlined text-[16px] text-secondary">directions_run</span><span>Running &amp; Trail (15)</span></button><button class="px-4 py-2 rounded-xl text-label-sm font-semibold bg-surface-container text-on-surface hover:bg-surface-container-highest transition-all flex items-center gap-1.5" onclick="filterReviews('crossfit', this)" type="button"><span class="material-symbols-outlined text-[16px] text-secondary">fitness_center</span><span>Crossfit &amp; Gimnasio (13)</span></button><button class="px-4 py-2 rounded-xl text-label-sm font-semibold bg-surface-container text-on-surface hover:bg-surface-container-highest transition-all flex items-center gap-1.5" onclick="filterReviews('combate', this)" type="button"><span class="material-symbols-outlined text-[16px] text-secondary">sports_mma</span><span>Combate &amp; BJJ (11)</span></button><button class="px-4 py-2 rounded-xl text-label-sm font-semibold bg-surface-container text-on-surface hover:bg-surface-container-highest transition-all flex items-center gap-1.5" onclick="filterReviews('rehab', this)" type="button"><span class="material-symbols-outlined text-[16px] text-secondary">home_health</span><span>Domicilio &amp; Rehabilitación (13)</span></button></div><div class="p-6 sm:p-8 rounded-2xl bg-surface-container-lowest border-2 border-secondary/30 shadow-md mb-10 relative overflow-hidden"><div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-surface-container mb-4"><div class="flex items-center gap-3"><div class="w-12 h-12 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold font-headline-sm">VR</div><div><h3 class="font-label-md text-label-md font-bold text-primary">Valentina Rojas S.</h3><p class="font-caption-caps text-caption-caps text-on-surface-variant uppercase">Trail Runner · Gorbea y Villarrica</p></div></div><div class="flex items-center gap-2"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[20px]">star</span><span class="material-symbols-outlined text-[20px]">star</span><span class="material-symbols-outlined text-[20px]">star</span><span class="material-symbols-outlined text-[20px]">star</span><span class="material-symbols-outlined text-[20px]">star</span></div><span class="px-2.5 py-0.5 rounded-full bg-surface-container text-secondary font-caption-caps text-caption-caps font-bold">5.0 Verificado</span></div></div><p class="font-headline-md text-headline-md text-primary italic leading-snug mb-3">“Llegué con sobrecarga severa en la banda iliotibial e isquios post trail Villarrica. Con Daniel en dos sesiones con punción seca, las botas Normatec y el sauna a 85°C quedé impecable. Además la boleta de honorarios kinésica electrónica me reembolsó el 80% en Isapre sin problemas.”</p><div class="flex flex-wrap items-center gap-4 text-[12px] text-on-surface-variant"><span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-secondary">check_circle</span>Atención 1:1 en Lord Cochrane 450</span><span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-secondary">receipt</span>Boleta SII Giro 869092 emitida al día</span><span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-secondary">thermostat</span>Termoterapia Nórdica de eucalipto</span></div></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="reviewsGrid"><div class="review-card p-5 rounded-xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between" data-category="running"><div class="space-y-2"><div class="flex items-center justify-between"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span></div><span class="text-[11px] font-caption-caps text-secondary font-bold uppercase">Pitrufquén</span></div><p class="text-body-sm text-on-surface leading-relaxed">“Viajo desde Pitrufquén cada 15 días. La combinación de punción seca y botas de presoterapia Normatec eliminó mi dolor en tendón rotuliano tras la maratón de Temuco.”</p></div><div class="pt-4 border-t border-surface-container mt-4 flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-caption-caps">MA</div><div><h4 class="text-label-sm font-bold text-primary">Matías Aravena</h4><p class="text-[11px] text-on-surface-variant">Maratonista · Running &amp; Trail</p></div></div></div><div class="review-card p-5 rounded-xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between" data-category="crossfit"><div class="space-y-2"><div class="flex items-center justify-between"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span></div><span class="text-[11px] font-caption-caps text-secondary font-bold uppercase">Gorbea</span></div><p class="text-body-sm text-on-surface leading-relaxed">“El desgarro miofascial y la contractura de trapecio me impedían hacer snatches pesados. Daniel Barrueto me atendió con una dedicación 1:1 única. Excelente sauna húmedo.”</p></div><div class="pt-4 border-t border-surface-container mt-4 flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-caption-caps">CO</div><div><h4 class="text-label-sm font-bold text-primary">Cristián Oyarzún</h4><p class="text-[11px] text-on-surface-variant">Crossfit &amp; Halterofilia Gorbea</p></div></div></div><div class="review-card p-5 rounded-xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between" data-category="rehab"><div class="space-y-2"><div class="flex items-center justify-between"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span></div><span class="text-[11px] font-caption-caps text-secondary font-bold uppercase">Loncoche</span></div><p class="text-body-sm text-on-surface leading-relaxed">“Atención kinésica a domicilio en Loncoche para mi madre con prótesis de cadera. Puntualidad inglesa, trato humano cálido y las boletas Fonasa aprobadas al 100%.”</p></div><div class="pt-4 border-t border-surface-container mt-4 flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-caption-caps">LM</div><div><h4 class="text-label-sm font-bold text-primary">Lorena Morales</h4><p class="text-[11px] text-on-surface-variant">Rehabilitación Domiciliaria Adulto Mayor</p></div></div></div><div class="review-card p-5 rounded-xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between" data-category="combate"><div class="space-y-2"><div class="flex items-center justify-between"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span></div><span class="text-[11px] font-caption-caps text-secondary font-bold uppercase">Temuco</span></div><p class="text-body-sm text-on-surface leading-relaxed">“Competidor de Jiu-Jitsu Brasileño. Tenía subluxación acromioclavicular recurrente. La terapia manual de Daniel y la readaptación neuromuscular me salvaron el nacional.”</p></div><div class="pt-4 border-t border-surface-container mt-4 flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-caption-caps">FS</div><div><h4 class="text-label-sm font-bold text-primary">Felipe Santander</h4><p class="text-[11px] text-on-surface-variant">Faixa Roxa BJJ · Temuco</p></div></div></div><div class="review-card p-5 rounded-xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between" data-category="running"><div class="space-y-2"><div class="flex items-center justify-between"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span></div><span class="text-[11px] font-caption-caps text-secondary font-bold uppercase">Villarrica</span></div><p class="text-body-sm text-on-surface leading-relaxed">“El contraste de crioterapia y sauna finlandés con esencias de eucalipto es de otro planeta. Mis gemelos quedaron como nuevos para el Ultra Trail Huilo Huilo.”</p></div><div class="pt-4 border-t border-surface-container mt-4 flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-caption-caps">CL</div><div><h4 class="text-label-sm font-bold text-primary">Camila Lagos</h4><p class="text-[11px] text-on-surface-variant">Ultra Trail Running · Villarrica</p></div></div></div><div class="review-card p-5 rounded-xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between" data-category="crossfit"><div class="space-y-2"><div class="flex items-center justify-between"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span></div><span class="text-[11px] font-caption-caps text-secondary font-bold uppercase">Gorbea</span></div><p class="text-body-sm text-on-surface leading-relaxed">“Excelente la boleta SII con el código 869092. Reembolsé en Colmena sin ninguna traba. Se nota la acreditación MINSAL y la experiencia deportiva de Daniel.”</p></div><div class="pt-4 border-t border-surface-container mt-4 flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-caption-caps">JV</div><div><h4 class="text-label-sm font-bold text-primary">Javier Valenzuela</h4><p class="text-[11px] text-on-surface-variant">Crossfit Gorbea</p></div></div></div><div class="review-card p-5 rounded-xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between" data-category="rehab"><div class="space-y-2"><div class="flex items-center justify-between"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span></div><span class="text-[11px] font-caption-caps text-secondary font-bold uppercase">Pitrufquén</span></div><p class="text-body-sm text-on-surface leading-relaxed">“Kinesiología a domicilio de primer nivel. Daniel llevó todo su equipo terapéutico a mi casa en Pitrufquén tras mi operación de meniscos. Recuperé la flexión en tiempo récord.”</p></div><div class="pt-4 border-t border-surface-container mt-4 flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-caption-caps">RO</div><div><h4 class="text-label-sm font-bold text-primary">Rodrigo Olave</h4><p class="text-[11px] text-on-surface-variant">Rehabilitación Post-Quirúrgica</p></div></div></div><div class="review-card p-5 rounded-xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between" data-category="combate"><div class="space-y-2"><div class="flex items-center justify-between"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span></div><span class="text-[11px] font-caption-caps text-secondary font-bold uppercase">Gorbea</span></div><p class="text-body-sm text-on-surface leading-relaxed">“Practico Kickboxing y Boxeo. El protocolo de descarga cervical y sauna post sparrings fuertes me devolvió la movilidad de cuello. Daniel te evalúa con rigor y empatía.”</p></div><div class="pt-4 border-t border-surface-container mt-4 flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-caption-caps">EN</div><div><h4 class="text-label-sm font-bold text-primary">Esteban Navarro</h4><p class="text-[11px] text-on-surface-variant">Kickboxing &amp; Artes Marciales</p></div></div></div><div class="review-card p-5 rounded-xl bg-surface-container-lowest border border-surface-container shadow-sm flex flex-col justify-between" data-category="running"><div class="space-y-2"><div class="flex items-center justify-between"><div class="flex text-amber-500"><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span><span class="material-symbols-outlined text-[18px]">star</span></div><span class="text-[11px] font-caption-caps text-secondary font-bold uppercase">Temuco</span></div><p class="text-body-sm text-on-surface leading-relaxed">“Fui por una fascitis plantar crónica que no cedía con nada. El enfoque kinésico integral y la punción guiada me permitieron volver a correr los 21K sin dolor.”</p></div><div class="pt-4 border-t border-surface-container mt-4 flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-caption-caps">PV</div><div><h4 class="text-label-sm font-bold text-primary">Patricia Vergara</h4><p class="text-[11px] text-on-surface-variant">Runner Ruta Temuco</p></div></div></div></div><div class="mt-8 text-center" id="moreReviewsContainer"><div class="p-6 rounded-2xl bg-surface-container border border-surface-container-high max-w-4xl mx-auto"><div class="flex flex-col sm:flex-row items-center justify-between gap-4"><div class="text-left"><p class="font-label-md text-primary font-bold">Mostrando testimonios selectos de 52 pacientes evaluados</p><p class="text-body-sm text-on-surface-variant">Registros de pacientes en Gorbea, Pitrufquén, Loncoche, Villarrica y Temuco.</p></div><div class="flex items-center gap-3"><a class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-surface-container-lowest border border-surface-container-high hover:border-outline text-primary font-label-md text-label-md font-semibold transition-all shadow-sm" href="https://g.page/r/CZxVsgDhqJElEBM/review" rel="noopener noreferrer" target="_blank"><span>Ver en Google Maps (4.8 ★)</span><span class="material-symbols-outlined text-[16px]">open_in_new</span></a><a class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-secondary hover:bg-secondary-container hover:text-on-secondary-container text-on-secondary font-label-md text-label-md font-semibold transition-all shadow-sm" href="#agendamiento"><span>Agendar con Daniel</span><span class="material-symbols-outlined text-[16px]">arrow_forward</span></a></div></div></div></div></div><script>function filterReviews(category, btn) { const buttons = document.querySelectorAll('#testimonialFilterGroup button'); buttons.forEach(b => { b.className = 'px-4 py-2 rounded-xl text-label-sm font-semibold bg-surface-container text-on-surface hover:bg-surface-container-highest transition-all flex items-center gap-1.5'; }); btn.className = 'px-4 py-2 rounded-xl text-label-sm font-bold bg-primary text-on-primary transition-all flex items-center gap-1.5'; const cards = document.querySelectorAll('#reviewsGrid .review-card'); cards.forEach(card => { if (category === 'all' || card.getAttribute('data-category') === category) { card.style.display = 'flex'; } else { card.style.display = 'none'; } }); }</script></section>
-<!-- Floating Utility Hub (Bottom Right Badges) -->
-<div class="fixed bottom-6 right-6 z-40 flex flex-col gap-3 items-end">
-<!-- Mercado Pago Quick Badge -->
-<a class="w-12 h-12 rounded-full bg-[#009ee3] text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform group relative" href="https://link.mercadopago.cl/recoverystudiogorbea" rel="noopener noreferrer" target="_blank" title="Pagar por Mercado Pago">
-<span class="font-label-md text-label-md font-bold tracking-tighter">MP</span>
-<span class="absolute right-14 bg-primary text-on-primary font-caption-caps text-caption-caps uppercase px-2.5 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-md">
-Pagar vía Mercado Pago
-</span>
-</a>
-<!-- Google Review Quick Badge -->
-<a class="w-12 h-12 rounded-full bg-[#fbbc04] text-primary flex items-center justify-center shadow-lg hover:scale-110 transition-transform group relative" href="https://g.page/r/CZxVsgDhqJElEBM/review" rel="noopener noreferrer" target="_blank" title="Dejar reseña en Google">
-<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">star</span>
-<span class="absolute right-14 bg-primary text-on-primary font-caption-caps text-caption-caps uppercase px-2.5 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-md">
-Opinar en Google (4.8 ★)
-</span>
-</a>
-<!-- WhatsApp Chat Direct Badge -->
-<a class="w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform group relative" href="https://wa.me/56965058439?text=Hola,%20quiero%20coordinar%20mi%20sesi%C3%B3n%20en%20Recovery%20Studio%20Gorbea" rel="noopener noreferrer" target="_blank" title="Chatear por WhatsApp">
-<span class="material-symbols-outlined text-[30px]">chat</span>
-<span class="absolute right-16 bg-primary text-on-primary font-caption-caps text-caption-caps uppercase px-2.5 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-md">
-Hablar con el Staff
-</span>
-</a>
-</div>
-</div>
-<script>
-  // Set default booking date to tomorrow
-  window.addEventListener('DOMContentLoaded', () => {
-    const today = new Date();
-    today.setDate(today.getDate() + 1);
-    const dateInput = document.getElementById('bookingDate');
-    if (dateInput) {
-      dateInput.value = today.toISOString().split('T')[0];
-      dateInput.min = new Date().toISOString().split('T')[0];
-    }
-  });
-
-  function selectService(type, btn) {
-    document.querySelectorAll('.service-opt-btn').forEach(b => {
-      b.className = "service-opt-btn p-2.5 rounded-lg border border-surface-container-high bg-surface text-on-surface text-left transition-all hover:border-outline flex flex-col justify-between";
-    });
-    btn.className = "service-opt-btn p-2.5 rounded-lg border-2 border-primary bg-primary-fixed/30 text-primary text-left transition-all flex flex-col justify-between";
-
-    const hiddenInput = document.getElementById('selectedServiceInput');
-    if (type === 'kine') hiddenInput.value = 'Kinesiología Deportiva & Descarga ($28.000)';
-    if (type === 'sauna') hiddenInput.value = 'Sauna Finlandés 85°C ($18.000)';
-    if (type === 'crio') hiddenInput.value = 'Crioterapia + Normatec ($22.000)';
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Kinesiólogo en Gorbea y recuperación deportiva | Recovery Studio</title>
+  <meta name="description" content="Kinesiólogo en Gorbea, La Araucanía. Evaluación funcional, rehabilitación, masoterapia, sauna húmedo y asesorías online. Agenda tu sesión 1:1 en Recovery Studio.">
+  <link rel="canonical" href="https://www.recoverystudio.cl/">
+  <meta name="theme-color" content="#0A2342">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_CL">
+  <meta property="og:site_name" content="Recovery Studio">
+  <meta property="og:title" content="Kinesiólogo en Gorbea y recuperación deportiva | Recovery Studio">
+  <meta property="og:description" content="Evaluación funcional, rehabilitación, masoterapia, sauna húmedo y asesorías online en Gorbea, La Araucanía.">
+  <meta property="og:url" content="https://www.recoverystudio.cl/">
+  <meta property="og:image" content="https://www.recoverystudio.cl/assets/icon.svg">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Recovery Studio",
+    "url": "https://www.recoverystudio.cl/",
+    "inLanguage": "es-CL"
   }
-
-  function handleBookingSubmit(event) {
-    event.preventDefault();
-    const service = document.getElementById('selectedServiceInput').value;
-    const kine = document.querySelector('input[name="kinesiologo"]:checked').value;
-    const date = document.getElementById('bookingDate').value || 'Próxima fecha';
-    const time = document.getElementById('bookingTime').value;
-
-    const message = `Hola Recovery Studio Gorbea, quiero agendar mi sesión:\n- Servicio: ${service}\n- Especialista: ${kine}\n- Fecha: ${date}\n- Horario: ${time}\n(Solicito boleta para reembolso Fonasa/Isapre)`;
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/56965058439?text=${encoded}`, '_blank');
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": ["MedicalBusiness", "Physiotherapy"],
+    "@id": "https://www.recoverystudio.cl/#studio",
+    "name": "Recovery Studio · Kinesiología Gorbea",
+    "url": "https://www.recoverystudio.cl/",
+    "image": "https://www.recoverystudio.cl/assets/icon.svg",
+    "telephone": "+56965058439",
+    "email": "recoverystudio7@gmail.com",
+    "medicalSpecialty": "Physiotherapy",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Pasaje Uno #4, Los Notros",
+      "addressLocality": "Gorbea",
+      "addressRegion": "La Araucanía",
+      "addressCountry": "CL"
+    },
+    "areaServed": [
+      { "@type": "City", "name": "Gorbea" },
+      { "@type": "AdministrativeArea", "name": "La Araucanía" }
+    ],
+    "priceRange": "$$",
+    "openingHours": "Mo-Sa 08:00-20:00",
+    "sameAs": [
+      "https://www.google.com/maps/search/Recovery+Studio+Gorbea"
+    ]
   }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/views.css">
+  <script src="assets/js/analytics.js"></script>
+</head>
+<body>
+  <div id="app" class="app-root">
+    <div class="boot-screen">
+      <div class="boot-logo">
+        <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="bootGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#123F70"/><stop offset="1" stop-color="#071B34"/>
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#bootGrad)"/>
+          <path d="M23 48V18h11.5c6 0 10 3.6 10 9.3 0 4.4-2.3 7.6-6.3 8.9L47 48" fill="none" stroke="#FFFFFF" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="47" cy="18" r="4.4" fill="#FF7A18"/>
+        </svg>
+      </div>
+      <div class="boot-spinner"></div>
+      <p>Cargando tu studio…</p>
+    </div>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="false"></div>
 
-  const calcData = {
-    running: {
-      category: "Protocolo para Running & Trail Running",
-      title: "Descarga de Impacto & Retorno Venoso",
-      frequency: "Frecuencia: 1 a 2 veces por semana",
-      step1: "Presoterapia neumática 30 min para drenar lactato y edemas en gemelos y cuádriceps.",
-      step2: "Descarga de banda iliotibial, fascia plantar y glúteos con terapia manual o punción seca.",
-      step3: "15-20 min de calor finlandés para bajar el tono simpático y relajar el suelo pélvico."
-    },
-    cycling: {
-      category: "Protocolo para Ciclismo de Ruta & MTB",
-      title: "Descompresión Lumbopélvica & Cuádriceps",
-      frequency: "Frecuencia: Post tiradas largas de fin de semana",
-      step1: "Liberación miofascial profunda en zona lumbar, piramidal y psoas ilíaco.",
-      step2: "Presoterapia de compresión alta en miembros inferiores y criocontraste.",
-      step3: "Sauna a 85°C con estiramientos asistidos en cabina para amplitud de cadera."
-    },
-    crossfit: {
-      category: "Protocolo para Crossfit & Halterofilia",
-      title: "Reseteo del Sistema Nervioso & Articular",
-      frequency: "Frecuencia: Cada 3 días de alta intensidad",
-      step1: "Punción seca en trapecios, romboides y manguito rotador por sobreuso.",
-      step2: "Movilización articular torácica y descarga muscular de antebrazos.",
-      step3: "Protocolo térmico húmedo de 3 ciclos con hidratación isotónica de la casa."
-    },
-    rehab: {
-      category: "Protocolo Post-Lesión & Readaptación",
-      title: "Regeneración Tisular & Carga Progresiva",
-      frequency: "Frecuencia: 2 a 3 veces por semana con boleta MINSAL",
-      step1: "Diagnóstico kinésico y palpación dinámica de la estructura comprometida.",
-      step2: "Fisioterapia desinflamatoria y ejercicios guiados de control neuromuscular.",
-      step3: "Plan domiciliario de movilidad y seguimiento continuo vía WhatsApp."
-    }
-  };
+  <noscript>
+    <div style="max-width:760px;margin:0 auto;padding:32px 20px;font-family:Inter,system-ui,sans-serif;color:#0A2342">
+      <h1>Kinesiólogo en Gorbea · Recovery Studio</h1>
+      <p>Kinesiología, rehabilitación y recuperación deportiva con atención 1:1 en Gorbea, La Araucanía. Evaluación funcional de 75 minutos, sesiones de 60 minutos, masoterapia, sauna húmedo y asesorías online.</p>
+      <p>Horario: lunes a sábado, 08:00–20:00. WhatsApp: <a href="https://wa.me/56965058439">+56 9 6505 8439</a>.</p>
+      <h2>Servicios</h2>
+      <ul>
+        <li><a href="kinesiologia.html">Kinesiología y rehabilitación en Gorbea</a></li>
+        <li><a href="masajes.html">Masajes deportivos y masoterapia</a></li>
+        <li><a href="sauna.html">Sauna húmedo</a></li>
+        <li><a href="asesorias.html">Asesorías online</a></li>
+        <li><a href="precios.html">Precios y planes</a></li>
+      </ul>
+      <p>Para usar la agenda online necesitas activar JavaScript en tu navegador.</p>
+    </div>
+  </noscript>
 
-  function calcRecommend(key, btn) {
-    const data = calcData[key];
-    if (!data) return;
-
-    // update tabs
-    document.querySelectorAll('.calc-tab-btn').forEach(b => {
-      b.className = "calc-tab-btn p-3.5 rounded-xl bg-surface/10 hover:bg-surface/20 text-surface-bright font-label-md text-[13px] font-semibold text-center flex flex-col items-center gap-2 transition-all";
-    });
-    btn.className = "calc-tab-btn p-3.5 rounded-xl bg-surface-container-lowest text-primary font-label-md text-[13px] font-bold text-center flex flex-col items-center gap-2 transition-all";
-
-    // update text
-    document.getElementById('calcCategory').innerText = data.category;
-    document.getElementById('calcTitle').innerText = data.title;
-    document.getElementById('calcFrequency').innerText = data.frequency;
-    document.getElementById('calcStep1').innerText = data.step1;
-    document.getElementById('calcStep2').innerText = data.step2;
-    document.getElementById('calcStep3').innerText = data.step3;
-  }
-</script></main><footer class="w-full bg-surface-container-low"><div class="max-w-7xl mx-auto px-6 lg:px-12 py-16"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12"><div class="space-y-4"><div class="flex items-center gap-3"><img alt="Recovery Studio Logo" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrBRQSCSYMUbZbfcoR2wHMJhlsfdNFrWflBkCoNvYoaJFIMd-74mb8ngtJB2xCtksOrxQi67oemUL_kqY_FJ7VMr47TrbkQRCUnf-IaHSuuQ_DuQA4brHH0wmIPDw7ZNMHbp82bKu9Y7YBvNxv4odK2JxH4HXQWhv41PBPclLFOJDbUcnYC_5oslagEInGoBq9MKiGdzL5Ekqdqa7Iq32pFyX0X0_rkIzKWvJRbfZrAy6A"><span class="font-headline-sm text-headline-sm text-primary">Recovery Studio</span></div><p class="font-body-sm text-body-sm text-on-surface-variant">Santuario de recuperación física y rendimiento atlético en el sur de Chile. Kinesiología acreditada MINSAL, sauna finlandés y distensión muscular holística.</p><div class="flex items-start gap-2 pt-2 text-on-surface-variant font-body-sm text-body-sm"><span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">location_on</span><span>Lord Cochrane 450, Gorbea, Región de la Araucanía</span></div></div><div class="space-y-3"><h3 class="font-label-md text-label-md text-primary uppercase tracking-wider">Navegación</h3><ul class="space-y-2 font-body-sm text-body-sm"><li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_forward</span><a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#agendamiento">Agendamiento Directo</a></li><li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_forward</span><a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#equipo">Kinesiólogo Titular MINSAL</a></li><li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_forward</span><a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#planes">Packs &amp; Precios</a></li><li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_forward</span><a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#calculadora">Calculadora de Recuperación</a></li><li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_forward</span><a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#testimonios">Reseñas de Atletas</a></li></ul></div><div class="space-y-3"><h3 class="font-label-md text-label-md text-primary uppercase tracking-wider">Contacto &amp; Sede</h3><p class="font-body-sm text-body-sm text-on-surface-variant">Lord Cochrane 450, Gorbea. Atención personalizada con cita previa.</p><div class="p-4 rounded-xl bg-surface-container space-y-2"><div class="flex items-center gap-2 text-on-surface"><span class="material-symbols-outlined text-secondary text-[20px]">call</span><span class="font-label-md text-label-md">+56 9 6505 8439</span></div><a class="inline-flex items-center font-label-sm text-label-sm text-secondary hover:text-on-secondary-container transition-colors font-semibold gap-1" href="https://wa.me/56965058439" rel="noopener noreferrer" target="_blank">Chat de WhatsApp directo →</a></div><div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm pt-1"><span class="material-symbols-outlined text-[18px]">schedule</span><span>Lun - Sáb: 08:30 - 20:30 hrs</span></div></div><div class="space-y-3"><h3 class="font-label-md text-label-md text-primary uppercase tracking-wider">Reembolsos &amp; Pagos</h3><p class="font-body-sm text-body-sm text-on-surface-variant">Boletas para Fonasa e Isapres. Pagos seguros mediante Mercado Pago.</p><div class="p-3 rounded-lg bg-surface-container flex items-center gap-3"><span class="material-symbols-outlined text-primary text-[28px]">credit_card</span><div><span class="font-label-md text-label-md text-on-surface block">Mercado Pago Chile</span><span class="font-caption-caps text-caption-caps text-on-surface-variant block uppercase">Débito · Crédito en cuotas</span></div></div><div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm"><span class="material-symbols-outlined text-[18px]">verified_user</span><span>Acreditación Kinesiológica MINSAL</span></div></div></div><div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-surface-container"><p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 Recovery Studio. Lord Cochrane 450, Gorbea, Región de la Araucanía.</p><div class="flex items-center gap-6 font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">Términos y Condiciones</a><a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">Políticas de Privacidad</a><a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">Protocolos Sanitarios</a></div></div></div></footer>
-
-</body></html>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/user.js"></script>
+  <script src="assets/js/admin-base.js"></script>
+  <script src="assets/js/admin-people.js"></script>
+  <script src="assets/js/admin-money.js"></script>
+  <script src="assets/js/admin-system.js"></script>
+  <script src="assets/js/reviews.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -24,22 +24,17 @@
 
   /* --------------------------------- pagos --------------------------------- */
 
-  async function applyApproval(payment) {
+  function applyApproval(payment) {
     if (!payment || payment.status === 'aprobado') return;
-    const targetUser = RS.data.getUser(payment.userId);
     payment.status = 'aprobado';
     payment.approvedAt = new Date().toISOString();
     payment.approvedBy = me().name;
     if (payment.creditsToAdd > 0) {
       const user = RS.data.getUser(payment.userId);
       if (user) {
-        const previousLabel = user.planLabel;
         user.credits += Number(payment.creditsToAdd);
         user.planLabel = payment.concept;
         payment.creditsAdded = Number(payment.creditsToAdd);
-        if (payment.category === 'Planes' || RS.data.isPlanLabel(payment.concept)) {
-          RS.data.startPlan(user, payment.concept, { extend: previousLabel === payment.concept });
-        }
       }
     }
     if (payment.sessionId) {
@@ -55,22 +50,9 @@
       'Pago aprobado',
       `${payment.ref} · ${payment.userName} · ${U.fmtMoney(payment.amount)}${payment.creditsAdded ? ` · +${payment.creditsAdded} sesiones` : ''}.`
     );
-    if (targetUser) {
-      RS.SupabaseSync.pushAccount(targetUser.id).catch((error) => {
-        console.warn('No se pudo sincronizar el saldo del cliente:', error.message);
-      });
-    }
-    // Correo al cliente + notificación al admin (pago aprobado)
-    try {
-      const mailUser = targetUser || { name: payment.userName || 'Cliente', email: '', credits: 0 };
-      await RS.data.paymentApprovedNotification(payment, mailUser);
-    } catch (err) {
-      console.error('Notificación de pago aprobado falló:', err);
-    }
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
   }
 
-  async function rejectPayment(payment, reason) {
+  function rejectPayment(payment, reason) {
     payment.status = 'rechazado';
     payment.note = reason || 'Comprobante rechazado por el administrador.';
     payment.rejectedAt = new Date().toISOString();
@@ -83,14 +65,6 @@
     }
     RS.DB.save();
     RS.data.addAudit(me().name, 'Pago rechazado', `${payment.ref} · ${payment.userName} · ${reason || 'Sin motivo especificado'}.`);
-    // Correo al cliente + notificación al admin (pago rechazado)
-    try {
-      const mailUser = RS.data.getUser(payment.userId) || { name: payment.userName || 'Cliente', email: '' };
-      await RS.data.paymentRejectedNotification(payment, mailUser, reason);
-    } catch (err) {
-      console.error('Notificación de pago rechazado falló:', err);
-    }
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
   }
 
   function renderPayments() {
@@ -142,7 +116,7 @@
             <div class="admin-payment-amount"><strong>${U.fmtMoney(p.amount)}</strong>${UI.statusPill(p.status, 'payment')}</div>
             <div class="admin-payment-proof">${p.proof ? `<button class="proof-thumb" data-action="admin-payment-view" data-id="${p.id}" title="Ver comprobante"><img src="${p.proof}" alt="Comprobante"><span>${UI.icon('eye', 14)}</span></button>` : `<span class="proof-none">${UI.icon('file-text', 18)} Sin comprobante</span>`}</div>
             <div class="admin-payment-actions">
-              ${p.status === 'pendiente' ? `<button class="btn btn-accent btn-sm" data-action="admin-payment-approve" data-id="${p.id}">${UI.icon('check', 14)} Aprobar</button><button class="btn btn-ghost btn-sm danger-text" data-action="admin-payment-reject" data-id="${p.id}">Rechazar</button>` : `<button class="btn btn-ghost btn-sm" data-action="admin-payment-view" data-id="${p.id}">Ver detalle</button><button class="btn btn-ghost btn-sm danger-text" data-action="admin-delete-payment" data-id="${p.id}">${UI.icon('trash', 14)} Eliminar</button>`}
+              ${p.status === 'pendiente' ? `<button class="btn btn-accent btn-sm" data-action="admin-payment-approve" data-id="${p.id}">${UI.icon('check', 14)} Aprobar</button><button class="btn btn-ghost btn-sm danger-text" data-action="admin-payment-reject" data-id="${p.id}">Rechazar</button>` : `<button class="btn btn-ghost btn-sm" data-action="admin-payment-view" data-id="${p.id}">Ver detalle</button>`}
             </div>
           </article>`).join('')}</div>` : UI.empty({ icon: 'check-circle', title: 'Nada por aquí', text: filter === 'pendiente' ? 'No hay pagos pendientes de validación.' : 'No encontramos pagos con este filtro.' })}
         </div>
@@ -167,13 +141,12 @@
         ${UI.detailRow('Categoría', payment.category || 'Otros')}
         ${UI.detailRow('Método', payment.method)}
         ${payment.creditsToAdd ? UI.detailRow('Sesiones a activar', `${payment.creditsToAdd}`) : ''}
-        ${payment.discountAmount ? UI.detailRow(`Descuento ${payment.promoCode}`, `− ${U.fmtMoney(payment.discountAmount)} sobre ${U.fmtMoney(payment.originalAmount)}`) : ''}
         ${payment.note ? UI.detailRow('Observación', payment.note) : ''}
       </div>
       ${payment.proof ? `<div class="proof-preview large"><img src="${payment.proof}" alt="Comprobante de ${U.esc(payment.userName)}"><a class="btn btn-ghost btn-sm" href="${payment.proof}" target="_blank" rel="noopener">${UI.icon('external-link', 15)} Abrir comprobante</a></div>` : `<div class="callout callout-orange">${UI.icon('alert-circle', 17)}<span>Este pago no tiene comprobante adjunto. Verifica la transferencia antes de aprobarlo.</span></div>`}
       ${payment.status === 'pendiente' ? `<div class="callout callout-blue">${UI.icon('shield-check', 17)}<span>Al aprobar, ${payment.creditsToAdd ? `se sumarán <strong>${payment.creditsToAdd} sesiones</strong> al plan del usuario` : 'la reserva asociada quedará confirmada'} automáticamente.</span></div>` : ''}`,
       footer: `<a class="btn btn-ghost" href="${RS.data.whatsappUrl(message)}" target="_blank" rel="noopener">${UI.icon('whatsapp', 16)} Contactar</a>
-        ${payment.status === 'pendiente' ? `<button class="btn btn-ghost danger-text" data-action="admin-payment-reject" data-id="${payment.id}">Rechazar</button><button class="btn btn-accent" data-action="admin-payment-approve" data-id="${payment.id}">${UI.icon('check', 16)} Aprobar pago</button>` : `${payment.status === 'aprobado' ? `<button class="btn btn-ghost" data-action="admin-edit-payment" data-id="${payment.id}">${UI.icon('edit', 16)} Editar ingreso</button>` : ''}<button class="btn btn-ghost danger-text" data-action="admin-delete-payment" data-id="${payment.id}">${UI.icon('trash', 16)} Eliminar</button><button class="btn btn-primary" data-modal-close>Cerrar</button>`}`,
+        ${payment.status === 'pendiente' ? `<button class="btn btn-ghost danger-text" data-action="admin-payment-reject" data-id="${payment.id}">Rechazar</button><button class="btn btn-accent" data-action="admin-payment-approve" data-id="${payment.id}">${UI.icon('check', 16)} Aprobar pago</button>` : '<button class="btn btn-primary" data-modal-close>Cerrar</button>'}`,
     });
   }
 
@@ -187,128 +160,56 @@
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-danger" data-reject-confirm>${UI.icon('x', 16)} Rechazar pago</button>`,
     });
     const root = document.getElementById('modal-root');
-    root.querySelector('[data-reject-confirm]').addEventListener('click', async () => {
+    root.querySelector('[data-reject-confirm]').addEventListener('click', () => {
       const reason = root.querySelector('#reject-reason').value.trim();
-      await rejectPayment(payment, reason);
+      rejectPayment(payment, reason);
       UI.closeModal();
       UI.toast('Pago rechazado. El usuario verá el motivo.', 'info');
       RS.App.render(true);
     });
   }
 
-  function openManualPayment(payment) {
-    const editing = Boolean(payment && payment.id);
-    const credits = editing ? Math.max(0, Number(payment.creditsAdded != null ? payment.creditsAdded : payment.creditsToAdd) || 0) : 0;
-    const formId = editing ? 'manual-form-edit' : 'manual-form';
-    const selectedUserId = editing ? (payment.userId || '') : '';
-    const ownerFallback = editing && payment.userId && !RS.data.getUser(payment.userId)
-      ? `<option value="${U.esc(payment.userId)}" selected>${U.esc(payment.userName || 'Usuario')}</option>`
-      : '';
-    const directName = editing && !payment.userId ? (payment.userName || '') : '';
-    const methods = ['Transferencia', 'Efectivo', 'Débito', 'Cortesía'];
-    const root = UI.modal({
-      title: editing ? 'Editar ingreso' : 'Registrar ingreso manual',
-      subtitle: editing
-        ? `${payment.ref} · ${U.fmtMoney(payment.amount)} · ${U.fmtDate(payment.date, 'long')}`
-        : 'Para pagos en efectivo, cortesías o transferencias ya verificadas.',
+  function openManualPayment() {
+    UI.modal({
+      title: 'Registrar ingreso manual',
+      subtitle: 'Para pagos en efectivo, cortesías o transferencias ya verificadas.',
       size: 'md',
-      body: `<form data-form="admin-manual-payment" data-payment-id="${editing ? U.esc(payment.id) : ''}" id="${formId}">
+      body: `<form data-form="admin-manual-payment" id="manual-form">
         <div class="grid grid-2 gap-sm">
-          <div class="field"><label for="mp-user">Cliente</label><select class="input" id="mp-user" name="userId">${ownerFallback}<option value="" ${selectedUserId ? '' : 'selected'}>— Sin registrar (venta directa) —</option>${Admin.userOptions(selectedUserId)}</select></div>
-          <div class="field"><label for="mp-date">Fecha *</label><input class="input" id="mp-date" name="date" type="date" value="${editing ? U.esc(payment.date) : U.todayISO()}" required></div>
-          <div class="field" id="mp-client-name-field"><label for="mp-client-name">Nombre del cliente</label><input class="input" id="mp-client-name" name="clientName" value="${U.esc(directName)}" placeholder="Ej: Cliente sin registrar" maxlength="80"></div>
-          <div class="field"><label for="mp-concept">Concepto *</label><input class="input" id="mp-concept" name="concept" value="${editing ? U.esc(payment.concept) : ''}" placeholder="Ej: Plan Progreso" required></div>
-          <div class="field"><label for="mp-category">Categoría</label><select class="input" id="mp-category" name="category">${Admin.INCOME_CATEGORIES.map((c) => `<option ${editing && (payment.category || 'Otros') === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
-          <div class="field"><label for="mp-amount">Monto *</label><input class="input" id="mp-amount" name="amount" type="number" min="0" step="500" value="${editing ? Number(payment.amount) || 0 : ''}" required placeholder="0"></div>
-          <div class="field"><label for="mp-method">Método</label><select class="input" id="mp-method" name="method">${methods.map((m) => `<option ${editing && payment.method === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
-          <div class="field" id="mp-credits-field"><label for="mp-credits">Sesiones a activar</label><input class="input" id="mp-credits" name="credits" type="number" min="0" step="1" value="${credits}"><span class="field-hint">Se suman al saldo del cliente.</span></div>
+          <div class="field"><label for="mp-user">Usuario *</label><select class="input" id="mp-user" name="userId" required>${Admin.userOptions()}</select></div>
+          <div class="field"><label for="mp-date">Fecha *</label><input class="input" id="mp-date" name="date" type="date" value="${U.todayISO()}" required></div>
+          <div class="field"><label for="mp-concept">Concepto *</label><input class="input" id="mp-concept" name="concept" placeholder="Ej: Plan Recovery 8" required></div>
+          <div class="field"><label for="mp-category">Categoría</label><select class="input" id="mp-category" name="category">${Admin.INCOME_CATEGORIES.map((c) => `<option>${c}</option>`).join('')}</select></div>
+          <div class="field"><label for="mp-amount">Monto *</label><input class="input" id="mp-amount" name="amount" type="number" min="0" step="500" required placeholder="0"></div>
+          <div class="field"><label for="mp-method">Método</label><select class="input" id="mp-method" name="method"><option>Transferencia</option><option>Efectivo</option><option>Débito</option><option>Cortesía</option></select></div>
+          <div class="field"><label for="mp-credits">Sesiones a activar</label><input class="input" id="mp-credits" name="credits" type="number" min="0" step="1" value="0"><span class="field-hint">Se suman al saldo del usuario.</span></div>
         </div>
-        <div class="field"><label for="mp-note">Nota</label><input class="input" id="mp-note" name="note" value="${editing ? U.esc(payment.note || '') : ''}" placeholder="Detalle opcional"></div>
-        ${editing ? `<div class="callout callout-blue">${UI.icon('info', 17)}<span>Al guardar se ajustará el saldo del cliente: se devuelven las sesiones anteriores y se aplican las nuevas.</span></div>` : ''}
-        <p class="form-error" id="${formId}-error" role="alert"></p>
+        <div class="field"><label for="mp-note">Nota</label><input class="input" id="mp-note" name="note" placeholder="Detalle opcional"></div>
+        <p class="form-error" id="manual-error" role="alert"></p>
       </form>`,
-      footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" type="submit" form="${formId}">${editing ? 'Guardar cambios' : 'Registrar ingreso'}</button>`,
+      footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" type="submit" form="manual-form">Registrar ingreso</button>`,
     });
-    if (!root) return;
-    const userSelect = root.querySelector('#mp-user');
-    const nameField = root.querySelector('#mp-client-name-field');
-    const creditsField = root.querySelector('#mp-credits-field');
-    const syncVisibility = () => {
-      const noUser = !userSelect.value;
-      if (nameField) nameField.style.display = noUser ? '' : 'none';
-      if (creditsField) creditsField.style.display = noUser ? 'none' : '';
-    };
-    userSelect.addEventListener('change', syncVisibility);
-    syncVisibility();
   }
 
   RS.forms['admin-manual-payment'] = (form) => {
-    const paymentId = form.dataset.paymentId;
-    const existing = paymentId ? st().payments.find((p) => p.id === paymentId) : null;
-    const userId = form.userId.value;
-    const user = userId ? RS.data.getUser(userId) : null;
-    const clientName = (form.clientName ? form.clientName.value : '').trim();
-    const userName = user ? user.name : (clientName || 'Venta directa');
+    const user = RS.data.getUser(form.userId.value);
     const amount = Number(form.amount.value);
-    const err = form.querySelector('.form-error');
-    const fail = (message) => {
+    const err = document.getElementById('manual-error');
+    if (!user || !amount || amount <= 0) {
       if (err) {
-        err.textContent = message;
+        err.textContent = 'Selecciona un usuario e ingresa un monto válido.';
         err.classList.add('show');
       }
-    };
-    if (!amount || amount <= 0) {
-      fail('Ingresa un monto válido.');
       return;
     }
-    const credits = user ? Math.max(0, Number(form.credits.value) || 0) : 0;
-    const concept = form.concept.value.trim() || 'Ingreso manual';
-    const category = form.category.value;
-
-    if (existing) {
-      const previousUser = RS.data.getUser(existing.userId);
-      const previousCredits = Math.max(0, Number(existing.creditsAdded != null ? existing.creditsAdded : existing.creditsToAdd) || 0);
-      if (previousUser && previousCredits) {
-        previousUser.credits = Math.max(0, Number(previousUser.credits || 0) - previousCredits);
-      }
-      if (user && credits) user.credits = Number(user.credits || 0) + credits;
-      if (user && (category === 'Planes' || RS.data.isPlanLabel(concept))) {
-        user.planLabel = concept;
-      }
-      Object.assign(existing, {
-        userId: user ? user.id : '',
-        userName,
-        concept,
-        category,
-        amount,
-        date: form.date.value,
-        method: form.method.value,
-        creditsToAdd: credits,
-        creditsAdded: credits,
-        note: form.note.value.trim(),
-        updatedAt: new Date().toISOString(),
-        updatedBy: me().name,
-      });
-      RS.DB.save();
-      RS.data.addAudit(me().name, 'Ingreso editado', `${existing.ref} · ${userName} · ${U.fmtMoney(amount)}${credits ? ` · +${credits} sesiones` : ''}.`);
-      if (previousUser && previousUser.id !== (user && user.id)) {
-        RS.SupabaseSync.pushAccount(previousUser.id).catch(() => { /* no bloquea la UI */ });
-      }
-      if (user) RS.SupabaseSync.pushAccount(user.id).catch(() => { /* no bloquea la UI */ });
-      RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
-      UI.closeModal();
-      UI.toast('Ingreso actualizado correctamente.', 'success');
-      RS.App.render(true);
-      return;
-    }
-
+    const credits = Math.max(0, Number(form.credits.value) || 0);
     const payment = {
       id: U.uid('pay'),
       ref: U.ref('PAG'),
-      userId: user ? user.id : '',
-      userName,
-      concept,
-      category,
+      userId: user.id,
+      userName: user.name,
+      concept: form.concept.value.trim() || 'Ingreso manual',
+      category: form.category.value,
       amount,
       date: form.date.value,
       status: 'aprobado',
@@ -324,18 +225,13 @@
       approvedAt: new Date().toISOString(),
       approvedBy: me().name,
     };
-    if (user && credits) {
-      const previousLabel = user.planLabel;
+    if (credits) {
       user.credits += credits;
-      if (category === 'Planes') {
-        user.planLabel = concept;
-        RS.data.startPlan(user, concept, { extend: previousLabel === concept });
-      }
+      if (payment.concept && form.category.value === 'Planes') user.planLabel = payment.concept;
     }
     st().payments.unshift(payment);
     RS.DB.save();
-    RS.data.addAudit(me().name, 'Ingreso manual registrado', `${payment.ref} · ${userName} · ${U.fmtMoney(amount)}${credits ? ` · +${credits} sesiones` : ''}.`);
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
+    RS.data.addAudit(me().name, 'Ingreso manual registrado', `${payment.ref} · ${user.name} · ${U.fmtMoney(amount)}${credits ? ` · +${credits} sesiones` : ''}.`);
     UI.closeModal();
     UI.toast('Ingreso registrado correctamente.', 'success');
     RS.App.render(true);
@@ -442,7 +338,7 @@
         </div>
         <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>Fecha</th><th>Referencia</th><th>Usuario</th><th>Concepto</th><th>Categoría</th><th>Método</th><th>Monto</th><th></th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Referencia</th><th>Usuario</th><th>Concepto</th><th>Categoría</th><th>Método</th><th>Monto</th></tr></thead>
             <tbody>${fin.payments.slice().sort((a, b) => b.date.localeCompare(a.date)).map((p) => `<tr>
               <td>${U.fmtDate(p.date, 'compact')}</td>
               <td><span class="mono">${U.esc(p.ref)}</span></td>
@@ -451,8 +347,7 @@
               <td>${UI.pill(p.category || 'Otros', 'info')}</td>
               <td>${U.esc(p.method)}</td>
               <td><strong>${U.fmtMoney(p.amount)}</strong></td>
-              <td><div class="table-actions"><button class="icon-btn" data-action="admin-edit-payment" data-id="${p.id}" title="Editar ingreso" aria-label="Editar ingreso">${UI.icon('edit', 15)}</button><button class="icon-btn danger" data-action="admin-delete-payment" data-id="${p.id}" title="Eliminar ingreso" aria-label="Eliminar ingreso">${UI.icon('trash', 15)}</button></div></td>
-            </tr>`).join('') || '<tr><td colspan="8" class="muted">Sin ingresos en este mes.</td></tr>'}</tbody>
+            </tr>`).join('') || '<tr><td colspan="7" class="muted">Sin ingresos en este mes.</td></tr>'}</tbody>
           </table>
         </div>
       </section>
@@ -572,7 +467,7 @@
     });
   }
 
-  RS.forms['admin-expense'] = async (form) => {
+  RS.forms['admin-expense'] = (form) => {
     const amount = Number(form.amount.value);
     const description = form.description.value.trim();
     const err = document.getElementById('expense-error');
@@ -583,25 +478,16 @@
       }
       return;
     }
-    const expense = {
+    st().expenses.push({
       id: U.uid('exp'),
       date: form.date.value,
       category: form.category.value,
       description,
       amount,
       method: form.method.value,
-    };
-    st().expenses.push(expense);
+    });
     RS.DB.save();
     RS.data.addAudit(me().name, 'Gasto registrado', `${description} · ${U.fmtMoney(amount)}.`);
-    if (RS.SupabaseSync && RS.SupabaseSync.saveExpense) {
-      try {
-        await RS.SupabaseSync.saveExpense(expense);
-      } catch (error) {
-        console.warn('El gasto quedó solo en este equipo:', error.message);
-        UI.toast('Gasto guardado en este equipo, pero no se pudo subir a la nube.', 'warning', 6000);
-      }
-    }
     UI.closeModal();
     UI.toast('Gasto registrado.', 'success');
     RS.App.render(true);
@@ -641,7 +527,7 @@
     if (netEl) netEl.textContent = U.fmtMoney(gross - ret);
   };
 
-  RS.forms['admin-boleta'] = async (form) => {
+  RS.forms['admin-boleta'] = (form) => {
     const gross = Number(form.gross.value);
     const err = document.getElementById('boleta-error');
     if (!gross || gross <= 0) {
@@ -651,7 +537,7 @@
       }
       return;
     }
-    const boleta = {
+    st().boletas.push({
       id: U.uid('bol'),
       number: form.number.value.trim(),
       date: form.date.value,
@@ -659,18 +545,9 @@
       gross,
       retentionRate: Number(st().settings.retention) || 15.25,
       notes: form.notes.value.trim(),
-    };
-    st().boletas.push(boleta);
+    });
     RS.DB.save();
     RS.data.addAudit(me().name, 'Boleta registrada', `N° ${form.number.value} · ${U.fmtMoney(gross)} bruto.`);
-    if (RS.SupabaseSync && RS.SupabaseSync.saveBoleta) {
-      try {
-        await RS.SupabaseSync.saveBoleta(boleta);
-      } catch (error) {
-        console.warn('La boleta quedó solo en este equipo:', error.message);
-        UI.toast('Boleta guardada en este equipo, pero no se pudo subir a la nube.', 'warning', 6000);
-      }
-    }
     UI.closeModal();
     UI.toast('Boleta registrada.', 'success');
     RS.App.render(true);
@@ -755,22 +632,13 @@
         <button class="btn btn-primary" data-quote-save>${UI.icon('check', 16)} Guardar</button>`,
     });
     if (!root) return;
-    root.querySelector('[data-quote-save]').addEventListener('click', async () => {
+    root.querySelector('[data-quote-save]').addEventListener('click', () => {
       quote.status = root.querySelector('#q-status').value;
       quote.finalAmount = Math.max(0, Number(root.querySelector('#q-final').value) || 0);
       quote.notes = root.querySelector('#q-notes').value.trim();
       quote.updatedAt = new Date().toISOString();
-      quote.dirty = true;
       RS.DB.save();
       RS.data.addAudit(me().name, 'Cotización actualizada', `${quote.ref} · ${quote.company} · ${quote.status}.`);
-      if (RS.SupabaseSync && RS.SupabaseSync.saveQuote) {
-        try {
-          await RS.SupabaseSync.saveQuote(quote);
-        } catch (error) {
-          console.warn('La cotización quedó solo en este equipo:', error.message);
-          UI.toast('Cotización guardada en este equipo, pero no se pudo subir a la nube.', 'warning', 6000);
-        }
-      }
       UI.closeModal();
       UI.toast('Cotización actualizada.', 'success');
       RS.App.render(true);
@@ -799,7 +667,7 @@
       okText: 'Aprobar pago',
     });
     if (!ok) return;
-    await applyApproval(payment);
+    applyApproval(payment);
     UI.closeModal();
     UI.toast('Pago aprobado. El usuario fue notificado en su panel.', 'success');
     RS.App.render(true);
@@ -813,46 +681,6 @@
   RS.actions['admin-manual-payment'] = () => {
     UI.closeModal();
     openManualPayment();
-  };
-
-  RS.actions['admin-edit-payment'] = (el) => {
-    const payment = st().payments.find((p) => p.id === el.dataset.id);
-    if (!payment) return;
-    UI.closeModal();
-    openManualPayment(payment);
-  };
-
-  RS.actions['admin-delete-payment'] = async (el) => {
-    const payment = st().payments.find((p) => p.id === el.dataset.id);
-    if (!payment) return;
-    const credits = Math.max(0, Number(payment.creditsAdded != null ? payment.creditsAdded : payment.creditsToAdd) || 0);
-    const ok = await UI.confirm({
-      title: 'Eliminar ingreso',
-      message: `Se eliminará el ingreso ${payment.ref} de ${payment.userName} por ${U.fmtMoney(payment.amount)}.${credits ? ` Se devolverán ${credits} ${credits === 1 ? 'sesión' : 'sesiones'} al saldo del cliente.` : ''}`,
-      okText: 'Eliminar',
-      danger: true,
-    });
-    if (!ok) return;
-    if (credits) {
-      const owner = RS.data.getUser(payment.userId);
-      if (owner) {
-        owner.credits = Math.max(0, Number(owner.credits || 0) - credits);
-        RS.SupabaseSync.pushAccount(owner.id).catch(() => { /* no bloquea la UI */ });
-      }
-    }
-    st().payments = st().payments.filter((p) => p.id !== payment.id);
-    RS.DB.save();
-    RS.data.addAudit(me().name, 'Ingreso eliminado', `${payment.ref} · ${payment.userName} · ${U.fmtMoney(payment.amount)}.`);
-    try {
-      await RS.SupabaseSync.deletePayment(payment.id);
-    } catch (error) {
-      console.warn('No se pudo eliminar el ingreso en la nube:', error && error.message);
-      UI.toast('Ingreso eliminado en este dispositivo, pero no se pudo borrar en la nube. Sincroniza o inténtalo de nuevo.', 'warning', 7000);
-    }
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
-    UI.closeModal();
-    UI.toast('Ingreso eliminado.', 'info');
-    RS.App.render(true);
   };
 
   RS.changes['finance-month'] = (el) => {
@@ -875,19 +703,11 @@
       message: `Se eliminará “${expense.description}” por ${U.fmtMoney(expense.amount)}.`,
       okText: 'Eliminar',
       danger: true,
-    }).then(async (ok) => {
+    }).then((ok) => {
       if (!ok) return;
       st().expenses = st().expenses.filter((e) => e.id !== expense.id);
       RS.DB.save();
       RS.data.addAudit(me().name, 'Gasto eliminado', `${expense.description} · ${U.fmtMoney(expense.amount)}.`);
-      if (RS.SupabaseSync && RS.SupabaseSync.deleteExpense) {
-        try {
-          await RS.SupabaseSync.deleteExpense(expense.id);
-        } catch (error) {
-          console.warn('No se pudo borrar el gasto en la nube:', error.message);
-          UI.toast('Gasto eliminado en este equipo, pero no en la nube.', 'warning', 6000);
-        }
-      }
       UI.toast('Gasto eliminado.', 'info');
       RS.App.render();
     });
@@ -903,19 +723,11 @@
       message: `Se eliminará la boleta N° ${boleta.number} por ${U.fmtMoney(boleta.gross)}.`,
       okText: 'Eliminar',
       danger: true,
-    }).then(async (ok) => {
+    }).then((ok) => {
       if (!ok) return;
       st().boletas = st().boletas.filter((b) => b.id !== boleta.id);
       RS.DB.save();
       RS.data.addAudit(me().name, 'Boleta eliminada', `N° ${boleta.number}.`);
-      if (RS.SupabaseSync && RS.SupabaseSync.deleteBoleta) {
-        try {
-          await RS.SupabaseSync.deleteBoleta(boleta.id);
-        } catch (error) {
-          console.warn('No se pudo borrar la boleta en la nube:', error.message);
-          UI.toast('Boleta eliminada en este equipo, pero no en la nube.', 'warning', 6000);
-        }
-      }
       UI.toast('Boleta eliminada.', 'info');
       RS.App.render();
     });

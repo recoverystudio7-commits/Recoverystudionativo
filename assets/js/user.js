@@ -21,26 +21,6 @@
     return RS.Auth.getUser();
   }
 
-  const SEEN_APPROVED_KEY = 'recoveryStudio.seenApproved.v1';
-  function loadSeenApproved() {
-    try {
-      const raw = localStorage.getItem(SEEN_APPROVED_KEY);
-      return new Set(raw ? JSON.parse(raw) : []);
-    } catch (e) {
-      return new Set();
-    }
-  }
-  function saveSeenApproved(set) {
-    try {
-      localStorage.setItem(SEEN_APPROVED_KEY, JSON.stringify(Array.from(set)));
-    } catch (e) { /* noop */ }
-  }
-  function markApprovedSeen(paymentIds) {
-    const set = loadSeenApproved();
-    paymentIds.forEach((id) => set.add(id));
-    saveSeenApproved(set);
-  }
-
   function ensureUi() {
     RS.ui = RS.ui || {};
     if (!RS.ui.planCart) RS.ui.planCart = {};
@@ -71,31 +51,6 @@
     return d === 1 ? 'Mañana' : `En ${d} días`;
   }
 
-  function loyaltyProgress(sessions) {
-    const completed = sessions.filter((session) => session.status === 'completada');
-    const activeMonths = new Set(completed
-      .filter((session) => /^\d{4}-\d{2}-\d{2}$/.test(String(session.date || '')))
-      .map((session) => U.monthKey(session.date)));
-    const month = new Date();
-    month.setDate(1);
-    let activeMonthStreak = 0;
-    while (activeMonths.has(U.monthKey(month))) {
-      activeMonthStreak += 1;
-      month.setMonth(month.getMonth() - 1);
-    }
-    const consistencyStamps = Math.floor(activeMonthStreak / 3);
-    const stamps = completed.length + consistencyStamps;
-    return {
-      completedSessions: completed.length,
-      activeMonthStreak,
-      consistencyStamps,
-      stamps,
-      earnedRewards: Math.floor(stamps / 5),
-      stampsToNextReward: 5 - (stamps % 5),
-      nextRewardProgress: stamps % 5,
-    };
-  }
-
   function bookingCategory(service) {
     return categoryFor(service);
   }
@@ -124,7 +79,7 @@
       `DTEND:${fmt(end)}Z`,
       `SUMMARY:${service ? service.name : 'Sesión'} · Recovery Studio`,
       `DESCRIPTION:${desc.replace(/[,;]/g, ' ')}`,
-      'LOCATION:Pasaje Uno, Gorbea',
+      'LOCATION:Recovery Studio · Gorbea',
       'STATUS:CONFIRMED',
       `BEGIN:VALARM`,
       'TRIGGER:-PT2H',
@@ -199,7 +154,6 @@
           <a class="btn btn-ghost btn-sm" href="${RS.data.whatsappUrl(`Hola Recovery Studio, sobre mi pago ${payment.ref} (${payment.concept}) por ${U.fmtMoney(payment.amount)}.`)}" target="_blank" rel="noopener">${UI.icon('whatsapp', 15)} Enviar por WhatsApp</a>
           <button class="btn btn-ghost btn-sm" data-action="payment-detail" data-id="${payment.id}">Ver detalle</button>
         </div>
-        ${payment.discountAmount ? `<p class="payment-note">${UI.icon('tag', 13)} Código ${U.esc(payment.promoCode)}: ahorraste ${U.fmtMoney(payment.discountAmount)}.</p>` : ''}
       </div>
     </article>`;
   }
@@ -217,8 +171,6 @@
     const next = RS.data.nextSession(user.id);
     const sessions = RS.data.userSessions(user.id);
     const thisMonth = U.monthKey(new Date());
-    const loyalty = loyaltyProgress(sessions);
-    const loyaltyReward = st().settings.clubRecoveryReward || 'Sesión de sauna';
     const monthSessions = sessions.filter((s) => U.monthKey(s.date) === thisMonth && s.status !== 'cancelada');
     const completed = sessions.filter((s) => s.status === 'completada').length;
     const missed = sessions.filter((s) => s.status === 'no_asistio').length;
@@ -226,15 +178,6 @@
     const past = completed + missed + cancelled;
     const attendance = past ? Math.round((completed / past) * 100) : null;
     const pending = st().payments.filter((p) => p.userId === user.id && p.status === 'pendiente');
-    const seenApproved = loadSeenApproved();
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recentlyApproved = st().payments.filter((p) => {
-      if (p.userId !== user.id || p.status !== 'aprobado') return false;
-      if (seenApproved.has(p.id)) return false;
-      const when = p.approvedAt || p.updatedAt || p.createdAt;
-      const time = when ? Date.parse(when) : 0;
-      return Number.isFinite(time) && time >= sevenDaysAgo;
-    });
     const maxes = RS.data.userMaxes(user.id);
     const routine = RS.data.userRoutine(user.id);
     const totalPlan = planTotalSessions(user);
@@ -255,12 +198,6 @@
         <span class="banner-icon">${UI.icon('clock', 20)}</span>
         <div><strong>Tienes ${U.pluralize(pending.length, 'pago', 'pagos')} en revisión</strong><span>${pending[0].proof ? 'El equipo está validando tu comprobante.' : 'Adjunta el comprobante para activar tu pago.'}</span></div>
         <a class="btn btn-ghost btn-sm" href="#/pagos">Ver pagos ${UI.icon('arrow-right', 15)}</a>
-      </div>` : ''}
-
-      ${recentlyApproved.length ? `<div class="banner banner-success">
-        <span class="banner-icon">${UI.icon('check-circle', 20)}</span>
-        <div><strong>${recentlyApproved.length === 1 ? 'Tu pago fue aprobado' : recentlyApproved.length + ' pagos aprobados'}</strong><span>${recentlyApproved.map((p) => U.esc(p.concept) + (p.creditsToAdd ? ' · ' + p.creditsToAdd + ' sesiones activadas' : '')).join(' · ')}</span></div>
-        <button class="btn btn-ghost btn-sm" data-action="dismiss-approved-banner">${UI.icon('x', 15)}</button>
       </div>` : ''}
 
       <div class="dash-grid">
@@ -320,22 +257,6 @@
         ${UI.kpi({ label: 'Pagos pendientes', value: String(pending.length), icon: 'credit-card', tone: pending.length ? 'amber' : 'green', helper: pending.length ? 'Por validar' : 'Todo al día' })}
       </div>
 
-      <section class="loyalty-card card" aria-labelledby="loyalty-title">
-        <div class="loyalty-copy">
-          <span class="eyebrow">${UI.icon('award', 15)} Club Recovery</span>
-          <h2 id="loyalty-title">Tu constancia tiene premio</h2>
-          <p>Cada sesión completada suma un sello. Por cada 3 meses seguidos con sesiones completadas, ganas un sello extra. Al alcanzar 5 sellos, recibirás: <strong>${U.esc(loyaltyReward)}</strong>.</p>
-        </div>
-        <div class="loyalty-progress">
-          <div class="loyalty-progress-label"><strong>${loyalty.stamps} ${loyalty.stamps === 1 ? 'sello' : 'sellos'}</strong><span>${loyalty.stampsToNextReward} para tu próxima recompensa</span></div>
-          <div class="loyalty-meter" role="progressbar" aria-label="Progreso a la próxima recompensa" aria-valuemin="0" aria-valuemax="5" aria-valuenow="${loyalty.nextRewardProgress}"><span style="width:${loyalty.nextRewardProgress * 20}%"></span></div>
-          <div class="loyalty-foot"><span>${loyalty.completedSessions} ${loyalty.completedSessions === 1 ? 'sesión completada' : 'sesiones completadas'} · ${loyalty.activeMonthStreak} ${loyalty.activeMonthStreak === 1 ? 'mes consecutivo' : 'meses consecutivos'} con actividad</span>
-            ${loyalty.earnedRewards ? `<a class="btn btn-accent btn-sm" href="${RS.data.whatsappUrl(`Hola, quiero consultar el canje de mis ${loyalty.earnedRewards} premio(s) del Club Recovery: ${loyaltyReward}. Mi cuenta: ${user.name} (${user.email}).`)}" target="_blank" rel="noopener">${UI.icon('award', 15)} Consultar mi ${loyalty.earnedRewards === 1 ? 'premio' : 'premios'}</a>` : ''}
-          </div>
-          ${loyalty.earnedRewards ? '<p class="loyalty-note">El equipo confirmará tus sesiones y coordinará el canje. Los premios no se agregan automáticamente al saldo.</p>' : ''}
-        </div>
-      </section>
-
       <div class="dash-columns">
         <section class="card">
           <div class="card-head head-row">
@@ -380,10 +301,12 @@
   /* ------------------------------- agendar -------------------------------- */
 
   function openDates(count) {
+    const settings = st().settings;
     const list = [];
     let cursor = U.todayISO();
     for (let i = 0; i < count; i += 1) {
-      list.push({ date: cursor, open: RS.data.hoursForDay(cursor).enabled });
+      const day = U.parseISO(cursor).getDay();
+      list.push({ date: cursor, open: settings.openDays.includes(day) });
       cursor = U.addDays(cursor, 1);
     }
     return list;
@@ -410,10 +333,6 @@
     if (!b.useCredit) b.useCredit = false;
     if (!b.policy) b.policy = false;
     if (!b.method) b.method = 'Transferencia';
-    if (!('trial' in b)) b.trial = false;
-    if (!('guestName' in b)) b.guestName = '';
-    if (!('guestPhone' in b)) b.guestPhone = '';
-    if (!('guestEmail' in b)) b.guestEmail = '';
     return b;
   }
 
@@ -425,20 +344,14 @@
     const service = RS.data.getService(b.serviceId);
     const slots = RS.data.availableSlots(b.date, b.serviceId);
     const price = service ? Number(service.price) : 0;
-    const useCredit = !!b.useCredit && (user ? user.credits > 0 : false);
+    const useCredit = !!b.useCredit && user.credits > 0;
     const total = useCredit ? 0 : price;
-    const hasSessions = user ? RS.data.userSessions(user.id).length > 0 : false;
-    const trialService = st().services.find((s) => s.id === 'srv-training' && s.active);
-    const trialEligible = !!trialService && !hasSessions && st().settings.freeTrialEnabled !== false;
-    const trial = !!b.trial && trialEligible;
-    const displayPrice = trial ? 0 : price;
-    const displayTotal = trial ? 0 : total;
     const dates = openDates(21);
     const today = U.todayISO();
 
-    const bookingHtml = `<div class="view view-booking">
+    return `<div class="view view-booking">
       <div class="page-head">
-        <div><span class="eyebrow">Agenda online</span><h1 class="page-title">Reserva tu sesión</h1><p class="page-sub">Elige tu servicio, fecha y hora. ${user ? 'Así de simple.' : 'Sin registros complicados.'}</p></div>
+        <div><span class="eyebrow">Agenda online</span><h1 class="page-title">Reserva tu sesión</h1><p class="page-sub">Elige el servicio, el horario y confirma. Así de simple.</p></div>
         <div class="head-chip">${UI.icon('shield-check', 16)} Reserva segura</div>
       </div>
 
@@ -447,17 +360,12 @@
           <section class="card">
             <div class="card-head"><div class="step-head"><span class="step-num">1</span><div><h2 class="card-title">Elige tu servicio</h2><p class="card-sub">Sesiones individuales y asesorías.</p></div></div></div>
             <div class="card-body">
-              ${trialEligible ? `<button type="button" class="trial-banner ${trial ? 'selected' : ''}" data-action="book-trial">
-               <span class="trial-emoji">🎁</span>
-               <span class="trial-body"><strong>Primera clase gratis</strong><span>${U.esc(trialService.name)} · sin costo, solo una vez</span></span>
-               <span class="trial-price">$0</span>
-             </button>` : ''}
-             <div class="service-grid">
+              <div class="service-grid">
                 ${services.map((s) => `<button type="button" class="service-option ${s.id === b.serviceId ? 'selected' : ''}" data-action="book-service" data-id="${s.id}">
                   <span class="service-option-top"><span class="service-option-icon">${UI.icon(s.kind === 'Asesoría' ? 'smartphone' : 'activity', 18)}</span>${s.popular ? '<span class="tag-popular">Popular</span>' : ''}</span>
                   <strong>${U.esc(s.name)}</strong>
                   <span class="service-option-desc">${U.esc(s.description)}</span>
-                  <span class="service-option-foot"><span>${UI.icon('clock', 13)} ${s.duration} min · ${Math.ceil(s.duration / 30)} ${Math.ceil(s.duration / 30) === 1 ? 'slot' : 'slots'}</span><b>${U.fmtMoney(s.price)}</b></span>
+                  <span class="service-option-foot"><span>${UI.icon('clock', 13)} ${s.duration} min</span><b>${U.fmtMoney(s.price)}</b></span>
                 </button>`).join('')}
               </div>
             </div>
@@ -493,37 +401,9 @@
           </section>
 
           <section class="card">
-            <div class="card-head"><div class="step-head"><span class="step-num">3</span><div><h2 class="card-title">Confirma tu reserva</h2><p class="card-sub">${user ? 'Revisa las condiciones antes de continuar.' : 'Ingresa tus datos de contacto para enviarte la confirmación.'}</p></div></div></div>
+            <div class="card-head"><div class="step-head"><span class="step-num">3</span><div><h2 class="card-title">Confirma tu reserva</h2><p class="card-sub">Revisa las condiciones antes de continuar.</p></div></div></div>
             <div class="card-body">
-              ${!user ? `
-              <div class="callout callout-green" style="margin-bottom:16px;">
-                <strong>${UI.icon('check-circle', 15)} Reserva directa:</strong> Agenda tu hora sin necesidad de crear una cuenta previa.
-              </div>
-              <div class="field" style="margin-bottom:14px;">
-                <label for="booking-guest-name"><strong>Tu nombre completo *</strong></label>
-                <div class="input-icon">
-                  ${UI.icon('user', 18)}
-                  <input class="input" id="booking-guest-name" name="guestName" type="text" placeholder="Ej: María González" value="${U.esc(b.guestName || '')}" autocomplete="name" data-input="booking-guest-name" required>
-                </div>
-              </div>
-              <div class="grid grid-2 gap-sm" style="margin-bottom:14px;">
-                <div class="field">
-                  <label for="booking-guest-phone"><strong>WhatsApp / Teléfono *</strong></label>
-                  <div class="input-icon">
-                    ${UI.icon('phone', 18)}
-                    <input class="input" id="booking-guest-phone" name="guestPhone" type="tel" placeholder="+56 9 1234 5678" value="${U.esc(b.guestPhone || '')}" autocomplete="tel" data-input="booking-guest-phone" required>
-                  </div>
-                </div>
-                <div class="field">
-                  <label for="booking-guest-email"><strong>Correo electrónico *</strong></label>
-                  <div class="input-icon">
-                    ${UI.icon('mail', 18)}
-                    <input class="input" id="booking-guest-email" name="guestEmail" type="email" placeholder="tu@correo.cl" value="${U.esc(b.guestEmail || '')}" autocomplete="email" data-input="booking-guest-email" required>
-                  </div>
-                </div>
-              </div>` : ''}
-
-              ${user && user.credits > 0 ? `<div class="pay-choice">
+              ${user.credits > 0 ? `<div class="pay-choice">
                 <label class="choice-card ${useCredit ? 'selected' : ''}">
                   <input type="radio" name="paymode" value="credit" ${useCredit ? 'checked' : ''} data-change="booking-credit" data-value="credit">
                   <span class="choice-icon">${UI.icon('layers', 18)}</span>
@@ -533,12 +413,12 @@
                 <label class="choice-card ${!useCredit ? 'selected' : ''}">
                   <input type="radio" name="paymode" value="pay" ${!useCredit ? 'checked' : ''} data-change="booking-credit" data-value="pay">
                   <span class="choice-icon">${UI.icon('credit-card', 18)}</span>
-                  <span class="choice-body"><strong>Pagar esta sesión</strong><span>${U.fmtMoney(displayPrice)} · transferencia o recepción</span></span>
+                  <span class="choice-body"><strong>Pagar esta sesión</strong><span>${U.fmtMoney(price)} · transferencia o recepción</span></span>
                   <span class="choice-check">${UI.icon('check', 14)}</span>
                 </label>
               </div>` : ''}
 
-              ${(!useCredit && !trial) ? `<div class="pay-methods">
+              ${!useCredit ? `<div class="pay-methods">
                 <label class="method-card ${b.method === 'Transferencia' ? 'selected' : ''}">
                   <input type="radio" name="method" value="Transferencia" ${b.method === 'Transferencia' ? 'checked' : ''} data-change="booking-method" data-value="Transferencia">
                   <span class="method-icon">${UI.icon('building', 17)}</span>
@@ -572,15 +452,15 @@
               <div><span>Profesional</span><strong>Daniel Barrueto</strong></div>
             </div>
             <div class="summary-total">
-              <div><span>Valor sesión</span><strong>${U.fmtMoney(displayPrice)}</strong></div>
-              ${useCredit ? `<div class="summary-credit"><span>Uso de plan</span><strong>− ${U.fmtMoney(displayPrice)}</strong></div>` : ''}
-              <div class="summary-grand"><span>Total a pagar</span><strong>${U.fmtMoney(displayTotal)}</strong></div>
+              <div><span>Valor sesión</span><strong>${U.fmtMoney(price)}</strong></div>
+              ${useCredit ? `<div class="summary-credit"><span>Uso de plan</span><strong>− ${U.fmtMoney(price)}</strong></div>` : ''}
+              <div class="summary-grand"><span>Total a pagar</span><strong>${U.fmtMoney(total)}</strong></div>
             </div>
             ${useCredit ? `<p class="summary-note">${UI.icon('layers', 14)} Se descontará 1 sesión de tu plan al confirmar.</p>` : `<p class="summary-note">${UI.icon('info', 14)} Si eliges transferencia, podrás adjuntar el comprobante al finalizar.</p>`}
-            <button class="btn btn-accent btn-block btn-lg" data-action="book-confirm">
-              ${UI.icon('calendar-check', 18)} ${useCredit ? 'Confirmar con mi plan' : (trial ? 'Confirmar mi clase gratis' : 'Confirmar reserva')}
+            <button class="btn btn-accent btn-block btn-lg" data-action="book-confirm" ${b.time && b.policy ? '' : 'disabled'}>
+              ${UI.icon('calendar-check', 18)} ${useCredit ? 'Confirmar con mi plan' : 'Confirmar reserva'}
             </button>
-            <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes. ${UI.icon('mail', 14)} Enviaremos confirmaci��n por correo cuando sea posible.</p>
+            <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes.</p>
           </div>
           <div class="help-card">
             <span class="help-icon">${UI.icon('whatsapp', 20)}</span>
@@ -590,28 +470,24 @@
         </aside>
       </div>
     </div>`;
+  }
 
-    if (!user) {
-      return `<div class="public-page">
-        <header class="public-nav">
-          <a class="brand-link" href="#/agendar" aria-label="Recovery Studio">${UI.logoLockup({ size: 40 })}</a>
-          <div class="public-nav-actions">
-            <span class="public-nav-note">${UI.icon('sparkles', 14)} Agenda directa online</span>
-            <a class="btn btn-outline btn-sm" href="#/login">${UI.icon('user', 15)} Ya tengo cuenta</a>
-            <a class="btn btn-ghost btn-sm" href="${RS.data.whatsappUrl('Hola Recovery Studio, necesito ayuda para agendar.')}" target="_blank" rel="noopener">${UI.icon('whatsapp', 16)} WhatsApp</a>
-          </div>
-        </header>
-        <main class="public-main">
-          ${bookingHtml}
-        </main>
-        <footer class="public-foot">
-          <span>© ${new Date().getFullYear()} Recovery Studio · ${U.esc(RS.DB.get().settings.address)}</span>
-          <span>${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</span>
-        </footer>
-      </div>`;
+  /**
+   * Arma la URL de la página de confirmación (gracias.html).
+   * Es el destino que se configura como conversión en Google Ads.
+   */
+  function confirmationUrl(session, estado) {
+    const service = RS.data.getService(session.serviceId);
+    const params = new URLSearchParams();
+    params.set('estado', estado || 'confirmada');
+    if (service) {
+      params.set('servicio', service.name);
+      params.set('duracion', String(service.duration || 60));
     }
-
-    return bookingHtml;
+    if (session.date) params.set('fecha', session.date);
+    if (session.time) params.set('hora', session.time);
+    if (session.id) params.set('ref', session.id);
+    return `gracias.html?${params.toString()}`;
   }
 
   function showBookingSuccess(session) {
@@ -648,9 +524,6 @@
       concept: o.concept,
       category: o.category || 'Otros',
       amount: Number(o.amount) || 0,
-      originalAmount: Number(o.originalAmount == null ? o.amount : o.originalAmount) || 0,
-      discountAmount: Number(o.discountAmount) || 0,
-      promoCode: o.promoCode || '',
       date: U.todayISO(),
       status: 'pendiente',
       method: o.method || 'Transferencia',
@@ -682,7 +555,6 @@
         <div><span>${U.esc(payment.concept)}</span><small>${U.esc(payment.ref)}</small></div>
         <strong>${U.fmtMoney(payment.amount)}</strong>
       </div>
-      ${payment.discountAmount ? `<div class="checkout-summary"><div><span>Precio de lista</span><strong>${U.fmtMoney(payment.originalAmount)}</strong></div><div class="summary-credit"><span>Código ${U.esc(payment.promoCode)}</span><strong>− ${U.fmtMoney(payment.discountAmount)}</strong></div></div>` : ''}
       ${UI.bankCard({ compact: true })}
       <div class="uploader-wrap">
         ${UI.uploader(payment.id, { title: 'Adjuntar comprobante de transferencia', hint: 'JPG o PNG · puedes hacerlo ahora o después' })}
@@ -690,7 +562,9 @@
       </div>
       <div class="callout callout-blue">${UI.icon('clock', 17)}<span>Tu pago quedará <strong>en revisión</strong>. Al aprobarlo, ${payment.creditsToAdd ? `se activarán ${payment.creditsToAdd} sesiones en tu plan` : 'tu reserva quedará confirmada'} y recibirás una notificación.</span></div>`,
       footer: `<a class="btn btn-ghost" href="#/pagos" data-modal-close>Ver mis pagos</a>
-        <a class="btn btn-primary" href="gracias.html?pago=1" target="_blank" rel="noopener">Página de gracias ${UI.icon('arrow-right', 16)}</a>`,
+        ${o.session
+          ? `<a class="btn btn-primary" href="${confirmationUrl(o.session, 'pendiente')}">Continuar ${UI.icon('arrow-right', 16)}</a>`
+          : `<a class="btn btn-primary" href="#/reservas" data-modal-close>Ir a mis reservas ${UI.icon('arrow-right', 16)}</a>`}`,
     });
   }
 
@@ -806,15 +680,11 @@
         UI.toast(`El nuevo horario debe tener al menos ${policy} h de anticipación.`, 'error');
         return;
       }
-      const previous = { date: session.date, time: session.time };
       session.date = date;
       session.time = time;
       session.rescheduledAt = new Date().toISOString();
       RS.DB.save();
       RS.data.addAudit(me().name, 'Sesión reagendada', `${service ? service.name : 'Sesión'} movida a ${U.fmtDate(date, 'long')} ${time} h.`);
-      RS.data.rescheduleNotification(session, me(), service, st().settings, previous).catch((error) => {
-        console.error('No se pudieron enviar los correos del reagendamiento:', error);
-      });
       UI.closeModal();
       UI.toast('Sesión reagendada correctamente.', 'success');
       RS.App.render(true);
@@ -858,12 +728,6 @@
         payment.note = 'Reserva cancelada por el usuario.';
       }
       RS.DB.save();
-      const cancelUser = RS.data.getUser(session.userId);
-      if (cancelUser) {
-        RS.data.cancellationNotification(session, cancelUser, RS.data.getService(session.serviceId), st().settings, false).catch((error) => {
-          console.error('Notificacion de cancelacion fallo:', error);
-        });
-      }
       RS.data.addAudit(me().name, 'Sesión cancelada', `${RS.data.serviceName(session.serviceId)} del ${U.fmtDate(session.date, 'long')} ${session.time} h.`);
       UI.toast('Tu sesión fue cancelada. El cupo quedó liberado.', 'success');
       RS.App.render(true);
@@ -888,7 +752,7 @@
         ${UI.detailRow('Profesional', session.coach || 'Daniel Barrueto')}
         ${UI.detailRow('Fecha', U.fmtDate(session.date, 'long'))}
         ${UI.detailRow('Horario', `${session.time} h`)}
-        ${UI.detailRow('Ubicación', 'Pasaje Uno, Gorbea')}
+        ${UI.detailRow('Ubicación', 'Recovery Studio · Gorbea')}
         ${UI.detailRow('Pago', session.payment === 'plan' ? 'Incluida en tu plan' : session.payment === 'pagado' ? 'Pagada' : session.payment === 'cortesia' ? 'Cortesía' : 'Pendiente de validación')}
         ${payment ? UI.detailRow('Comprobante', payment.proof ? 'Recibido, en revisión' : 'Pendiente de subir') : ''}
         ${session.notes ? UI.detailRow('Notas', session.notes) : ''}
@@ -983,51 +847,33 @@
     </div>`;
   }
 
-  function renderCheckoutModal() {
+  function openCheckout(opts) {
     const user = me();
-    const checkout = RS.ui.checkout;
-    if (!checkout) return;
-    const items = checkout.items || [];
-    const discount = Number(checkout.discountAmount) || 0;
+    const o = opts || {};
+    const items = o.items || [];
+    const isCustom = !!o.custom;
     UI.modal({
-      title: checkout.custom ? 'Confirmar plan personalizado' : 'Confirmar compra de plan',
+      title: isCustom ? 'Confirmar plan personalizado' : 'Confirmar compra de plan',
       subtitle: 'Revisa el detalle antes de generar tu orden de pago.',
       size: 'sm',
       body: `<div class="checkout-lines">
         ${items.map((i) => `<div class="checkout-line"><span>${U.esc(i.name)} ${i.qty > 1 ? `× ${i.qty}` : ''}</span><strong>${U.fmtMoney(i.price * i.qty)}</strong></div>`).join('')}
       </div>
       <div class="checkout-summary">
-        <div><span>Precio de lista</span><strong>${U.fmtMoney(checkout.originalAmount)}</strong></div>
-        ${discount ? `<div class="summary-credit"><span>Descuento ${U.esc(checkout.promoCode)}</span><strong>− ${U.fmtMoney(discount)}</strong></div>` : ''}
-        <div><span>Total a transferir</span><strong>${U.fmtMoney(checkout.amount)}</strong></div>
-        <div><span>Sesiones a activar</span><strong>${checkout.credits} sesiones</strong></div>
+        <div><span>Total a transferir</span><strong>${U.fmtMoney(o.amount)}</strong></div>
+        <div><span>Sesiones a activar</span><strong>${o.credits} sesiones</strong></div>
       </div>
-      <form data-form="discount-apply" class="field">
-        <label for="checkout-discount">¿Tienes un código de descuento?</label>
-        <div class="form-row"><input class="input" id="checkout-discount" name="code" maxlength="30" value="${U.esc(checkout.promoCode || '')}" placeholder="Escribe tu código"><button class="btn btn-outline" type="submit">Aplicar</button></div>
-        ${RS.ui.discountFeedback ? `<span class="field-hint">${U.esc(RS.ui.discountFeedback)}</span>` : ''}
-      </form>
       <div class="callout callout-blue">${UI.icon('info', 17)}<span>Las sesiones se suman a tu saldo cuando el equipo valida el comprobante de pago. Tu saldo actual es de <strong>${user.credits}</strong> sesiones.</span></div>
       <p class="form-hint">${UI.icon('lock', 14)} Pago por transferencia bancaria. No se solicitan datos de tarjeta.</p>`,
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-accent" data-action="checkout-create">Generar orden de pago ${UI.icon('arrow-right', 16)}</button>`,
     });
-  }
-
-  function openCheckout(opts) {
-    const o = opts || {};
-    RS.ui.discountFeedback = '';
     RS.ui.checkout = {
-      concept: o.custom ? 'Plan personalizado Recovery Studio' : o.concept,
-      amount: Number(o.amount) || 0,
-      originalAmount: Number(o.amount) || 0,
-      discountAmount: 0,
-      promoCode: '',
-      credits: Number(o.credits) || 0,
-      items: o.items || [],
+      concept: isCustom ? 'Plan personalizado Recovery Studio' : o.concept,
+      amount: o.amount,
+      credits: o.credits,
+      items,
       category: 'Planes',
-      custom: !!o.custom,
     };
-    renderCheckoutModal();
   }
 
   /* -------------------------------- pagos --------------------------------- */
@@ -1112,10 +958,6 @@
     const ui = ensureUi();
     const maxes = RS.data.userMaxes(user.id).sort((a, b) => (b.current || 0) - (a.current || 0));
     const routine = RS.data.userRoutine(user.id);
-    const progressPhotos = routine ? [
-      { label: 'Inicio', image: routine.startImage },
-      { label: 'Final', image: routine.endImage },
-    ].filter((photo) => /^data:image\/jpeg;base64,/i.test(photo.image || '')) : [];
     const best = maxes.reduce((acc, m) => Math.max(acc, Number(m.current) || 0), 0);
     return `<div class="view">
       <div class="page-head no-print">
@@ -1160,13 +1002,6 @@
               <div><span>Actualizada</span><strong>${U.fmtDate(routine.updatedAt, 'compact')}</strong></div>
             </div>
           </div>
-          ${progressPhotos.length ? `<section class="routine-progress-photos" aria-label="Fotos de progreso">
-            <div class="routine-progress-heading"><h3>Tu progreso</h3><p>Imágenes de referencia compartidas por tu coach.</p></div>
-            <div class="routine-progress-grid">${progressPhotos.map((photo) => `<figure class="routine-progress-photo">
-              <img src="${U.esc(photo.image)}" alt="Foto de progreso: ${photo.label.toLowerCase()}" loading="lazy">
-              <figcaption>${photo.label}</figcaption>
-            </figure>`).join('')}</div>
-          </section>` : ''}
           <div class="routine-days">
             ${routine.days.map((d, idx) => `<details class="routine-day" ${idx === 0 ? 'open' : ''}>
               <summary>
@@ -1304,99 +1139,28 @@
     RS.App.render();
   };
 
-  RS.inputs['booking-guest-name'] = (el) => { bookingState().guestName = el.value; };
-  RS.inputs['booking-guest-phone'] = (el) => { bookingState().guestPhone = el.value; };
-  RS.inputs['booking-guest-email'] = (el) => { bookingState().guestEmail = el.value; };
-
   RS.changes['booking-policy'] = (el) => {
     const b = bookingState();
     b.policy = el.checked;
-  };
-
-  RS.actions['book-trial'] = () => {
-    const b = bookingState();
-    b.trial = !b.trial;
-    RS.App.render();
+    const btn = document.querySelector('[data-action="book-confirm"]');
+    if (btn) btn.disabled = !(b.time && b.policy);
   };
 
   RS.actions['book-confirm'] = () => {
-    let user = me();
+    const user = me();
     const b = bookingState();
     const service = RS.data.getService(b.serviceId);
-    if (!service) return UI.toast('Por favor selecciona un servicio.', 'error');
-    if (!b.time) return UI.toast('Por favor selecciona un horario disponible.', 'error');
-
-    // Validación para usuarios sin cuenta previa (invitados)
-    if (!user) {
-      const nameEl = document.getElementById('booking-guest-name');
-      const phoneEl = document.getElementById('booking-guest-phone');
-      const emailEl = document.getElementById('booking-guest-email');
-      const name = (nameEl ? nameEl.value : b.guestName || '').trim();
-      const phone = (phoneEl ? phoneEl.value : b.guestPhone || '').trim();
-      const email = (emailEl ? emailEl.value : b.guestEmail || '').trim().toLowerCase();
-
-      b.guestName = name;
-      b.guestPhone = phone;
-      b.guestEmail = email;
-
-      if (!name) {
-        if (nameEl) nameEl.focus();
-        return UI.toast('Por favor ingresa tu nombre completo.', 'error');
-      }
-      if (!phone || phone.length < 8) {
-        if (phoneEl) phoneEl.focus();
-        return UI.toast('Por favor ingresa tu WhatsApp o teléfono de contacto.', 'error');
-      }
-      if (!email || !email.includes('@')) {
-        if (emailEl) emailEl.focus();
-        return UI.toast('Por favor ingresa un correo electrónico válido.', 'error');
-      }
-    }
-
-    if (!b.policy) {
-      const policyEl = document.getElementById('booking-policy');
-      if (policyEl) {
-        policyEl.focus();
-        policyEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return UI.toast('Debes aceptar la política de reagendamiento marcando la casilla.', 'error');
-    }
-
+    if (!service) return UI.toast('Selecciona un servicio.', 'error');
+    if (!b.time) return UI.toast('Selecciona un horario.', 'error');
+    if (!b.policy) return UI.toast('Debes aceptar la política de reagendamiento.', 'error');
     const available = RS.data.availableSlots(b.date, b.serviceId).find((s) => s.time === b.time && s.available);
     if (!available) {
-      UI.toast('Ese horario ya no está disponible. Por favor elige otro.', 'error');
+      UI.toast('Ese horario ya no está disponible. Elige otro.', 'error');
       b.time = null;
       RS.App.render(true);
       return;
     }
-
-    // Si es invitado, buscamos si ya existe por email o creamos nuevo usuario
-    if (!user) {
-      let existing = st().users.find((u) => u.email && u.email.toLowerCase() === b.guestEmail);
-      if (!existing) {
-        existing = {
-          id: U.uid('usr'),
-          name: b.guestName,
-          email: b.guestEmail,
-          phone: b.guestPhone,
-          role: 'user',
-          active: true,
-          credits: 0,
-          createdAt: new Date().toISOString(),
-        };
-        st().users.push(existing);
-      } else {
-        if (b.guestPhone && !existing.phone) existing.phone = b.guestPhone;
-      }
-      user = existing;
-      RS.Auth.startSession(user);
-    }
-
     const useCredit = b.useCredit && user.credits > 0;
-    const hasSessions = RS.data.userSessions(user.id).length > 0;
-    const trialService = st().services.find((s) => s.id === 'srv-training' && s.active);
-    const trialEligible = !!trialService && !hasSessions && st().settings.freeTrialEnabled !== false;
-    const trial = !!b.trial && trialEligible;
     if (useCredit) user.credits -= 1;
 
     const session = {
@@ -1405,25 +1169,21 @@
       serviceId: service.id,
       date: b.date,
       time: b.time,
-      status: (useCredit || trial) ? 'confirmada' : 'pendiente',
-      payment: useCredit ? 'plan' : trial ? 'cortesía' : 'pendiente',
+      status: useCredit ? 'confirmada' : 'pendiente',
+      payment: useCredit ? 'plan' : 'pendiente',
       notes: '',
       coach: 'Daniel Barrueto',
       createdAt: new Date().toISOString(),
     };
     st().sessions.push(session);
     RS.DB.save();
-    RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${trial ? ' (clase de prueba gratis)' : useCredit ? ' con crédito de plan' : ''}.`);
-    RS.data.bookingNotification(session, user, service, st().settings).catch((error) => {
-      console.error('No se pudieron enviar los correos de la reserva:', error);
-    });
+    RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${useCredit ? ' con crédito de plan' : ''}.`);
 
-    if (useCredit || trial) {
-      showBookingSuccess(session);
+    if (useCredit) {
       RS.ui.booking.time = null;
       RS.ui.booking.policy = false;
-      RS.ui.booking.trial = false;
       RS.App.render();
+      window.location.href = confirmationUrl(session, 'confirmada');
       return;
     }
 
@@ -1439,14 +1199,11 @@
     });
     RS.ui.booking.time = null;
     RS.ui.booking.policy = false;
-    RS.App.render();
-    window.location.href = 'gracias.html?ref=' + encodeURIComponent(payment.ref) + '&amount=' + encodeURIComponent(payment.amount) + '&concept=' + encodeURIComponent(payment.concept);
-  };
-
-  RS.actions['dismiss-approved-banner'] = () => {
-    const user = me();
-    const approved = st().payments.filter((p) => p.userId === user.id && p.status === 'aprobado');
-    markApprovedSeen(approved.map((p) => p.id));
+    openPaymentModal(payment, {
+      title: 'Reserva registrada',
+      subtitle: 'Guarda tu comprobante para dejar el pago en revisión.',
+      session,
+    });
     RS.App.render();
   };
 
@@ -1531,17 +1288,14 @@
       creditsToAdd: checkout.credits,
       items: checkout.items,
       method: 'Transferencia',
-      originalAmount: checkout.originalAmount,
-      discountAmount: checkout.discountAmount,
-      promoCode: checkout.promoCode,
       note: checkout.credits ? `${checkout.credits} sesiones al aprobar el pago.` : '',
     });
     RS.data.addAudit(user.name, 'Orden de pago creada', `${checkout.concept} · ${U.fmtMoney(checkout.amount)} · ${payment.ref}.`);
-    RS.data.planPurchaseNotification(payment, user).catch((error) => {
-      console.error('No se pudieron enviar los correos de la compra:', error);
-    });
     RS.ui.planCart = {};
-    window.location.href = 'gracias.html?ref=' + encodeURIComponent(payment.ref) + '&amount=' + encodeURIComponent(payment.amount) + '&concept=' + encodeURIComponent(payment.concept);
+    openPaymentModal(payment, {
+      title: 'Orden de pago generada',
+      subtitle: 'Transfiere el monto y adjunta tu comprobante para activar tus sesiones.',
+    });
   };
 
   RS.actions['payment-detail'] = (el) => {
@@ -1568,7 +1322,7 @@
     });
   };
 
-  RS.forms['profile-info'] = async (form) => {
+  RS.forms['profile-info'] = (form) => {
     const user = me();
     const name = form.name.value.trim();
     const phone = form.phone.value.trim();
@@ -1581,30 +1335,18 @@
       }
       return;
     }
-    try {
-      const auth = RS.Supabase.readSession();
-      const updated = await RS.Supabase.request('/rest/v1/rpc/update_own_profile', {
-        method: 'POST',
-        body: JSON.stringify({ p_full_name: name, p_phone: phone, p_goal: goal }),
-      }, auth && auth.access_token);
-      user.name = updated.full_name;
-      user.phone = updated.phone;
-      user.goal = updated.goal;
-      const session = RS.Auth.getSession();
-      if (session) {
-        session.name = updated.full_name;
-        sessionStorage.setItem(RS.SESSION_KEY, JSON.stringify(session));
-      }
-      RS.DB.save();
-      RS.data.addAudit(name, 'Perfil actualizado', 'El usuario actualizó sus datos personales.');
-      UI.toast('Datos actualizados correctamente.', 'success');
-      RS.App.render();
-    } catch (error) {
-      if (err) {
-        err.textContent = error.message || 'No pudimos actualizar tus datos.';
-        err.classList.add('show');
-      }
+    user.name = name;
+    user.phone = phone;
+    user.goal = goal;
+    const session = RS.Auth.getSession();
+    if (session) {
+      session.name = name;
+      sessionStorage.setItem(RS.SESSION_KEY, JSON.stringify(session));
     }
+    RS.DB.save();
+    RS.data.addAudit(name, 'Perfil actualizado', 'El usuario actualizó sus datos personales.');
+    UI.toast('Datos actualizados correctamente.', 'success');
+    RS.App.render();
   };
 
   RS.forms['profile-password'] = async (form) => {
@@ -1638,11 +1380,6 @@
     renderPayments,
     renderTraining,
     renderProfile,
-    refreshCheckout: () => {
-      RS.ui.discountFeedback = RS.ui.discountFeedback || '';
-      UI.closeModal();
-      renderCheckoutModal();
-    },
     handleProofUpload: async (input) => {
       const id = input.dataset.proof;
       const payment = st().payments.find((p) => p.id === id);
@@ -1661,12 +1398,6 @@
         }
         RS.data.addAudit(me().name, 'Comprobante adjuntado', `${payment.ref} · ${payment.concept}.`);
         UI.toast('Comprobante adjuntado. Tu pago quedó en revisión.', 'success');
-        const owner = RS.data.getUser(payment.userId);
-        if (owner) {
-          RS.data.paymentProofNotification(payment, owner).catch((error) => {
-            console.error('No se pudo notificar el comprobante:', error);
-          });
-        }
         UI.closeModal();
         RS.App.render();
       } catch (err) {
@@ -1675,6 +1406,5 @@
     },
     downloadIcs,
     openPaymentModal,
-    loyaltyProgress,
   };
 })();

@@ -48,49 +48,20 @@
             <div class="card-head"><h2 class="card-title">Agenda y reservas</h2><p class="card-sub">Define cuándo y cómo se puede agendar.</p></div>
             <div class="card-body">
               <div class="field">
-                <label>Horario por día</label>
-                <div class="schedule-days">
-                  ${DAY_LABELS.map((d) => {
-                    const hours = (s.hoursByDay && s.hoursByDay[d.value]) || {
-                      enabled: (s.openDays || []).includes(d.value),
-                      start: s.start || '17:30',
-                      end: s.end || '22:30',
-                    };
-                    return `<div class="schedule-day">
-                      <label class="check"><input type="checkbox" name="dayEnabled" value="${d.value}" ${hours.enabled ? 'checked' : ''}><span>${d.label}</span></label>
-                      <div class="grid grid-2 gap-sm">
-                        <div class="field"><label for="day-start-${d.value}">Desde</label><input class="input" id="day-start-${d.value}" name="dayStart-${d.value}" type="time" value="${U.esc(hours.start)}" required></div>
-                        <div class="field"><label for="day-end-${d.value}">Hasta</label><input class="input" id="day-end-${d.value}" name="dayEnd-${d.value}" type="time" value="${U.esc(hours.end)}" required></div>
-                      </div>
-                    </div>`;
-                  }).join('')}
+                <label>Días de atención</label>
+                <div class="day-checks">
+                  ${DAY_LABELS.map((d) => `<label class="day-check"><input type="checkbox" name="openDays" value="${d.value}" ${s.openDays.includes(d.value) ? 'checked' : ''}><span>${d.label.slice(0, 3)}</span></label>`).join('')}
                 </div>
               </div>
               <div class="grid grid-2 gap-sm">
+                <div class="field"><label for="st-start">Hora de apertura</label><input class="input" id="st-start" name="start" type="time" value="${U.esc(s.start)}" required></div>
+                <div class="field"><label for="st-end">Hora de cierre</label><input class="input" id="st-end" name="end" type="time" value="${U.esc(s.end)}" required></div>
                 <div class="field"><label for="st-slot">Duración de bloque (min)</label><select class="input" id="st-slot" name="slot">${[30, 45, 60, 90, 120].map((v) => `<option value="${v}" ${Number(s.slot) === v ? 'selected' : ''}>${v} min</option>`).join('')}</select></div>
                 <div class="field"><label for="st-horizon">Días de anticipación</label><input class="input" id="st-horizon" name="horizonDays" type="number" min="1" max="120" value="${s.horizonDays}" required></div>
                 <div class="field"><label for="st-lead">Anticipación mínima (h)</label><input class="input" id="st-lead" name="leadHours" type="number" min="0" max="48" value="${s.leadHours}" required><span class="field-hint">Horas mínimas para reservar hoy.</span></div>
                 <div class="field"><label for="st-policy">Política de cambios (h)</label><input class="input" id="st-policy" name="policyHours" type="number" min="1" max="168" value="${s.policyHours}" required><span class="field-hint">Plazo para reagendar o cancelar.</span></div>
               </div>
               <div class="callout callout-orange">${UI.icon('clock', 17)}<span>Con una política de <strong>${s.policyHours} h</strong>, el sistema bloqueará reagendamientos fuera de plazo y la sesión se considerará utilizada.</span></div>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card-head"><h2 class="card-title">Premio Club Recovery</h2><p class="card-sub">Define qué premio recibirán los clientes al alcanzar cinco sellos.</p></div>
-            <div class="card-body">
-              <div class="field">
-                <label for="st-club-reward">Premio por constancia</label>
-                <input class="input" id="st-club-reward" name="clubRecoveryReward" value="${U.esc(s.clubRecoveryReward || 'Sesión de sauna')}" maxlength="120" required>
-                <span class="field-hint">Ejemplo: Sesión de sauna. Los clientes que ya tengan cinco sellos verán el premio configurado aquí.</span>
-              </div>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card-head"><h2 class="card-title">Clase de prueba gratis</h2><p class="card-sub">Deja que los clientes nuevos reserven su primera clase sin costo.</p></div>
-            <div class="card-body">
-              <label class="check check-boxed"><input type="checkbox" name="freeTrialEnabled" ${s.freeTrialEnabled !== false ? 'checked' : ''}><span><strong>Activar clase de prueba gratis</strong><small>Los clientes nuevos (sin sesiones previas) podrán reservar 1 sesión de Entrenamiento personal sin costo, marcada como cortesía.</small></span></label>
             </div>
           </section>
 
@@ -108,18 +79,6 @@
                 <div class="field"><label for="st-retention">Retención honorarios (%)</label><input class="input" id="st-retention" name="retention" type="number" min="0" max="100" step="0.01" value="${s.retention}" required><span class="field-hint">Vigente: 15,25%.</span></div>
               </div>
               <div class="field"><label for="st-address">Dirección del studio</label><input class="input" id="st-address" name="address" value="${U.esc(s.address)}"></div>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card-head"><h2 class="card-title">Identidad y firma</h2><p class="card-sub">Nombre, profesión y nombre del studio que aparecen en las rutinas descargadas como PDF.</p></div>
-            <div class="card-body">
-              <div class="grid grid-2 gap-sm">
-                <div class="field"><label for="st-coach">Nombre del profesional</label><input class="input" id="st-coach" name="coachName" value="${U.esc(s.coachName || 'Daniel Barrueto Jopia')}" required></div>
-                <div class="field"><label for="st-profession">Profesión</label><input class="input" id="st-profession" name="coachProfession" value="${U.esc(s.coachProfession || 'Kinesiólogo · Magíster')}" required></div>
-                <div class="field"><label for="st-studio">Nombre del studio / pyme</label><input class="input" id="st-studio" name="studioName" value="${U.esc(s.studioName || 'Recovery Studio')}" required></div>
-              </div>
-              <p class="form-hint">${UI.icon('info', 14)} Estos datos encabezan el PDF de la rutina, junto al nombre del cliente.</p>
             </div>
           </section>
 
@@ -146,8 +105,9 @@
               </div>
               <div class="page-actions wrap">
                 <button class="btn btn-outline" type="button" data-action="export-backup">${UI.icon('download', 16)} Descargar respaldo JSON</button>
+                <button class="btn btn-ghost danger-text" type="button" data-action="admin-reset-demo">${UI.icon('refresh', 16)} Restablecer demo</button>
               </div>
-              <p class="form-hint">${UI.icon('info', 14)} Las reservas y los datos de esta app se guardan en este navegador.</p>
+              <p class="form-hint">${UI.icon('info', 14)} Para uso productivo se recomienda conectar una base de datos y autenticación del lado servidor.</p>
             </div>
           </section>
         </div>
@@ -155,22 +115,17 @@
     </div>`;
   }
 
-  RS.forms['admin-settings'] = async (form) => {
+  RS.forms['admin-settings'] = (form) => {
     const s = st().settings;
-    const enabledDays = Array.from(form.querySelectorAll('input[name="dayEnabled"]:checked')).map((i) => Number(i.value));
-    const hoursByDay = {};
-    for (const day of DAY_LABELS) {
-      const start = form.querySelector(`[name="dayStart-${day.value}"]`).value;
-      const end = form.querySelector(`[name="dayEnd-${day.value}"]`).value;
-      const enabled = enabledDays.includes(day.value);
-      if (enabled && U.timeToMin(start) >= U.timeToMin(end)) {
-        UI.toast(`El horario del ${day.label.toLowerCase()} debe terminar después de comenzar.`, 'error');
-        return;
-      }
-      hoursByDay[day.value] = { enabled, start, end };
-    }
-    if (!enabledDays.length) {
+    const openDays = Array.from(form.querySelectorAll('input[name="openDays"]:checked')).map((i) => Number(i.value));
+    const start = form.start.value;
+    const end = form.end.value;
+    if (!openDays.length) {
       UI.toast('Selecciona al menos un día de atención.', 'error');
+      return;
+    }
+    if (U.timeToMin(start) >= U.timeToMin(end)) {
+      UI.toast('La hora de apertura debe ser anterior a la de cierre.', 'error');
       return;
     }
     const retention = Number(form.retention.value);
@@ -183,15 +138,9 @@
       UI.toast('Ingresa un WhatsApp válido en formato internacional.', 'error');
       return;
     }
-    const clubRecoveryReward = form.clubRecoveryReward.value.trim();
-    if (!clubRecoveryReward) {
-      UI.toast('Define el premio de Club Recovery.', 'error');
-      return;
-    }
-    s.hoursByDay = hoursByDay;
-    s.openDays = enabledDays;
-    s.start = hoursByDay[enabledDays[0]].start;
-    s.end = hoursByDay[enabledDays[0]].end;
+    s.openDays = openDays;
+    s.start = start;
+    s.end = end;
     s.slot = Number(form.slot.value);
     s.horizonDays = Math.max(1, Number(form.horizonDays.value) || 45);
     s.leadHours = Math.max(0, Number(form.leadHours.value) || 0);
@@ -199,12 +148,7 @@
     s.autoLockMin = Number(form.autoLockMin.value) || 15;
     s.retention = retention;
     s.whatsapp = whatsapp;
-    s.clubRecoveryReward = clubRecoveryReward;
-    s.freeTrialEnabled = form.freeTrialEnabled.checked;
     s.address = form.address.value.trim();
-    s.coachName = form.coachName.value.trim() || 'Daniel Barrueto Jopia';
-    s.coachProfession = form.coachProfession.value.trim() || 'Kinesiólogo · Magíster';
-    s.studioName = form.studioName.value.trim() || 'Recovery Studio';
     s.bank = {
       holder: form.bankHolder.value.trim(),
       rut: form.bankRut.value.trim(),
@@ -213,38 +157,8 @@
       account: form.account.value.trim(),
       email: form.bankEmail.value.trim(),
     };
-    const settingsPatch = {
-      openDays: s.openDays,
-      hoursByDay: s.hoursByDay,
-      start: s.start,
-      end: s.end,
-      slot: s.slot,
-      horizonDays: s.horizonDays,
-      leadHours: s.leadHours,
-      policyHours: s.policyHours,
-      autoLockMin: s.autoLockMin,
-      retention: s.retention,
-      whatsapp: s.whatsapp,
-      address: s.address,
-      clubRecoveryReward: s.clubRecoveryReward,
-      clubRecoveryStamps: s.clubRecoveryStamps,
-      clubRecoveryConsistencyMonths: s.clubRecoveryConsistencyMonths,
-      coachName: s.coachName,
-      coachProfession: s.coachProfession,
-      studioName: s.studioName,
-      freeTrialEnabled: s.freeTrialEnabled,
-      bank: s.bank,
-      settingsUpdatedAt: Date.now(),
-    };
-    try {
-      await RS.VideoContent.saveStudioConfig(settingsPatch);
-      s.settingsUpdatedAt = settingsPatch.settingsUpdatedAt;
-    } catch (error) {
-      console.warn('No se pudo sincronizar la configuración del studio con Supabase.', error);
-      UI.toast('Se guardó en este equipo, pero no se pudo subir a la nube. Revisa tu conexión e intenta de nuevo.', 'error', 7000);
-    }
     RS.DB.save();
-    RS.data.addAudit(me().name, 'Configuración actualizada', `${enabledDays.length} días de atención · Política ${s.policyHours} h · Retención ${s.retention}% · Premio Club Recovery: ${clubRecoveryReward}.`);
+    RS.data.addAudit(me().name, 'Configuración actualizada', `Horario ${start}–${end} · Política ${s.policyHours} h · Retención ${s.retention}%.`);
     UI.toast('Configuración guardada.', 'success');
     RS.App.render(true);
   };
@@ -253,6 +167,22 @@
     const date = U.todayISO();
     U.downloadFile(`recovery-studio-respaldo-${date}.json`, RS.DB.export(), 'application/json;charset=utf-8');
     UI.toast('Respaldo descargado.', 'success');
+  };
+
+  RS.actions['admin-reset-demo'] = async () => {
+    const ok = await UI.confirm({
+      title: 'Restablecer datos demo',
+      message: 'Se eliminarán todos los cambios guardados (usuarios, sesiones, pagos, gastos y configuraciones) y se restaurarán los datos de ejemplo. Esta acción no se puede deshacer.',
+      okText: 'Restablecer todo',
+      danger: true,
+    });
+    if (!ok) return;
+    await RS.DB.reset();
+    RS.Auth.clearSession();
+    RS.ui = { authTab: 'login' };
+    UI.toast('Datos restablecidos. Vuelve a ingresar.', 'success');
+    RS.App.go('login');
+    RS.App.render(true);
   };
 
   /* -------------------------------- seguridad ------------------------------ */
@@ -299,7 +229,7 @@
               </div>
               <button class="btn btn-primary" type="submit">${UI.icon('key', 16)} Actualizar PIN</button>
             </form>
-            <p class="form-hint">${UI.icon('info', 14)} Cambia el PIN inicial antes de administrar información de clientes.</p>
+            <p class="form-hint">${UI.icon('info', 14)} PIN demo inicial: 2468. Cámbialo antes de usar la app con datos reales.</p>
           </div>
         </section>
 

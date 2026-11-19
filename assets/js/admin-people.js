@@ -37,7 +37,6 @@
       <div class="page-head">
         <div><span class="eyebrow">Comunidad</span><h1 class="page-title">Usuarios</h1><p class="page-sub">Inscribe, edita y gestiona a las personas del studio.</p></div>
         <button class="btn btn-accent" data-action="admin-user-new">${UI.icon('user-plus', 17)} Inscribir usuario</button>
-        <button class="btn btn-outline btn-danger" data-action="admin-users-reset" style="margin-left:8px">${UI.icon('trash', 17)} Eliminar todos (salvo admin)</button>
       </div>
 
       <div class="stats-grid">
@@ -70,7 +69,6 @@
                     <button class="icon-btn" title="Gestionar" aria-label="Gestionar usuario" data-action="admin-user-detail" data-id="${u.id}">${UI.icon('settings', 16)}</button>
                     <button class="icon-btn" title="Editar" aria-label="Editar usuario" data-action="admin-user-edit" data-id="${u.id}">${UI.icon('edit', 16)}</button>
                     <button class="icon-btn" title="Nueva sesión" aria-label="Agendar sesión" data-action="admin-user-assign" data-id="${u.id}">${UI.icon('calendar', 16)}</button>
-                    <button class="icon-btn danger" title="Eliminar usuario" aria-label="Eliminar usuario" data-action="admin-user-delete" data-id="${u.id}">${UI.icon('trash', 16)}</button>
                   </div></td>
                 </tr>`;
               }).join('')}
@@ -87,8 +85,6 @@
     const completed = sessions.filter((s) => s.status === 'completada').length;
     const next = RS.data.nextSession(user.id);
     const paid = U.sum(st().payments.filter((p) => p.userId === user.id && p.status === 'aprobado'), (p) => p.amount);
-    const loyalty = RS.data.loyaltyProgress(user.id);
-    const plan = RS.data.planStatus(user);
     UI.modal({
       title: 'Ficha del usuario',
       subtitle: user.email,
@@ -102,13 +98,10 @@
         <div><strong>${user.credits}</strong><span>Saldo plan</span></div>
         <div><strong>${U.fmtMoney(paid)}</strong><span>Total pagado</span></div>
       </div>
-      ${plan.needsAttention ? `<div class="callout callout-orange">${UI.icon('bell', 17)}<span>${plan.status === 'expired' ? `El plan venció el ${U.fmtDate(plan.expires, 'long')}.` : plan.status === 'no-sessions' ? 'El plan no tiene sesiones disponibles.' : `El plan vence en ${plan.daysLeft} día(s) y quedan ${plan.credits} sesión(es).`}</span></div>` : ''}
       <div class="detail-list">
         ${UI.detailRow('Plan actual', user.planLabel || 'Sin plan activo')}
-        ${UI.detailRow('Vigencia del plan', plan.hasPlan ? (plan.expires ? `Hasta ${U.fmtDate(plan.expires, 'long')}${plan.daysLeft == null ? '' : plan.daysLeft < 0 ? ' · vencido' : ` · ${plan.daysLeft} día(s)`}` : 'Sin fecha registrada') : '—')}
         ${UI.detailRow('Objetivo', user.goal || 'No definido')}
         ${UI.detailRow('Próxima sesión', next ? `${U.fmtDate(next.date, 'long')} · ${next.time} h` : 'Sin agendar')}
-        ${UI.detailRow('Club Recovery', `${loyalty.stamps} sellos · ${loyalty.earnedRewards ? `${loyalty.earnedRewards} premio(s) disponible(s)` : `a ${loyalty.stampsToNextReward} sello(s) de la meta`}`)}
         ${UI.detailRow('Inscrito', user.createdAt ? U.fmtDate(user.createdAt.slice(0, 10), 'long') : '—')}
         ${UI.detailRow('Notas internas', user.notes || '—')}
       </div>
@@ -117,23 +110,16 @@
         <button class="user-action" data-action="admin-max-edit" data-id="${user.id}"><span class="tone-orange">${UI.icon('activity', 18)}</span><strong>Maximales</strong><small>${RS.data.userMaxes(user.id).length} registros</small></button>
         <button class="user-action" data-action="admin-routine-edit" data-id="${user.id}"><span class="tone-green">${UI.icon('clipboard', 18)}</span><strong>Rutina</strong><small>${RS.data.userRoutine(user.id) ? 'Editar pauta' : 'Asignar pauta'}</small></button>
         <button class="user-action" data-action="admin-user-assign" data-id="${user.id}"><span class="tone-amber">${UI.icon('calendar', 18)}</span><strong>Agendar sesión</strong><small>Asignar horario</small></button>
-        <button class="user-action" data-action="admin-club-open" data-id="${user.id}"><span class="tone-amber">${UI.icon('award', 18)}</span><strong>Club Recovery</strong><small>${loyalty.stamps} sellos · ${loyalty.earnedRewards ? 'Premio disponible' : `A ${loyalty.stampsToNextReward}`}</small></button>
-        ${plan.needsAttention && user.phone ? `<a class="user-action" href="${RS.data.contactWhatsappUrl(user, RS.data.planNoticeMessage(user, plan))}" target="_blank" rel="noopener" data-action="plan-alert-send" data-id="${user.id}" data-channel="whatsapp" data-status="${plan.status}"><span class="tone-green">${UI.icon('whatsapp', 18)}</span><strong>Avisar plan</strong><small>WhatsApp al cliente</small></a>` : ''}
         <button class="user-action" data-action="admin-reset-password" data-id="${user.id}"><span class="tone-blue">${UI.icon('key', 18)}</span><strong>Resetear clave</strong><small>Nueva clave temporal</small></button>
         <button class="user-action" data-action="admin-user-sessions" data-id="${user.id}"><span class="tone-green">${UI.icon('receipt', 18)}</span><strong>Historial</strong><small>${sessions.length} sesiones</small></button>
-        ${(user.credits > 0 || (user.planLabel && user.planLabel !== 'Sin plan activo')) ? `<button class="user-action danger-text" data-action="admin-user-clear-plan" data-id="${user.id}"><span class="tone-orange">${UI.icon('trash', 18)}</span><strong>Quitar plan</strong><small>Eliminar plan y saldo</small></button>` : ''}
-        <button class="user-action danger-text" data-action="admin-user-delete" data-id="${user.id}"><span class="tone-red">${UI.icon('trash', 18)}</span><strong>Eliminar usuario</strong><small>Borrar cuenta y datos</small></button>
-</div>`,
+      </div>`,
       footer: `<button class="btn btn-ghost" data-modal-close>Cerrar</button><button class="btn btn-primary" data-action="admin-user-edit" data-id="${user.id}">Editar usuario</button>`,
     });
   }
 
   function openUserForm(user) {
     const isEdit = !!user;
-    const selectableServices = st().services.filter((service) => service.active && ['Plan', 'Sesión', 'Asesoría'].includes(service.kind));
-    const currentPlan = isEdit ? user.planLabel || '' : '';
-    const hasCurrentPlan = selectableServices.some((service) => service.name === currentPlan);
-    const root = UI.modal({
+    UI.modal({
       title: isEdit ? 'Editar usuario' : 'Inscribir nuevo usuario',
       subtitle: isEdit ? 'Actualiza los datos del usuario y su saldo de sesiones.' : 'Crea una cuenta manualmente. El usuario podrá ingresar con su correo y clave.',
       size: 'md',
@@ -143,16 +129,8 @@
           <div class="field"><label for="uf-name">Nombre completo *</label><input class="input" id="uf-name" name="name" value="${U.esc(isEdit ? user.name : '')}" required></div>
           <div class="field"><label for="uf-email">Correo *</label><input class="input" id="uf-email" name="email" type="email" value="${U.esc(isEdit ? user.email : '')}" required></div>
           <div class="field"><label for="uf-phone">WhatsApp</label><input class="input" id="uf-phone" name="phone" type="tel" value="${U.esc(isEdit ? user.phone || '' : '')}" placeholder="+56 9 …"></div>
-          <div class="field"><label for="uf-plan">Plan o servicio asignado</label><select class="input" id="uf-plan" name="planLabel">
-            <option value="" ${!currentPlan || currentPlan === 'Sin plan activo' ? 'selected' : ''}>Sin plan activo</option>
-            ${isEdit && currentPlan && currentPlan !== 'Sin plan activo' && !hasCurrentPlan ? `<option value="legacy" data-label="${U.esc(currentPlan)}" data-sessions="${Number(user.credits) || 0}" data-validity="30" selected>${U.esc(currentPlan)} (actual)</option>` : ''}
-            ${selectableServices.length
-              ? selectableServices.map((service) => `<option value="${U.esc(service.id)}" data-label="${U.esc(service.name)}" data-sessions="${Math.max(0, Number(service.sessions) || 0)}" data-validity="${Math.max(1, Number(service.validityDays) || 30)}" ${currentPlan === service.name ? 'selected' : ''}>${U.esc(service.name)} · ${U.esc(service.kind)} · ${U.fmtMoney(service.price)}</option>`).join('')
-              : '<option disabled>No hay planes o servicios activos en el catálogo</option>'}
-          </select><span class="field-hint">Las sesiones se completan según el plan seleccionado.</span></div>
+          <div class="field"><label for="uf-plan">Plan asignado</label><input class="input" id="uf-plan" name="planLabel" value="${U.esc(isEdit ? user.planLabel || '' : 'Sin plan activo')}" placeholder="Ej: Plan Performance 12"></div>
           <div class="field"><label for="uf-credits">Sesiones disponibles</label><input class="input" id="uf-credits" name="credits" type="number" min="0" step="1" value="${isEdit ? user.credits : 0}"></div>
-          <div class="field"><label for="uf-plan-start">Inicio del plan</label><input class="input" id="uf-plan-start" name="planStart" type="date" value="${isEdit ? user.planStart || '' : ''}"></div>
-          <div class="field"><label for="uf-plan-expires">Vence el</label><input class="input" id="uf-plan-expires" name="planExpires" type="date" value="${isEdit ? user.planExpires || '' : ''}"><span class="field-hint">Si lo dejas vacío, se calcula con la vigencia del plan.</span></div>
           ${isEdit ? `<div class="field"><label>Estado</label><label class="check check-boxed"><input type="checkbox" name="active" ${user.active ? 'checked' : ''}><span>Cuenta activa</span></label></div>` : `<div class="field"><label for="uf-pass">Clave temporal *</label><input class="input" id="uf-pass" name="password" type="text" value="Recovery2026!" minlength="8" required><span class="field-hint">Compártela por WhatsApp. El usuario puede cambiarla luego.</span></div>`}
         </div>
         <div class="field"><label for="uf-goal">Objetivo del usuario</label><input class="input" id="uf-goal" name="goal" value="${U.esc(isEdit ? user.goal || '' : '')}" placeholder="Ej: recuperación post lesión"></div>
@@ -160,23 +138,6 @@
         <p class="form-error" id="user-form-error" role="alert"></p>
       </form>`,
       footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" type="submit" form="user-form">${isEdit ? 'Guardar cambios' : 'Inscribir usuario'}</button>`,
-    });
-    if (!root) return;
-    root.querySelector('[name="planLabel"]').addEventListener('change', (event) => {
-      const option = event.target.selectedOptions[0];
-      const isPlan = !!option.value;
-      const startInput = root.querySelector('[name="planStart"]');
-      const expiresInput = root.querySelector('[name="planExpires"]');
-      root.querySelector('[name="credits"]').value = isPlan ? option.dataset.sessions || '0' : '0';
-      if (isPlan) {
-        const start = U.todayISO();
-        const days = Math.max(1, Number(option.dataset.validity) || 30);
-        startInput.value = start;
-        expiresInput.value = U.addDays(start, days);
-      } else {
-        startInput.value = '';
-        expiresInput.value = '';
-      }
     });
   }
 
@@ -190,12 +151,6 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFormError(err, 'Ingresa un correo válido.');
     if (st().users.some((u) => U.normalize(u.email) === U.normalize(email))) return showFormError(err, 'Ya existe un usuario con ese correo.');
     if (String(password).length < 8) return showFormError(err, 'La clave temporal debe tener al menos 8 caracteres.');
-    const planLabel = form.planLabel.selectedOptions[0].dataset.label || 'Sin plan activo';
-    const credits = Math.max(0, Number(form.credits.value) || 0);
-    const planStart = planLabel !== 'Sin plan activo' ? (form.planStart.value || U.todayISO()) : null;
-    const planExpires = planLabel !== 'Sin plan activo'
-      ? (form.planExpires.value || U.addDays(planStart, RS.data.planValidityDays(planLabel)))
-      : null;
     const user = {
       id: U.uid('usr'),
       role: 'user',
@@ -204,10 +159,8 @@
       phone: form.phone.value.trim(),
       passwordHash: await U.hashPassword(password),
       active: true,
-      credits,
-      planLabel,
-      planStart,
-      planExpires,
+      credits: Math.max(0, Number(form.credits.value) || 0),
+      planLabel: form.planLabel.value.trim() || 'Sin plan activo',
       goal: form.goal.value.trim(),
       notes: form.notes.value.trim(),
       createdAt: new Date().toISOString(),
@@ -216,10 +169,6 @@
     st().users.push(user);
     RS.DB.save();
     RS.data.addAudit(me().name, 'Usuario inscrito', `${user.name} (${user.email}) · ${user.credits} sesiones iniciales.`);
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
-    if (user.credits > 0 || (user.planLabel && user.planLabel !== 'Sin plan activo')) {
-      RS.SupabaseSync.pushAccount(user.id).catch((error) => { console.warn('No se pudo sincronizar el plan del usuario:', error && error.message); });
-    }
     UI.closeModal();
     UI.toast('Usuario inscrito correctamente.', 'success');
     RS.App.render(true);
@@ -236,31 +185,16 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFormError(err, 'Ingresa un correo válido.');
     if (st().users.some((u) => u.id !== user.id && U.normalize(u.email) === U.normalize(email))) return showFormError(err, 'Ese correo ya está en uso.');
     const beforeCredits = user.credits;
-    const previousPlan = user.planLabel || 'Sin plan activo';
-    const planLabel = form.planLabel.selectedOptions[0].dataset.label || 'Sin plan activo';
-    const planChanged = planLabel !== previousPlan;
     user.name = name;
     user.email = email;
     user.phone = form.phone.value.trim();
-    user.planLabel = planLabel;
+    user.planLabel = form.planLabel.value.trim() || 'Sin plan activo';
     user.credits = Math.max(0, Number(form.credits.value) || 0);
-    if (planLabel === 'Sin plan activo') {
-      RS.data.clearPlanDates(user);
-    } else {
-      const start = form.planStart.value || (planChanged ? U.todayISO() : user.planStart) || U.todayISO();
-      const expires = form.planExpires.value
-        || (planChanged ? U.addDays(start, RS.data.planValidityDays(planLabel)) : user.planExpires)
-        || U.addDays(start, RS.data.planValidityDays(planLabel));
-      user.planStart = start;
-      user.planExpires = expires;
-    }
     user.goal = form.goal.value.trim();
     user.notes = form.notes.value.trim();
     user.active = form.active ? form.active.checked : true;
     RS.DB.save();
     RS.data.addAudit(me().name, 'Usuario actualizado', `${user.name} · saldo ${beforeCredits} → ${user.credits} sesiones.`);
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
-    RS.SupabaseSync.pushAccount(user.id).catch((error) => { console.warn('No se pudo sincronizar el plan del usuario:', error && error.message); });
     UI.closeModal();
     UI.toast('Usuario actualizado.', 'success');
     RS.App.render(true);
@@ -367,9 +301,6 @@
         });
       });
       RS.DB.save();
-      if (RS.SupabaseSync && RS.SupabaseSync.pushMaxes) {
-        RS.SupabaseSync.pushMaxes(user.id).catch(() => {});
-      }
       RS.data.addAudit(me().name, 'Maximales actualizados', `${user.name} · ${parsed.length} registros.`);
       UI.closeModal();
       UI.toast('Maximales actualizados.', 'success');
@@ -379,84 +310,40 @@
 
   /* --------------------------------- rutina -------------------------------- */
 
-  function newRoutineItem() {
-    return { name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '', exerciseId: '', category: '', muscleGroup: '', equipment: '', difficulty: '', description: '', cues: '', commonErrors: '', variants: '', imageUrl: '', imageStart: '', imageEnd: '', gifUrl: '', videoUrl: '' };
-  }
-
-  function newStretch() {
-    return { id: U.uid('rstretch'), name: '', muscleGroup: '', duration: '30 s', notes: '', exerciseId: '', description: '', cues: '', imageStart: '', imageEnd: '' };
-  }
-
   function newRoutineDay(index) {
     return {
       id: U.uid('rday'),
       name: `Día ${index + 1}`,
       focus: '',
-      items: [newRoutineItem()],
-      stretches: [],
+      items: [{ name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '' }],
     };
   }
 
-  function openRoutineEditor(user, preDraft) {
+  function openRoutineEditor(user) {
     const existing = RS.data.userRoutine(user.id);
-    const draft = preDraft
-      ? JSON.parse(JSON.stringify(preDraft))
-      : (existing ? JSON.parse(JSON.stringify(existing)) : { id: U.uid('rt'), userId: user.id, title: 'Nueva pauta de entrenamiento', objective: '', weeks: 4, days: [newRoutineDay(0)] });
+    const draft = existing
+      ? JSON.parse(JSON.stringify(existing))
+      : { id: U.uid('rt'), userId: user.id, title: 'Nueva pauta de entrenamiento', objective: '', weeks: 4, days: [newRoutineDay(0)] };
     if (!draft.days.length) draft.days.push(newRoutineDay(0));
-    draft.days.forEach((d) => { if (!Array.isArray(d.stretches)) d.stretches = []; });
-    draft.startImage = draft.startImage || '';
-    draft.endImage = draft.endImage || '';
-
-    const photoMarkup = (side, label) => `<div class="routine-photo-card">
-      <div class="routine-photo-copy"><strong>${label}</strong><span>Se guarda con la pauta privada del usuario.</span></div>
-      <div class="routine-photo-preview" data-r-photo-preview="${side}">${draft[`${side}Image`]
-        ? `<img src="${U.esc(draft[`${side}Image`])}" alt="Progreso ${label.toLowerCase()}">`
-        : '<span>Sin imagen</span>'}</div>
-      <div class="routine-photo-actions">
-        <label class="btn btn-outline btn-sm">${UI.icon('upload', 14)}<span data-r-photo-label="${side}">${draft[`${side}Image`] ? 'Cambiar imagen' : 'Agregar imagen'}</span>
-          <input type="file" accept="image/*" data-r-photo="${side}" hidden>
-        </label>
-        <button type="button" class="btn btn-ghost btn-sm" data-r-photo-remove="${side}" ${draft[`${side}Image`] ? '' : 'disabled'}>Quitar</button>
-      </div>
-    </div>`;
-
-    const editorBody = () => `<div class="routine-editor-meta">
-        <div class="field"><label>Título de la pauta</label><input class="input" data-r-meta="title" value="${U.esc(draft.title)}"></div>
-        <div class="field"><label>Objetivo</label><input class="input" data-r-meta="objective" value="${U.esc(draft.objective)}" placeholder="Foco principal del bloque"></div>
-        <div class="field field-weeks"><label>Semanas</label><input class="input" type="number" min="1" max="52" data-r-meta="weeks" value="${U.esc(draft.weeks)}"></div>
-      </div>
-      <div class="routine-photo-editor">${photoMarkup('start', 'Foto de inicio')}${photoMarkup('end', 'Foto de final')}</div>
-      <div class="routine-editor" id="routine-editor"></div>
-      <div class="routine-editor-foot"><button type="button" class="btn btn-outline btn-sm" data-r-add-day>${UI.icon('plus', 15)} Agregar día</button><span class="form-hint">${UI.icon('info', 13)} Los cambios se guardan al finalizar.</span></div>`;
-
-    const editorFoot = () => `<button class="btn btn-outline" data-r-planning>${UI.icon('bar-chart-2', 16)} Planificación</button><button class="btn btn-outline" data-r-pdf>${UI.icon('download', 16)} Descargar PDF</button><button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" data-routine-save>${UI.icon('check', 16)} Guardar rutina</button>`;
 
     const root = UI.modal({
       title: 'Rutina del usuario',
       subtitle: `${user.name} · edita la pauta que verá en su perfil`,
       size: 'xl',
-      body: editorBody(),
-      footer: editorFoot(),
+      body: `<div class="routine-editor-meta">
+        <div class="field"><label>Título de la pauta</label><input class="input" data-r-meta="title" value="${U.esc(draft.title)}"></div>
+        <div class="field"><label>Objetivo</label><input class="input" data-r-meta="objective" value="${U.esc(draft.objective)}" placeholder="Foco principal del bloque"></div>
+        <div class="field field-weeks"><label>Semanas</label><input class="input" type="number" min="1" max="52" data-r-meta="weeks" value="${U.esc(draft.weeks)}"></div>
+      </div>
+      <div class="routine-editor" id="routine-editor"></div>
+      <div class="routine-editor-foot"><button type="button" class="btn btn-outline btn-sm" data-r-add-day>${UI.icon('plus', 15)} Agregar día</button><span class="form-hint">${UI.icon('info', 13)} Los cambios se guardan al finalizar.</span></div>`,
+      footer: `<button class="btn btn-ghost" data-modal-close>Cancelar</button><button class="btn btn-primary" data-routine-save>${UI.icon('check', 16)} Guardar rutina</button>`,
     });
     if (!root) return;
-    const bodyEl = root.querySelector('.modal-body');
-    const footEl = root.querySelector('.modal-foot');
+    const container = root.querySelector('#routine-editor');
 
-    const setHead = (title, subtitle) => {
-      const h2 = root.querySelector('.modal-head-text h2');
-      const p = root.querySelector('.modal-head-text p');
-      if (h2) h2.textContent = title;
-      if (p) p.textContent = subtitle;
-    };
-
-    const stretchGroups = (day) => {
-      const set = new Set(['Cuádriceps', 'Isquios', 'Glúteo', 'Pantorrillas', 'Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Core / Abdomen', 'Espalda baja', 'Cadera', 'Cadena posterior', 'Cuerpo completo']);
-      (day.items || []).forEach((it) => { if (it.muscleGroup) set.add(it.muscleGroup); });
-      if (RS.ExerciseLibrary) RS.ExerciseLibrary.all().forEach((x) => { if (x.muscleGroup) set.add(x.muscleGroup); });
-      return Array.from(set);
-    };
-
-    const daysHtml = () => draft.days.map((day, di) => `<div class="re-day">
+    const render = () => {
+      container.innerHTML = draft.days.map((day, di) => `<div class="re-day">
         <div class="re-day-head">
           <span class="re-day-num">${String(di + 1).padStart(2, '0')}</span>
           <input class="input re-day-name" data-r-day="name" data-day="${di}" value="${U.esc(day.name)}" placeholder="Nombre del día">
@@ -464,374 +351,21 @@
           <button type="button" class="icon-btn danger" data-r-remove-day="${di}" aria-label="Eliminar día">${UI.icon('trash', 16)}</button>
         </div>
         <div class="re-items">
-          ${day.items.map((it, ii) => {
-            const thumb = it.gifUrl || it.imageUrl || '';
-            return `<div class="re-item re-item-lib">
+          ${day.items.map((it, ii) => `<div class="re-item">
             <span class="re-item-num">${ii + 1}</span>
-            ${thumb ? `<span class="re-item-thumb"><img src="${U.esc(thumb)}" alt="" loading="lazy"></span>` : ''}
-            <input class="input re-name" data-r-item="name" data-day="${di}" data-item="${ii}" value="${U.esc(it.name)}" placeholder="Ejercicio" list="ex-library-names">
-            <button type="button" class="btn btn-outline btn-sm re-lib-btn" data-r-lib="${di}:${ii}" title="Elegir de biblioteca">${UI.icon('search', 14)} Biblioteca</button>
+            <input class="input" data-r-item="name" data-day="${di}" data-item="${ii}" value="${U.esc(it.name)}" placeholder="Ejercicio">
             <input class="input re-small" data-r-item="sets" data-day="${di}" data-item="${ii}" value="${U.esc(it.sets)}" placeholder="Series">
             <input class="input re-small" data-r-item="reps" data-day="${di}" data-item="${ii}" value="${U.esc(it.reps)}" placeholder="Reps">
             <input class="input re-small" data-r-item="load" data-day="${di}" data-item="${ii}" value="${U.esc(it.load)}" placeholder="Carga">
             <input class="input re-small" data-r-item="rest" data-day="${di}" data-item="${ii}" value="${U.esc(it.rest)}" placeholder="Descanso">
-            <input class="input re-notes" data-r-item="notes" data-day="${di}" data-item="${ii}" value="${U.esc(it.notes || '')}" placeholder="Notas (opcional)">
+            <input class="input re-notes" data-r-item="notes" data-day="${di}" data-item="${ii}" value="${U.esc(it.notes || '')}" placeholder="Notas">
             <button type="button" class="icon-btn danger" data-r-remove-item="${di}:${ii}" aria-label="Quitar ejercicio">${UI.icon('x', 15)}</button>
-          </div>`;
-          }).join('')}
-          <datalist id="ex-library-names">${RS.ExerciseLibrary ? RS.ExerciseLibrary.all().slice(0, 220).map((x) => '<option value="' + U.esc(x.name) + '"></option>').join('') : ''}</datalist>
+          </div>`).join('')}
           <button type="button" class="btn btn-ghost btn-sm re-add-item" data-r-add-item="${di}">${UI.icon('plus', 14)} Agregar ejercicio</button>
         </div>
-        <div class="re-stretches">
-          <div class="re-stretches-head">${UI.icon('heart', 13)} <span>Estiramientos · vuelta a la calma</span></div>
-          <div class="re-stretches-list">
-            ${(day.stretches || []).map((s, si) => {
-              const sThumb = s.imageStart || s.imageUrl || s.imageEnd || '';
-              return `<div class="re-stretch re-stretch-lib">
-              <span class="re-item-num">${si + 1}</span>
-              ${sThumb ? `<span class="re-item-thumb"><img src="${U.esc(sThumb)}" alt="" loading="lazy"></span>` : ''}
-              <input class="input re-st-name" data-r-stretch="name" data-day="${di}" data-stretch="${si}" value="${U.esc(s.name)}" placeholder="Estiramiento" list="ex-stretch-groups-${di}">
-              <button type="button" class="btn btn-outline btn-sm re-lib-btn" data-r-stretch-lib="${di}:${si}" title="Elegir de biblioteca">${UI.icon('search', 14)} Biblioteca</button>
-              <input class="input re-small" data-r-stretch="muscleGroup" data-day="${di}" data-stretch="${si}" value="${U.esc(s.muscleGroup || '')}" placeholder="Músculo" list="ex-stretch-groups-${di}">
-              <input class="input re-small" data-r-stretch="duration" data-day="${di}" data-stretch="${si}" value="${U.esc(s.duration || '')}" placeholder="Tiempo">
-              <input class="input re-notes" data-r-stretch="notes" data-day="${di}" data-stretch="${si}" value="${U.esc(s.notes || '')}" placeholder="Nota (opcional)">
-              <button type="button" class="icon-btn danger" data-r-remove-stretch="${di}:${si}" aria-label="Quitar estiramiento">${UI.icon('x', 15)}</button>
-            </div>`;
-            }).join('')}
-          </div>
-          <datalist id="ex-stretch-groups-${di}">${stretchGroups(day).map((g) => `<option value="${U.esc(g)}"></option>`).join('')}</datalist>
-          <button type="button" class="btn btn-ghost btn-sm re-add-stretch" data-r-add-stretch="${di}">${UI.icon('plus', 14)} Agregar estiramiento</button>
-        </div>
       </div>`).join('');
-
-    const render = () => {
-      const editor = root.querySelector('#routine-editor');
-      if (editor) editor.innerHTML = daysHtml();
-    };
-
-    const renderEditor = () => {
-      setHead('Rutina del usuario', `${user.name} · edita la pauta que verá en su perfil`);
-      bodyEl.innerHTML = editorBody();
-      footEl.innerHTML = editorFoot();
-      render();
     };
     render();
-
-    /* --------------------- planificación soviética --------------------- */
-
-    function openPlanning() {
-      if (!RS.Soviet) { UI.toast('Planificación no disponible.', 'error'); return; }
-      const maxes = RS.data.userMaxes(user.id);
-      if (!maxes.length) {
-        UI.toast('Este usuario no tiene maximales. Registra sus maximales primero para poder calcular cargas y porcentajes.', 'info', 6000);
-        return;
-      }
-      const data = RS.Soviet.analyze(draft, maxes);
-      let week = 1;
-
-      const fmtNum = (n) => (n == null ? '—' : String(n));
-      const macroRows = data.macro.map((p) => `<tr>
-        <td><strong>${U.esc(p.name)}</strong></td>
-        <td>${p.weeks}${p.weeks === 1 ? ' semana' : ' semanas'} <span class="muted">(S${p.startWeek}–S${p.endWeek})</span></td>
-        <td>${p.from}–${p.to}%</td>
-        <td>${U.esc(p.volume)}</td>
-        <td class="muted">${U.esc(p.focus)}</td>
-      </tr>`).join('');
-
-      const microRows = data.micro.map((w) => `<tr class="plan-week-row" data-plan-week="${w.week}">
-        <td><strong>S${w.week}</strong></td>
-        <td>${U.esc(w.phase)}</td>
-        <td><strong>${w.intensity}%</strong></td>
-        <td>${w.sets || '—'}</td>
-        <td>${w.reps || '—'}</td>
-        <td class="muted">${w.totalRange || '—'}</td>
-      </tr>`).join('');
-
-      const exerciseRows = (() => {
-        let rows = '';
-        let idx = 0;
-        data.days.forEach((d) => {
-          d.items.forEach((it) => {
-            rows += `<tr>
-              <td><strong>${U.esc(it.name || '—')}</strong></td>
-              <td>${it.matched ? `${fmtNum(it.maxValue)} ${U.esc(it.maxUnit || '')}` : '<span class="muted">Sin máximo</span>'}</td>
-              <td>${it.loadValue != null ? `${fmtNum(it.loadValue)}${it.loadUnit === 'lb' ? ' lb' : ''}` : '—'}</td>
-              <td>${it.loadPct != null ? `${Math.round(it.loadPct)}%` : '—'}</td>
-              <td>${it.sets != null && it.reps != null ? `${it.sets} × ${it.reps}` : '—'}</td>
-              <td>${it.tonnage != null ? it.tonnage : '—'}</td>
-              <td data-plan-suggest="${idx}">—</td>
-              <td>${it.zone ? `${it.zone.min}–${it.zone.max}% · ${it.zone.reps} reps` : '—'}</td>
-            </tr>`;
-            idx += 1;
-          });
-        });
-        return rows;
-      })();
-
-      const body = `<div class="planning-wrap">
-        <div class="planning-bar">
-          <div class="field"><label>Semana objetivo</label><select class="input" id="plan-week">${data.micro.map((w) => `<option value="${w.week}">Semana ${w.week} · ${w.intensity}%</option>`).join('')}</select></div>
-          <p class="form-hint">${UI.icon('info', 14)} <span>Con el método soviético (Prilepin) cada semana usa un % del máximo. Elige la semana y aplica las cargas sugeridas a la rutina.</span></p>
-        </div>
-        <div class="planning-kpis">
-          <div><span>Semanas de trabajo</span><strong>${data.weeks}</strong></div>
-          <div><span>Días / semana</span><strong>${data.daysPerWeek}</strong></div>
-          <div><span>Tonelaje semanal</span><strong>${data.totalTonnage || '—'}</strong></div>
-          <div><span>Intensidad promedio</span><strong>${data.avgIntensity != null ? data.avgIntensity + '%' : '—'}</strong></div>
-        </div>
-        <section class="card">
-          <div class="card-head"><h2 class="card-title">Macrociclo · fases</h2></div>
-          <div class="table-wrap"><table class="table table-compact">
-            <thead><tr><th>Fase</th><th>Semanas</th><th>% 1RM</th><th>Volumen</th><th>Foco</th></tr></thead>
-            <tbody>${macroRows}</tbody>
-          </table></div>
-        </section>
-        <section class="card">
-          <div class="card-head"><h2 class="card-title">Microciclo · semana a semana</h2><p class="card-sub">Haz clic en una semana para elegirla</p></div>
-          <div class="table-wrap"><table class="table table-compact">
-            <thead><tr><th>Semana</th><th>Fase</th><th>Intensidad</th><th>Series</th><th>Reps</th><th>Levantamientos</th></tr></thead>
-            <tbody>${microRows}</tbody>
-          </table></div>
-        </section>
-        <section class="card">
-          <div class="card-head"><h2 class="card-title">Ejercicios · carga y tonelaje</h2></div>
-          <div class="table-wrap"><table class="table table-compact">
-            <thead><tr><th>Ejercicio</th><th>Máximo</th><th>Carga actual</th><th>% 1RM</th><th>Series×Reps</th><th>Tonelaje</th><th>Carga sugerida</th><th>Zona Prilepin</th></tr></thead>
-            <tbody>${exerciseRows}</tbody>
-          </table></div>
-          <p class="form-hint" style="margin:10px 14px">${UI.icon('info', 14)} <span>La “carga sugerida” es máximo × % de la semana seleccionada. Los ejercicios sin máximo se muestran como “Sin máximo”.</span></p>
-        </section>
-        <details class="card">
-          <summary class="card-head" style="cursor:pointer"><h2 class="card-title">Tabla de Prilepin (referencia)</h2></summary>
-          <div class="table-wrap"><table class="table table-compact">
-            <thead><tr><th>% 1RM</th><th>Reps / serie</th><th>Series</th><th>Total óptimo</th><th>Rango total</th></tr></thead>
-            <tbody>${RS.Soviet.prilepin.map((z) => `<tr><td>${z.min}–${z.max}%</td><td>${z.reps}</td><td>${z.sets}</td><td>${z.total}</td><td>${z.totalRange}</td></tr>`).join('')}</tbody>
-          </table></div>
-        </details>
-      </div>`;
-
-      setHead('Planificación soviética', `${user.name} · ${data.weeks} semanas · método Prilepin`);
-      bodyEl.innerHTML = body;
-      footEl.innerHTML = '<button class="btn btn-ghost" data-plan-back>' + UI.icon('arrow-left', 16) + ' Volver</button><button class="btn btn-primary" data-plan-apply>' + UI.icon('check', 16) + ' Aplicar cargas</button>';
-
-      const weekSelect = root.querySelector('#plan-week');
-      const applyBtn = root.querySelector('[data-plan-apply]');
-      const backBtn = root.querySelector('[data-plan-back]');
-      const suggestCells = Array.from(root.querySelectorAll('[data-plan-suggest]'));
-
-      function updateWeek(w) {
-        week = Math.min(data.weeks, Math.max(1, Number(w) || 1));
-        const intensity = data.micro[week - 1].intensity;
-        weekSelect.value = String(week);
-        root.querySelectorAll('[data-plan-week]').forEach((tr) => {
-          tr.classList.toggle('selected', Number(tr.dataset.planWeek) === week);
-        });
-        let idx = 0;
-        data.days.forEach((d) => d.items.forEach((it) => {
-          const cell = suggestCells[idx];
-          if (cell) {
-            cell.textContent = (it.matched && it.matched.current != null)
-              ? (RS.Soviet.suggestedLoad(it.matched, intensity) || '—')
-              : '—';
-          }
-          idx += 1;
-        }));
-        applyBtn.innerHTML = UI.icon('check', 16) + ' Aplicar cargas (Semana ' + week + ' · ' + intensity + '%)';
-      }
-
-      weekSelect.addEventListener('change', () => updateWeek(weekSelect.value));
-      root.querySelectorAll('[data-plan-week]').forEach((tr) => {
-        tr.addEventListener('click', () => updateWeek(tr.dataset.planWeek));
-      });
-      applyBtn.addEventListener('click', () => {
-        const intensity = data.micro[week - 1].intensity;
-        let applied = 0;
-        data.days.forEach((d) => d.items.forEach((it) => {
-          if (it.matched && it.matched.current != null) {
-            const value = RS.Soviet.suggestedLoad(it.matched, intensity);
-            if (value != null) { it.source.load = value; applied += 1; }
-          }
-        }));
-        renderEditor();
-        UI.toast(applied
-          ? `Cargas aplicadas para la semana ${week} (${applied} ejercicios). Guarda la rutina para conservarlas.`
-          : 'No hay ejercicios con máximo para aplicar carga.',
-        applied ? 'success' : 'info', applied ? 6000 : 5000);
-      });
-      backBtn.addEventListener('click', renderEditor);
-
-      updateWeek(1);
-    }
-
-    function openRoutinePdf() {
-      if (!RS.RoutinePdf) { UI.toast('Exportación a PDF no disponible.', 'error'); return; }
-      const snapshot = Object.assign({}, draft, {
-        days: draft.days.map((d) => ({
-          name: d.name,
-          focus: d.focus,
-          items: (d.items || []).filter((i) => i.name && i.name.trim()),
-          stretches: (d.stretches || []).filter((s) => s.name && s.name.trim()),
-        })),
-      });
-      if (!U.sum(snapshot.days, (d) => d.items.length)) {
-        UI.toast('Agrega al menos un ejercicio para descargar el PDF.', 'error');
-        return;
-      }
-      setHead('Descargar rutina (PDF)', 'Para enviársela a alguien que aún no se registra en la página');
-      bodyEl.innerHTML = `<div class="routine-pdf-form">
-        <div class="field"><label for="pdf-client">Nombre del cliente</label><input class="input" id="pdf-client" value="${U.esc(user.name || '')}" maxlength="80" placeholder="Ej: Nombre y apellido"></div>
-        <div class="callout callout-blue">${UI.icon('info', 17)}<span>El PDF muestra el nombre del cliente en el encabezado y tu nombre con profesión (Mg.) en el pie, junto con la pauta completa (ejercicios y estiramientos). Se abrirá la ventana de impresión: elige “Guardar como PDF”.</span></div>
-      </div>`;
-      footEl.innerHTML = `<button class="btn btn-ghost" data-r-pdf-back>${UI.icon('arrow-left', 16)} Volver</button><button class="btn btn-primary" data-r-pdf-generate>${UI.icon('printer', 16)} Generar PDF</button>`;
-      const input = bodyEl.querySelector('#pdf-client');
-      const generateBtn = footEl.querySelector('[data-r-pdf-generate]');
-      if (input) input.focus();
-      const generate = () => {
-        const name = ((input && input.value) || '').trim() || user.name || 'Cliente';
-        RS.RoutinePdf.open(snapshot, { clientName: name });
-      };
-      generateBtn.addEventListener('click', generate);
-      footEl.querySelector('[data-r-pdf-back]').addEventListener('click', renderEditor);
-      if (input) input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); generate(); }
-      });
-    }
-
-    function openStretchPicker(di, si) {
-      if (!RS.ExerciseLibrary) return UI.toast('Biblioteca no disponible.', 'error');
-      const pool = RS.ExerciseLibrary.all({ category: 'Movilidad' });
-      if (!pool.length) {
-        UI.toast('Todavía no hay estiramientos en la biblioteca.', 'error');
-        return;
-      }
-      setHead('Elegir estiramiento', 'Se rellenará nombre, músculo, fotos (inicio y final) e indicaciones');
-      bodyEl.innerHTML = '<div class="lib-picker-grid" data-stretch-grid></div>';
-      footEl.innerHTML = `<button class="btn btn-ghost" data-stretch-back>${UI.icon('arrow-left', 16)} Volver</button>`;
-      const grid = bodyEl.querySelector('[data-stretch-grid]');
-      grid.innerHTML = pool.map((x) => {
-        const img = x.imageStart || x.imageUrl || '';
-        return `<button type="button" class="lib-card" data-stretch-id="${U.esc(x.id)}">`
-          + `<span class="lib-card-img">${img
-            ? `<img src="${U.esc(img)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span class="lib-no-img" style="display:none">${UI.icon('heart', 26)}</span>`
-            : `<span class="lib-no-img">${UI.icon('heart', 26)}</span>`}</span>`
-          + `<span class="lib-card-name">${U.esc(x.name)}</span>`
-          + `<span class="lib-card-sub">${U.esc(x.muscleGroup || '')}</span>`
-          + '</button>';
-      }).join('');
-      grid.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-stretch-id]');
-        if (!btn) return;
-        const lib = RS.ExerciseLibrary.get(btn.dataset.stretchId);
-        if (!lib) return;
-        const s = draft.days[di].stretches[si];
-        s.name = lib.name;
-        s.muscleGroup = lib.muscleGroup || s.muscleGroup;
-        s.imageStart = lib.imageStart || lib.imageUrl || '';
-        s.imageEnd = lib.imageEnd || '';
-        s.description = lib.description || '';
-        s.cues = lib.cues || '';
-        s.exerciseId = lib.id || '';
-        renderEditor();
-        UI.toast('Estiramiento aplicado. Ajusta el tiempo si quieres.', 'success', 4000);
-      });
-      footEl.querySelector('[data-stretch-back]').addEventListener('click', renderEditor);
-    }
-
-    function openLibraryPicker(di, ii) {
-      if (!RS.ExerciseLibrary) return UI.toast('Biblioteca no disponible.', 'error');
-      let q = '';
-      let cat = 'Todas';
-
-      const imgOrFallback = (src, iconSize) => (src
-        ? `<img src="${U.esc(src)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span class="lib-no-img" style="display:none">${UI.icon('dumbbell', iconSize)}</span>`
-        : `<span class="lib-no-img">${UI.icon('dumbbell', iconSize)}</span>`);
-
-      const routineBack = () => `<button class="btn btn-ghost" data-lib-routine>${UI.icon('arrow-left', 16)} Volver a la rutina</button>`;
-
-      function renderList() {
-        setHead('Elegir de biblioteca', 'Haz clic en un ejercicio para ver su imagen antes de usarlo');
-        bodyEl.innerHTML = '<div class="lib-picker-bar"><select class="input input-sm" data-lib-cat><option value="Todas">Todas</option>'
-          + RS.ExerciseLibrary.categories.map((c) => `<option value="${U.esc(c)}"${cat === c ? ' selected' : ''}>${U.esc(c)}</option>`).join('') + '</select>'
-          + '<div class="input-icon input-search">' + UI.icon('search', 16) + `<input class="input input-sm" data-lib-q placeholder="Buscar por nombre, músculo o material…" value="${U.esc(q)}"></div></div>`
-          + '<div class="lib-picker-grid" data-lib-grid></div>'
-          + '<p class="form-hint" style="margin-top:10px">Al usar un ejercicio se rellenan nombre, foto/GIF e indicaciones. Luego ajustas series/reps/carga.</p>';
-        footEl.innerHTML = routineBack();
-        const grid = bodyEl.querySelector('[data-lib-grid]');
-        const qEl = bodyEl.querySelector('[data-lib-q]');
-        const catEl = bodyEl.querySelector('[data-lib-cat]');
-        const paint = () => {
-          const items = RS.ExerciseLibrary.all({ category: cat, query: q }).slice(0, 80);
-          grid.innerHTML = items.length ? items.map((x) => {
-            const img = x.gifUrl || x.imageUrl || '';
-            return `<button type="button" class="lib-card" data-lib-id="${U.esc(x.id)}">`
-              + `<span class="lib-card-img">${imgOrFallback(img, 26)}</span>`
-              + `<span class="lib-card-name">${U.esc(x.name)}</span>`
-              + `<span class="lib-card-sub">${U.esc(x.muscleGroup || x.category || '')}</span>`
-              + '</button>';
-          }).join('') : '<p class="muted" style="padding:12px">Sin resultados.</p>';
-        };
-        paint();
-        qEl.addEventListener('input', () => { q = qEl.value; paint(); });
-        catEl.addEventListener('change', () => { cat = catEl.value; paint(); });
-        grid.addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-lib-id]');
-          if (btn) renderDetail(btn.dataset.libId);
-        });
-        footEl.querySelector('[data-lib-routine]').addEventListener('click', renderEditor);
-        qEl.focus();
-      }
-
-      function renderDetail(id) {
-        const libItem = RS.ExerciseLibrary.get(id);
-        if (!libItem) { renderList(); return; }
-        const media = libItem.gifUrl || libItem.imageUrl || '';
-        setHead('Elegir de biblioteca', libItem.name);
-        bodyEl.innerHTML = '<div class="lib-detail">'
-          + '<button type="button" class="btn btn-ghost btn-sm" data-lib-back>' + UI.icon('arrow-left', 15) + ' Volver</button>'
-          + '<div class="lib-detail-media">' + imgOrFallback(media, 40) + '</div>'
-          + '<div class="lib-detail-info">'
-          + '<h3>' + U.esc(libItem.name) + '</h3>'
-          + '<div class="lib-detail-tags"><span class="tag-soft">' + U.esc(libItem.category || '') + '</span><span class="tag-soft">' + U.esc(libItem.muscleGroup || 'General') + '</span><span class="tag-soft">' + U.esc(libItem.equipment || 'Sin material') + '</span><span class="tag-soft">' + U.esc(libItem.difficulty || '') + '</span></div>'
-          + (libItem.description ? '<p class="lib-detail-desc">' + U.esc(libItem.description) + '</p>' : '')
-          + (libItem.cues ? '<p class="lib-detail-cues"><strong>Indicaciones:</strong> ' + U.esc(libItem.cues) + '</p>' : '')
-          + '<div class="lib-detail-actions"><button type="button" class="btn btn-accent" data-lib-use>' + UI.icon('check', 16) + ' Usar este ejercicio</button></div>'
-          + '</div></div>';
-        footEl.innerHTML = routineBack();
-        bodyEl.querySelector('[data-lib-back]').addEventListener('click', renderList);
-        footEl.querySelector('[data-lib-routine]').addEventListener('click', renderEditor);
-        bodyEl.querySelector('[data-lib-use]').addEventListener('click', () => {
-          RS.ExerciseLibrary.applyToItem(draft.days[di].items[ii], libItem);
-          renderEditor();
-          UI.toast('Ejercicio aplicado. Ajusta series, repeticiones y carga.', 'success', 4000);
-        });
-      }
-
-      renderList();
-    }
-
-    root.addEventListener('change', async (e) => {
-      const input = e.target.closest('[data-r-photo]');
-      const file = input && input.files && input.files[0];
-      if (!file) return;
-      const side = input.dataset.rPhoto;
-      const saveBtn = root.querySelector('[data-routine-save]');
-      root.querySelectorAll('[data-r-photo]').forEach((photoInput) => { photoInput.disabled = true; });
-      if (saveBtn) saveBtn.disabled = true;
-      try {
-        draft[`${side}Image`] = await U.compressImage(file, 1100, 0.72);
-        root.querySelector(`[data-r-photo-preview="${side}"]`).innerHTML =
-          `<img src="${U.esc(draft[`${side}Image`])}" alt="Progreso ${side === 'start' ? 'inicial' : 'final'}">`;
-        root.querySelector(`[data-r-photo-remove="${side}"]`).disabled = false;
-        root.querySelector(`[data-r-photo-label="${side}"]`).textContent = 'Cambiar imagen';
-      } catch (error) {
-        UI.toast(error.message || 'No pudimos procesar la imagen.', 'error');
-      } finally {
-        input.value = '';
-        root.querySelectorAll('[data-r-photo]').forEach((photoInput) => { photoInput.disabled = false; });
-        const sb = root.querySelector('[data-routine-save]');
-        if (sb) sb.disabled = false;
-      }
-    });
 
     root.addEventListener('input', (e) => {
       const meta = e.target.dataset.rMeta;
@@ -846,81 +380,11 @@
       }
       const itemField = e.target.dataset.rItem;
       if (itemField) {
-        const di = Number(e.target.dataset.day);
-        const ii = Number(e.target.dataset.item);
-        draft.days[di].items[ii][itemField] = e.target.value;
-        if (itemField === 'name' && RS.ExerciseLibrary) {
-          const found = RS.ExerciseLibrary.getByName(e.target.value, draft.days[di].items[ii].category);
-          const current = RS.ExerciseLibrary.get(draft.days[di].items[ii].exerciseId || '');
-          if (found && (!current || current.id !== found.id)) {
-            RS.ExerciseLibrary.applyToItem(draft.days[di].items[ii], found);
-          } else if (!found) {
-            draft.days[di].items[ii].exerciseId = '';
-          }
-        }
-      }
-      const stretchField = e.target.dataset.rStretch;
-      if (stretchField) {
-        const di = Number(e.target.dataset.day);
-        const si = Number(e.target.dataset.stretch);
-        if (draft.days[di] && draft.days[di].stretches && draft.days[di].stretches[si]) {
-          draft.days[di].stretches[si][stretchField] = e.target.value;
-        }
+        draft.days[Number(e.target.dataset.day)].items[Number(e.target.dataset.item)][itemField] = e.target.value;
       }
     });
 
-    async function saveRoutine() {
-      draft.title = draft.title.trim() || 'Pauta de entrenamiento';
-      draft.objective = draft.objective.trim();
-      draft.days.forEach((d) => {
-        d.items = d.items.filter((i) => i.name.trim());
-        d.stretches = (d.stretches || []).filter((s) => s.name.trim());
-      });
-      const totalItems = U.sum(draft.days, (d) => d.items.length);
-      if (!totalItems) {
-        UI.toast('Agrega al menos un ejercicio a la rutina.', 'error');
-        return;
-      }
-      draft.updatedAt = U.todayISO();
-      const remote = RS.TrainingRoutines.supportsUserId(user.id);
-      const saveBtn = root.querySelector('[data-routine-save]');
-      if (saveBtn) saveBtn.disabled = true;
-      try {
-        if (remote) await RS.TrainingRoutines.save(user.id, draft, me().id);
-      } catch (error) {
-        UI.toast(`No pudimos sincronizar la rutina: ${error.message}`, 'error', 7000);
-        if (saveBtn) saveBtn.disabled = false;
-        return;
-      }
-      const idx = st().routines.findIndex((r) => r.userId === user.id);
-      if (idx >= 0) st().routines[idx] = draft;
-      else st().routines.push(draft);
-      if (!RS.DB.save()) {
-        if (!remote) {
-          if (idx >= 0) st().routines[idx] = existing;
-          else st().routines.pop();
-          if (saveBtn) saveBtn.disabled = false;
-          return;
-        }
-      }
-      RS.data.addAudit(me().name, 'Rutina asignada', `${user.name} · ${draft.title} · ${draft.days.length} días.`);
-      UI.closeModal();
-      UI.toast(remote
-        ? 'Rutina guardada y sincronizada. El usuario ya puede verla desde su cuenta.'
-        : 'Rutina guardada en este navegador. Esta cuenta aún no está vinculada a un perfil de Supabase.',
-      remote ? 'success' : 'info', 6000);
-      RS.App.render(true);
-    }
-
-    root.addEventListener('click', (e) => {
-      if (e.target.closest('[data-modal-close]')) { UI.closeModal(); return; }
-
-      const libBtn = e.target.closest('[data-r-lib]');
-      if (libBtn) {
-        const [di, ii] = libBtn.dataset.rLib.split(':').map(Number);
-        openLibraryPicker(di, ii);
-        return;
-      }
+    container.addEventListener('click', (e) => {
       const addDay = e.target.closest('[data-r-add-day]');
       if (addDay) {
         draft.days.push(newRoutineDay(draft.days.length));
@@ -937,7 +401,7 @@
       const addItem = e.target.closest('[data-r-add-item]');
       if (addItem) {
         const di = Number(addItem.dataset.rAddItem);
-        draft.days[di].items.push(newRoutineItem());
+        draft.days[di].items.push({ name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '' });
         render();
         return;
       }
@@ -946,46 +410,37 @@
         const [di, ii] = removeItem.dataset.rRemoveItem.split(':').map(Number);
         draft.days[di].items.splice(ii, 1);
         if (!draft.days[di].items.length) {
-          draft.days[di].items.push(newRoutineItem());
+          draft.days[di].items.push({ name: '', sets: '3', reps: '10', load: '', rest: '60 s', notes: '' });
         }
         render();
+      }
+    });
+
+    root.querySelector('[data-r-add-day]').addEventListener('click', () => {
+      draft.days.push(newRoutineDay(draft.days.length));
+      render();
+    });
+
+    root.querySelector('[data-routine-save]').addEventListener('click', () => {
+      draft.title = draft.title.trim() || 'Pauta de entrenamiento';
+      draft.objective = draft.objective.trim();
+      draft.days.forEach((d) => {
+        d.items = d.items.filter((i) => i.name.trim());
+      });
+      const totalItems = U.sum(draft.days, (d) => d.items.length);
+      if (!totalItems) {
+        UI.toast('Agrega al menos un ejercicio a la rutina.', 'error');
         return;
       }
-      const addStretch = e.target.closest('[data-r-add-stretch]');
-      if (addStretch) {
-        const di = Number(addStretch.dataset.rAddStretch);
-        draft.days[di].stretches.push(newStretch());
-        render();
-        return;
-      }
-      const removeStretch = e.target.closest('[data-r-remove-stretch]');
-      if (removeStretch) {
-        const [di, si] = removeStretch.dataset.rRemoveStretch.split(':').map(Number);
-        draft.days[di].stretches.splice(si, 1);
-        render();
-        return;
-      }
-      const stretchLib = e.target.closest('[data-r-stretch-lib]');
-      if (stretchLib) {
-        const [di, si] = stretchLib.dataset.rStretchLib.split(':').map(Number);
-        openStretchPicker(di, si);
-        return;
-      }
-      const photoRemove = e.target.closest('[data-r-photo-remove]');
-      if (photoRemove) {
-        const side = photoRemove.dataset.rPhotoRemove;
-        draft[`${side}Image`] = '';
-        root.querySelector(`[data-r-photo-preview="${side}"]`).innerHTML = '<span>Sin imagen</span>';
-        photoRemove.disabled = true;
-        root.querySelector(`[data-r-photo-label="${side}"]`).textContent = 'Agregar imagen';
-        return;
-      }
-      const planning = e.target.closest('[data-r-planning]');
-      if (planning) { openPlanning(); return; }
-      const pdfBtn = e.target.closest('[data-r-pdf]');
-      if (pdfBtn) { openRoutinePdf(); return; }
-      const save = e.target.closest('[data-routine-save]');
-      if (save) { saveRoutine(); return; }
+      draft.updatedAt = U.todayISO();
+      const idx = st().routines.findIndex((r) => r.userId === user.id);
+      if (idx >= 0) st().routines[idx] = draft;
+      else st().routines.push(draft);
+      RS.DB.save();
+      RS.data.addAudit(me().name, 'Rutina asignada', `${user.name} · ${draft.title} · ${draft.days.length} días.`);
+      UI.closeModal();
+      UI.toast('Rutina guardada. El usuario ya puede verla.', 'success');
+      RS.App.render(true);
     });
   }
 
@@ -997,7 +452,7 @@
       size: 'md',
       body: sessions.length ? `<div class="mini-session-list">${sessions.slice(0, 20).map((s) => `<div class="mini-session">
         <div class="mini-session-date"><strong>${U.fmtDate(s.date, 'compact')}</strong><span>${s.time}</span></div>
-        <div class="mini-session-info"><strong>${U.esc(RS.data.serviceName(s.serviceId))}</strong><span>${U.esc(s.coach || 'Daniel Barrueto Jopia')} · ${s.payment === 'plan' ? 'Plan' : s.payment === 'pagado' ? 'Pagada' : s.payment === 'cortesia' ? 'Cortesía' : 'Pendiente'}</span></div>
+        <div class="mini-session-info"><strong>${U.esc(RS.data.serviceName(s.serviceId))}</strong><span>${U.esc(s.coach || 'Daniel Barrueto')} · ${s.payment === 'plan' ? 'Plan' : s.payment === 'pagado' ? 'Pagada' : s.payment === 'cortesia' ? 'Cortesía' : 'Pendiente'}</span></div>
         ${UI.statusPill(s.status)}
       </div>`).join('')}</div>` : UI.empty({ icon: 'calendar', title: 'Sin sesiones', text: 'Este usuario aún no tiene sesiones registradas.' }),
       footer: '<button class="btn btn-primary" data-modal-close>Cerrar</button>',
@@ -1035,7 +490,7 @@
             <td><strong>${U.fmtMoney(p.price)}</strong></td>
             <td>${U.fmtMoney(Math.round(p.price / Math.max(1, p.sessions)))}</td>
             <td>${p.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td>
-            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${p.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${p.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${p.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${p.id}" title="${p.active ? 'Desactivar' : 'Activar'}">${UI.icon(p.active ? 'eye-off' : 'eye', 16)}</button></div></td>
+            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${p.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${p.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${p.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${p.id}" title="${p.active ? 'Desactivar' : 'Activar'}">${UI.icon(p.active ? 'eye-off' : 'eye', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${p.id}" title="Eliminar">${UI.icon('trash', 16)}</button></div></td>
           </tr>`).join('')}</tbody>
         </table></div>
       </section>
@@ -1051,7 +506,7 @@
             <td><strong>${U.fmtMoney(s.price)}</strong></td>
             <td>${U.fmtMoney(s.companyPrice || 0)}</td>
             <td>${s.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td>
-            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${s.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${s.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${s.id}">${UI.icon(s.active ? 'eye-off' : 'eye', 16)}</button></div></td>
+            <td><div class="table-actions"><button class="icon-btn" data-action="catalog-charge" data-id="${s.id}" title="Cobrar">${UI.icon('credit-card', 16)}</button><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}" title="Editar">${UI.icon('edit', 16)}</button><button class="icon-btn ${s.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${s.id}">${UI.icon(s.active ? 'eye-off' : 'eye', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${s.id}" title="Eliminar">${UI.icon('trash', 16)}</button></div></td>
           </tr>`).join('')}</tbody>
         </table></div>
       </section>
@@ -1060,7 +515,7 @@
         <div class="card-head head-row"><div><h2 class="card-title">Programa empresas</h2><p class="card-sub">Valor referencial por persona para cotizaciones.</p></div><button class="link-btn" data-action="catalog-new" data-kind="Empresa">+ Agregar programa</button></div>
         <div class="table-wrap"><table class="table">
           <thead><tr><th>Programa</th><th>Valor empresa / persona</th><th>Estado</th><th></th></tr></thead>
-          <tbody>${companies.map((s) => `<tr><td><strong>${U.esc(s.name)}</strong><br><span class="muted small">${U.esc(s.description)}</span></td><td><strong>${U.fmtMoney(s.companyPrice)}</strong></td><td>${s.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td><td><div class="table-actions"><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}">${UI.icon('edit', 16)}</button><button class="icon-btn ${s.active ? 'danger' : ''}" data-action="catalog-toggle" data-id="${s.id}" title="${s.active ? 'Desactivar' : 'Activar'}">${UI.icon(s.active ? 'eye-off' : 'eye', 16)}</button></div></td></tr>`).join('')}</tbody>
+          <tbody>${companies.map((s) => `<tr><td><strong>${U.esc(s.name)}</strong><br><span class="muted small">${U.esc(s.description)}</span></td><td><strong>${U.fmtMoney(s.companyPrice)}</strong></td><td>${s.active ? UI.pill('Activo', 'success') : UI.pill('Inactivo', 'neutral')}</td><td><div class="table-actions"><button class="icon-btn" data-action="catalog-edit" data-id="${s.id}">${UI.icon('edit', 16)}</button><button class="icon-btn danger" data-action="catalog-delete" data-id="${s.id}">${UI.icon('trash', 16)}</button></div></td></tr>`).join('')}</tbody>
         </table></div>
       </section>` : ''}
     </div>`;
@@ -1252,7 +707,6 @@
     }
     RS.DB.save();
     UI.closeModal();
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
     RS.App.render(true);
   };
 
@@ -1271,97 +725,12 @@
     if (user) openUserForm(user);
   };
 
-  RS.actions['admin-user-clear-plan'] = async (el) => {
-    const user = st().users.find((item) => item.id === el.dataset.id && item.role === 'user');
-    if (!user) return;
-    const ok = await UI.confirm({
-      title: 'Quitar plan asignado',
-      message: `Se quitará el plan de ${user.name} y su saldo de ${user.credits} sesiones. El historial de pagos no se modificará.`,
-      okText: 'Quitar plan',
-      danger: true,
-    });
-    if (!ok) return;
-    const previousPlan = user.planLabel || 'Sin plan activo';
-    const previousCredits = user.credits;
-    user.planLabel = 'Sin plan activo';
-    user.credits = 0;
-    RS.data.clearPlanDates(user);
-    RS.DB.save();
-    RS.data.addAudit(me().name, 'Plan quitado', `${user.name} · ${previousPlan} · ${previousCredits} sesiones.`);
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
-    UI.closeModal();
-    UI.toast('Plan y saldo eliminados.', 'success');
-  };
-
-  RS.actions['admin-user-delete'] = async (el) => {
-    const user = st().users.find((item) => item.id === el.dataset.id && item.role === 'user');
-    if (!user) return;
-    const ok = await UI.confirm({
-      title: 'Eliminar usuario',
-      message: `Se eliminará permanentemente la cuenta de ${user.name} (${user.email}), sus sesiones, pagos y sellos. Esta acción no se puede deshacer. El usuario podrá registrarse nuevamente desde la app.`,
-      okText: 'Eliminar usuario',
-      danger: true,
-    });
-    if (!ok) return;
-
-    const supabaseId = RS.SupabaseSync && RS.SupabaseSync.supabaseUserId ? RS.SupabaseSync.supabaseUserId(user) : null;
-    if (supabaseId) {
-      try {
-        const session = RS.Supabase.readSession();
-        if (!session || !session.access_token) throw new Error('Inicia sesión como admin para eliminar en el servidor.');
-        await RS.Supabase.request('/functions/v1/delete-user', {
-          method: 'POST',
-          body: JSON.stringify({ userId: supabaseId }),
-        }, session.access_token);
-      } catch (error) {
-        UI.toast(error && error.message ? error.message : 'No se pudo eliminar en el servidor. No se eliminó localmente.', 'error');
-        return;
-      }
-    }
-
-    st().users = st().users.filter((u) => u.id !== user.id);
-    st().sessions = (st().sessions || []).filter((s) => s.userId !== user.id);
-    st().payments = (st().payments || []).filter((p) => p.userId !== user.id);
-    RS.DB.save();
-    RS.data.addAudit(me().name, 'Usuario eliminado', `${user.name} (${user.email}).`);
-    UI.closeModal();
-    UI.toast('Usuario eliminado.', 'success');
-    RS.App.render(true);
-  };
-
-  RS.actions['admin-users-reset'] = async () => {
-    const current = me();
-    const users = st().users.filter((u) => u.role === 'user');
-    if (!users.length) {
-      UI.toast('No hay usuarios para eliminar.', 'info');
-      return;
-    }
-    const ok = await UI.confirm({
-      title: 'Eliminar todos los usuarios',
-      message: `Se eliminarán ${users.length} cuenta(s) de usuario. El administrador (${current.name}) se mantendrá. Esta acción no se puede deshacer.`,
-      okText: 'Eliminar todo',
-      cancelText: 'Cancelar',
-      danger: true,
-    });
-    if (!ok) return;
-    st().users = st().users.filter((u) => u.role === 'admin');
-    RS.DB.save();
-    RS.data.addAudit(current.name, 'Reset de usuarios', `Se eliminaron ${users.length} cuentas de usuario.`);
-    RS.SupabaseSync.push().catch(() => { /* no bloquea la UI */ });
-    UI.toast('Se eliminaron todos los usuarios. Queda solo el administrador.', 'success');
-    RS.App.render(true);
-  };
-
   RS.actions['admin-user-new'] = () => openUserForm(null);
 
   RS.actions['admin-user-assign'] = (el) => {
     const user = RS.data.getUser(el.dataset.id);
     UI.closeModal();
-    Admin.openSessionModal({
-      userId: user ? user.id : null,
-      date: ensureUi().agendaDate,
-      payment: user && Number(user.credits) > 0 ? 'plan' : 'pendiente',
-    });
+    Admin.openSessionModal({ userId: user ? user.id : null, date: ensureUi().agendaDate });
   };
 
   RS.actions['admin-max-edit'] = (el) => {
@@ -1402,6 +771,29 @@
     RS.data.addAudit(me().name, 'Catálogo actualizado', `${service.name} ${service.active ? 'activado' : 'desactivado'}.`);
     UI.toast(`${service.name} ${service.active ? 'activado' : 'desactivado'}.`, 'success');
     RS.App.render();
+  };
+
+  RS.actions['catalog-delete'] = (el) => {
+    const service = RS.data.getService(el.dataset.id);
+    if (!service) return;
+    const used = st().sessions.some((s) => s.serviceId === service.id);
+    if (used) {
+      UI.toast('Este servicio tiene sesiones asociadas. Desactívalo en lugar de eliminarlo.', 'error', 5000);
+      return;
+    }
+    UI.confirm({
+      title: 'Eliminar del catálogo',
+      message: `Se eliminará “${service.name}” del catálogo. Las compras y cotizaciones históricas no se modifican.`,
+      okText: 'Eliminar',
+      danger: true,
+    }).then((ok) => {
+      if (!ok) return;
+      st().services = st().services.filter((s) => s.id !== service.id);
+      RS.DB.save();
+      RS.data.addAudit(me().name, 'Servicio eliminado', service.name);
+      UI.toast('Servicio eliminado.', 'info');
+      RS.App.render();
+    });
   };
 
   RS.inputs['user-search'] = (el) => {

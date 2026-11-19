@@ -14,7 +14,6 @@
   RS.inputs = RS.inputs || {};
 
   let currentSession = null;
-  let supabaseSession = null;
   let pendingAdmin = null;
   let locking = false;
   let activityBound = false;
@@ -77,9 +76,7 @@
     return getSession() && getSession().role === 'admin';
   }
 
-  function startSession(user, authSession) {
-    supabaseSession = authSession || RS.Supabase.readSession();
-    if (supabaseSession) RS.Supabase.writeSession(supabaseSession);
+  function startSession(user) {
     currentSession = {
       userId: user.id,
       role: user.role,
@@ -91,122 +88,11 @@
     saveSession();
   }
 
-  async function loadRemoteProfile(authUser) {
-    supabaseSession = RS.Supabase.readSession() || supabaseSession;
-    if (!supabaseSession || !supabaseSession.access_token) {
-      throw new Error('La sesión de Supabase expiró. Ingresa nuevamente.');
-    }
-    const token = supabaseSession.access_token;
-    const rows = await RS.Supabase.request(
-      `/rest/v1/profiles?id=eq.${encodeURIComponent(authUser.id)}&select=id,email,full_name,phone,goal,role,active`,
-      { method: 'GET' },
-      token
-    );
-    const profile = Array.isArray(rows) ? rows[0] : null;
-    if (!profile) {
-      const meta = authUser.user_metadata || authUser.user_meta_data || {};
-      const metaName = meta.full_name || meta.name || '';
-      const metaPhone = meta.phone || '';
-      let created = null;
-      try {
-        created = await RS.Supabase.request('/rest/v1/profiles', {
-          method: 'POST',
-          headers: { Prefer: 'return=representation' },
-          body: JSON.stringify({
-            id: authUser.id,
-            email: authUser.email || '',
-            full_name: metaName || '',
-            phone: metaPhone || '',
-            goal: '',
-            role: 'user',
-            active: true,
-          }),
-        }, token);
-      } catch (createError) {
-        console.warn('No se pudo crear el perfil automÃ¡ticamente:', createError.message);
-      }
-      profile = Array.isArray(created) ? created[0] : created;
-      if (!profile) {
-        throw new Error('Tu usuario ya existe en Supabase, pero falta completar su perfil. No vuelvas a registrarte; contacta al administrador para reparar la cuenta.');
-      }
-    }
-    if (!profile.active) {
-      throw new Error('Supabase autenticÃ³ la cuenta, pero no encontramos un perfil activo. Verifica que las migraciones de perfiles estÃ©n aplicadas y contacta al administrador.');
-    }
-
-    const accounts = await RS.Supabase.request(
-      `/rest/v1/client_accounts?user_id=eq.${encodeURIComponent(authUser.id)}&select=credits,plan_label`,
-      { method: 'GET' },
-      token
-    );
-    const account = Array.isArray(accounts) ? accounts[0] : null;
-    if (!account) {
-      try {
-        const createdAcct = await RS.Supabase.request('/rest/v1/client_accounts', {
-          method: 'POST',
-          headers: { Prefer: 'return=representation' },
-          body: JSON.stringify({
-            user_id: authUser.id,
-            credits: 0,
-            plan_label: '',
-          }),
-        }, token);
-        account = Array.isArray(createdAcct) ? createdAcct[0] : createdAcct;
-      } catch (accountError) {
-        console.warn('No se pudo crear la cuenta de cliente; se usarÃ¡ saldo 0:', accountError.message);
-        account = { credits: 0, plan_label: '' };
-      }
-    }
-    let user = RS.data.getUser(authUser.id);
-    if (!user) {
-      user = { id: authUser.id, createdAt: authUser.created_at || new Date().toISOString(), notes: '' };
-      state().users.push(user);
-    }
-    Object.assign(user, {
-      role: profile.role === 'admin' ? 'admin' : 'user',
-      name: profile.full_name,
-      email: profile.email,
-      phone: profile.phone || '',
-      goal: profile.goal || '',
-      active: profile.active,
-      credits: Number(account.credits) || 0,
-      planLabel: account.plan_label || 'Sin plan activo',
-      source: 'supabase',
-    });
-    return user;
-  }
-
-  async function restoreSession() {
-    supabaseSession = RS.Supabase.readSession();
-    if (!supabaseSession) {
-      clearSession();
-      return null;
-    }
-    const authUser = await RS.Supabase.auth.getUser();
-    if (!authUser) {
-      supabaseSession = null;
-      clearSession();
-      return null;
-    }
-    const user = await loadRemoteProfile(authUser);
-    startSession(user, RS.Supabase.readSession());
-    return currentSession;
-  }
-
   function logout(options) {
     const o = options || {};
     const user = getUser();
     if (user && o.silent !== true) {
       RS.data.addAudit(user.name, 'Cierre de sesión', o.reason || 'Cierre de sesión manual.');
-    }
-    const token = supabaseSession && supabaseSession.access_token;
-    supabaseSession = null;
-    RS.Supabase.writeSession(null);
-    if (token) {
-      RS.Supabase.auth.signOut(token).catch((error) => {
-        console.error('No se pudo cerrar la sesión de Supabase:', error);
-        UI.toast('Se cerró la sesión en este dispositivo, pero no pudimos revocarla en el servidor.', 'error', 6000);
-      });
     }
     clearSession();
     locking = false;
@@ -286,7 +172,7 @@
         <label class="pin-label" for="admin-pin">PIN de 4 dígitos</label>
         <input id="admin-pin" class="pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="••••" aria-label="PIN de administrador">
         <p class="pin-error" id="pin-error" role="alert"></p>
-        <p class="pin-hint">${o.hint === false ? '' : 'Ingresa tu PIN de administrador.'}</p>
+        <p class="pin-hint">${o.hint === false ? '' : 'PIN demo: <strong>2468</strong> · cámbialo en Seguridad.'}</p>
       </div>`,
       footer: `${o.dismissible === false ? '<button class="btn btn-ghost" data-action="force-logout">Cerrar sesión</button>' : '<button class="btn btn-ghost" data-modal-close>Cancelar</button>'}
         <button class="btn btn-primary" data-pin-submit>${o.buttonLabel || 'Verificar PIN'}</button>`,
@@ -391,7 +277,6 @@
         initActivity();
         UI.toast('Acceso verificado. Bienvenido, Daniel.', 'success');
         RS.App.go('admin');
-        if (RS.App.syncAfterLogin) RS.App.syncAfterLogin({ toast: true });
       },
     });
   }
@@ -430,46 +315,28 @@
   }
 
   async function attemptLogin(identifier, password) {
-    const email = String(identifier || '').trim().toLowerCase();
-    if (!email.includes('@')) {
-      return { ok: false, error: 'Ingresa el correo electrónico de tu cuenta.' };
-    }
-    try {
-      supabaseSession = await RS.Supabase.auth.signInWithPassword(email, password);
-      if (!supabaseSession || !supabaseSession.user || !supabaseSession.access_token) {
-        throw new Error('La autenticación no entregó una sesión válida. Intenta nuevamente.');
-      }
-      RS.Supabase.writeSession(supabaseSession);
-      const authUser = supabaseSession.user;
-      const user = await loadRemoteProfile(authUser);
-      startSession(user, supabaseSession);
-      RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso autenticado por Supabase.');
-      return { ok: true, needsPin: user.role === 'admin', user };
-    } catch (error) {
-      supabaseSession = null;
-      RS.Supabase.writeSession(null);
-      const message = /invalid login credentials/i.test(error.message)
-        ? 'El correo o la contraseña no son correctos.'
-        : /email not confirmed/i.test(error.message)
-          ? 'Confirma tu correo desde el enlace que te enviamos y vuelve a ingresar.'
-          : error.message;
-      return { ok: false, error: message };
-    }
+    const st = state();
+    const idNorm = U.normalize(identifier);
+    const user = st.users.find(
+      (u) => U.normalize(u.email) === idNorm || (idNorm.length > 3 && U.normalize(u.name) === idNorm)
+    );
+    if (!user) return { ok: false, error: 'No encontramos una cuenta con ese correo o nombre.' };
+    if (!user.active) return { ok: false, error: 'Tu cuenta está desactivada. Contacta al studio por WhatsApp.' };
+    const hashed = await U.hashPassword(password);
+    if (hashed !== user.passwordHash) return { ok: false, error: 'La contraseña no es correcta. Intenta nuevamente.' };
+    if (user.role === 'admin') return { ok: true, needsPin: true, user };
+    startSession(user);
+    RS.data.addAudit(user.name, 'Inicio de sesión', 'Acceso de usuario a la app.');
+    return { ok: true, needsPin: false, user };
   }
 
   async function changePassword(user, currentPassword, newPassword) {
+    const currentHash = await U.hashPassword(currentPassword);
+    if (currentHash !== user.passwordHash) return { ok: false, error: 'La contraseña actual no es correcta.' };
     if (String(newPassword).length < 8) return { ok: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' };
-    try {
-      const reauthenticated = await RS.Supabase.auth.signInWithPassword(user.email, currentPassword);
-      await RS.Supabase.auth.updatePassword(newPassword, reauthenticated.access_token);
-      supabaseSession = reauthenticated;
-      RS.Supabase.writeSession(reauthenticated);
-    } catch (error) {
-      const message = /invalid login credentials/i.test(error.message)
-        ? 'La contraseña actual no es correcta.'
-        : error.message;
-      return { ok: false, error: message };
-    }
+    user.passwordHash = await U.hashPassword(newPassword);
+    state().security.lastPasswordChange = new Date().toISOString();
+    RS.DB.save();
     RS.data.addAudit(user.name, 'Contraseña actualizada', 'Cambio de contraseña desde la app.');
     return { ok: true };
   }
@@ -516,15 +383,13 @@
   function renderLogin() {
     const tab = (RS.ui && RS.ui.authTab) || 'login';
     const isRegister = tab === 'register';
-    const trialService = state().services.find((s) => s.id === 'srv-training' && s.active);
-    const trialOn = !!trialService && state().settings.freeTrialEnabled !== false;
-    return `<main class="auth-page" id="main-content">
+    return `<div class="auth-page">
       <section class="auth-hero">
         <div class="hero-orb hero-orb-1"></div>
         <div class="hero-orb hero-orb-2"></div>
         <div class="hero-grid"></div>
         <div class="auth-hero-inner">
-          <a class="brand-link" href="#/login">${UI.logoLockup({ light: true, size: 44 })}</a>
+          <a class="brand-link" href="#/login" aria-label="Recovery Studio">${UI.logoLockup({ light: true, size: 44 })}</a>
           <div class="hero-copy">
             <span class="hero-eyebrow">${UI.icon('sparkles', 14)} Agenda · Recuperación · Performance</span>
             <h1>Recupera mejor.<br><em>Vuelve más fuerte.</em></h1>
@@ -563,7 +428,7 @@
               <span>${UI.icon('whatsapp', 14)} +56 9 6505 8439</span>
             </div>
           </div>
-          <p class="hero-foot">Recovery Studio · Gorbea, Región de la Araucanía · ${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</p>
+          <p class="hero-foot">Recovery Studio · Gorbea, Chile · ${UI.icon('heart', 13)} Entrena. Recupera. Rinde.</p>
         </div>
       </section>
 
@@ -575,10 +440,6 @@
               <button class="auth-tab ${!isRegister ? 'active' : ''}" data-action="auth-tab" data-tab="login" role="tab" aria-selected="${!isRegister}">Ingresar</button>
               <button class="auth-tab ${isRegister ? 'active' : ''}" data-action="auth-tab" data-tab="register" role="tab" aria-selected="${isRegister}">Crear cuenta</button>
             </div>
-            ${trialOn ? `<div class="auth-trial">
-              <span class="auth-trial-icon" aria-hidden="true">🎁</span>
-              <span class="auth-trial-text"><strong>Tu primera clase es gratis</strong><span>Entrenamiento personal · solo para tu primera vez</span></span>
-            </div>` : ''}
             ${isRegister ? renderRegisterForm() : renderLoginForm()}
           </div>
           <a class="company-cta" href="#/cotizar">
@@ -591,36 +452,23 @@
             <span><strong>Servicios y precios</strong><span>Kinesiología, masajes, sauna y planes</span></span>
             ${UI.icon('arrow-right', 18)}
           </a>
-          <a class="company-cta" href="https://wa.me/56965058439?text=Hola,%20quiero%20agendar%20sin%20crear%20cuenta">
-            <span class="company-cta-icon">${UI.icon('calendar', 20)}</span>
-            <span><strong>Reservar sin cuenta</strong><span>Agenda tu primera sesión por WhatsApp en segundos</span></span>
-            ${UI.icon('arrow-right', 18)}
-          </a>
-          <a class="company-cta" href="https://tally.so/r/1W4dkp" target="_blank" rel="noopener">
-            <span class="company-cta-icon">${UI.icon('mail', 20)}</span>
-            <span><strong>Formulario de contacto</strong><span>Déjanos tus datos y te escribimos a la brevedad</span></span>
-            ${UI.icon('arrow-right', 18)}
-          </a>
           <a class="company-cta sauna-cta" href="sauna.html">
             <span class="company-cta-icon">${UI.icon('droplet', 20)}</span>
             <span><strong>Beneficios del sauna húmedo</strong><span>Calor, movilidad y recuperación profunda</span></span>
             ${UI.icon('arrow-right', 18)}
           </a>
-          <a class="company-cta" href="#/capsulas">
-            <span class="company-cta-icon">${UI.icon('play', 20)}</span>
-            <span><strong>Cápsulas de recuperación</strong><span>Consejos prácticos para moverte y entrenar mejor</span></span>
-            ${UI.icon('arrow-right', 18)}
-          </a>
-          <a class="reviews-teaser" href="#/resenas" data-reviews-teaser hidden></a>
+          <a class="reviews-teaser" href="#/resenas" data-reviews-teaser hidden aria-label="Ver reseñas y calificaciones de clientes"></a>
           <p class="auth-legal">
             <button class="link-btn" data-action="show-terms">Términos</button>
             <span>·</span>
             <button class="link-btn" data-action="show-privacy">Privacidad</button>
+            <span>·</span>
+            <button class="link-btn" data-action="reset-demo">Restablecer demo</button>
           </p>
           <p class="auth-copy">© ${new Date().getFullYear()} Recovery Studio. Todos los derechos reservados.</p>
         </div>
       </section>
-    </main>`;
+    </div>`;
   }
 
   function renderLoginForm() {
@@ -652,7 +500,18 @@
         </div>
         <button class="btn btn-primary btn-block btn-lg" type="submit" data-login-submit>Ingresar a mi cuenta ${UI.icon('arrow-right', 18)}</button>
       </form>
-      ${googleButton()}
+      <div class="auth-divider"><span>o explora la demo</span></div>
+      <div class="demo-grid">
+        <button class="demo-btn" type="button" data-action="demo-login" data-role="user">
+          <span class="demo-avatar">${UI.avatar('Valentina Rojas', 36)}</span>
+          <span class="demo-text"><strong>Usuario demo</strong><span>valentina@demo.cl · demo1234</span></span>
+        </button>
+        <button class="demo-btn" type="button" data-action="demo-login" data-role="admin">
+          <span class="demo-avatar admin">${UI.avatar('Daniel Barrueto', 36)}</span>
+          <span class="demo-text"><strong>Admin demo</strong><span>recoverystudio7@gmail.com · PIN 2468</span></span>
+        </button>
+      </div>
+      <p class="auth-tip">${UI.icon('info', 14)} Demo funcional: tu cuenta y reservas se guardan en este navegador. Las reseñas sí son compartidas.</p>
     </div>`;
   }
 
@@ -695,78 +554,12 @@
         <label class="check check-top"><input type="checkbox" name="terms" required><span>Acepto los términos y la política de reagendamiento de 12 h.</span></label>
         <button class="btn btn-accent btn-block btn-lg" type="submit" data-register-submit>Crear mi cuenta ${UI.icon('arrow-right', 18)}</button>
       </form>
-      ${googleButton()}
       <div class="auth-divider"><span>¿Prefieres que te inscribamos?</span></div>
       <a class="btn btn-outline btn-block" href="https://wa.me/${RS.BRAND.whatsapp}?text=${encodeURIComponent('Hola Recovery Studio, quiero inscribirme y agendar mi primera evaluación.')}" target="_blank" rel="noopener">${UI.icon('whatsapp', 18)} Escríbenos por WhatsApp</a>
     </div>`;
   }
 
   /* ------------------------------ cotización ------------------------------- */
-
-  RS.actions['google-login'] = () => startGoogleLogin();
-
-  /* --------------------------- inicio de sesión --------------------------- */
-
-  let googleEnabled = false;
-
-  async function loadProviders() {
-    try {
-      const settings = await RS.Supabase.request('/auth/v1/settings', { method: 'GET' });
-      googleEnabled = Boolean(settings && settings.external && settings.external.google);
-    } catch (error) {
-      googleEnabled = false;
-    }
-    RS.Auth.googleEnabled = googleEnabled;
-    return googleEnabled;
-  }
-
-  function consumeOAuthRedirect() {
-    const raw = location.hash || '';
-    if (!raw) return false;
-    const params = new URLSearchParams(raw.replace(/^#/, ''));
-    if (params.get('error')) {
-      const message = params.get('error_description') || 'No pudimos completar el ingreso con Google.';
-      history.replaceState(null, '', location.pathname + location.search);
-      setTimeout(() => UI.toast(message, 'error', 7000), 400);
-      return false;
-    }
-    const access = params.get('access_token');
-    if (!access) return false;
-    const expiresIn = Number(params.get('expires_in')) || 3600;
-    RS.Supabase.writeSession({
-      access_token: access,
-      refresh_token: params.get('refresh_token') || '',
-      token_type: params.get('token_type') || 'bearer',
-      expires_in: expiresIn,
-      expires_at: Math.floor(Date.now() / 1000) + expiresIn,
-    });
-    history.replaceState(null, '', location.pathname + location.search);
-    return true;
-  }
-
-  function startGoogleLogin() {
-    const config = RS.SupabaseConfig;
-    if (!config || !config.url) {
-      UI.toast('Supabase no está configurado.', 'error');
-      return;
-    }
-    if (!googleEnabled) {
-      UI.toast('El ingreso con Google aún no está habilitado. Usa tu correo y contraseña.', 'info', 6000);
-      return;
-    }
-    const redirect = location.origin;
-    const url = `${config.url.replace(/\/$/, '')}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;
-    location.href = url;
-  }
-
-  function googleButton() {
-    if (!RS.Auth.googleEnabled) return '';
-    return `<div class="auth-divider"><span>o</span></div>
-      <button type="button" class="btn btn-outline btn-block" data-action="google-login">
-        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
-        Continuar con Google
-      </button>`;
-  }
 
   function serviceById(id) {
     return state().services.find((s) => s.id === id);
@@ -885,7 +678,7 @@
         </div>
       </main>
       <footer class="public-foot">
-        <span>© ${new Date().getFullYear()} Recovery Studio · Gorbea, Región de la Araucanía</span>
+        <span>© ${new Date().getFullYear()} Recovery Studio · Gorbea, Chile</span>
         <span>${UI.icon('map-pin', 14)} ${U.esc(state().settings.address)}</span>
       </footer>
     </div>`;
@@ -941,6 +734,26 @@
     el.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
   };
 
+  RS.actions['demo-login'] = async (el) => {
+    const role = el.dataset.role;
+    const identifier = role === 'admin' ? RS.BRAND.adminEmail : 'valentina@demo.cl';
+    const password = role === 'admin' ? 'Recovery2026!' : 'demo1234';
+    el.disabled = true;
+    const result = await attemptLogin(identifier, password);
+    el.disabled = false;
+    if (!result.ok) {
+      loginError(result.error);
+      return;
+    }
+    if (result.needsPin) {
+      openAdminPin(result.user);
+      return;
+    }
+    initActivity();
+    UI.toast(`Hola ${result.user.name.split(' ')[0]}, qué bueno verte.`, 'success');
+    RS.App.go('inicio');
+  };
+
   RS.actions['forgot-password'] = () => {
     UI.modal({
       title: 'Restablecer contraseña',
@@ -973,11 +786,28 @@
       title: 'Privacidad y datos',
       size: 'md',
       body: `<div class="prose">
-        <p>La información de esta cuenta se guarda en el almacenamiento local de este navegador. No se sincroniza con otros dispositivos.</p>
-        <p>Los datos de salud, pagos y entrenamiento deben protegerse con cifrado en tránsito y en reposo, control de acceso por roles y una política de retención.</p>
+        <p>Esta versión de demostración guarda la información en el almacenamiento local de tu navegador. No se envía a servidores externos.</p>
+        <p>En una implementación productiva, los datos de salud, pagos y entrenamiento deben protegerse con cifrado en tránsito y en reposo, control de acceso por roles y una política de retención.</p>
+        <p>Puedes borrar todos los datos locales usando “Restablecer demo” en la pantalla de ingreso.</p>
       </div>`,
       footer: '<button class="btn btn-primary" data-modal-close>Entendido</button>',
     });
+  };
+
+  RS.actions['reset-demo'] = async () => {
+    const ok = await UI.confirm({
+      title: 'Restablecer datos demo',
+      message: 'Se borrarán todos los cambios guardados en este navegador y se restaurarán los datos de ejemplo. Esta acción no se puede deshacer.',
+      okText: 'Restablecer demo',
+      danger: true,
+    });
+    if (!ok) return;
+    await RS.DB.reset();
+    clearSession();
+    RS.ui = { authTab: 'login' };
+    UI.toast('Datos demo restablecidos.', 'success');
+    RS.App.go('login');
+    RS.App.render(true);
   };
 
   RS.forms.login = async (form, submitter) => {
@@ -1006,7 +836,6 @@
     initActivity();
     UI.toast(`Bienvenido, ${result.user.name.split(' ')[0]}.`, 'success');
     RS.App.go('inicio');
-    if (RS.App.syncAfterLogin) RS.App.syncAfterLogin({ toast: true });
   };
 
   RS.forms.register = async (form, submitter) => {
@@ -1023,43 +852,34 @@
     if (password.length < 8) return loginError('La contraseña debe tener al menos 8 caracteres.');
     if (password !== confirm) return loginError('Las contraseñas no coinciden.');
     if (!form.terms.checked) return loginError('Debes aceptar los términos y la política de reservas.');
-    setLoading(submitter, true, 'Creando cuenta…');
-    try {
-      const emailRedirect = new URL(window.location.href);
-      emailRedirect.search = '';
-      emailRedirect.hash = '#/login';
-      const result = await RS.Supabase.auth.signUp(
-        email,
-        password,
-        { full_name: name, phone },
-        emailRedirect.href
-      );
-      if (!result.user) throw new Error('Supabase no confirmó la creación de la cuenta.');
-      if (!result.access_token) {
-        setLoading(submitter, false);
-        UI.toast('Cuenta creada en Supabase. Confirma tu correo con el enlace que te enviamos; después podrás ingresar desde cualquier dispositivo.', 'success', 8000);
-        RS.ui.authTab = 'login';
-        RS.App.render(true);
-        return;
-      }
-      supabaseSession = result;
-      RS.Supabase.writeSession(result);
-      const user = await loadRemoteProfile(result.user);
-      startSession(user, result);
-      initActivity();
-      RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email} en Supabase.`);
-      setLoading(submitter, false);
-      UI.toast('¡Cuenta creada! Agenda tu primera sesión.', 'success');
-      RS.App.go('agendar');
-    } catch (error) {
-      setLoading(submitter, false);
-      const message = /already registered|already exists/i.test(error.message)
-        ? 'Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.'
-        : /redirect.*(allow|valid)|not allowed/i.test(error.message)
-          ? 'Supabase rechazó el retorno de confirmación. Agrega la URL de este sitio a Authentication → URL Configuration → Redirect URLs.'
-          : error.message;
-      loginError(message);
+    const st = state();
+    if (st.users.some((u) => U.normalize(u.email) === U.normalize(email))) {
+      return loginError('Ya existe una cuenta con ese correo. Inicia sesión o recupera tu clave.');
     }
+    setLoading(submitter, true, 'Creando cuenta…');
+    const user = {
+      id: U.uid('usr'),
+      role: 'user',
+      name,
+      email,
+      phone,
+      passwordHash: await U.hashPassword(password),
+      active: true,
+      credits: 0,
+      planLabel: 'Sin plan activo',
+      goal: '',
+      notes: 'Registro desde la app.',
+      createdAt: new Date().toISOString(),
+      source: 'registro',
+    };
+    st.users.push(user);
+    RS.DB.save();
+    RS.data.addAudit(name, 'Nuevo registro', `Se creó la cuenta ${email}.`);
+    startSession(user);
+    initActivity();
+    setLoading(submitter, false);
+    UI.toast('¡Cuenta creada! Agenda tu primera sesión.', 'success');
+    RS.App.go('agendar');
   };
 
   RS.forms.quote = async (form, submitter) => {
@@ -1140,7 +960,6 @@
     getSession,
     getUser,
     startSession,
-    restoreSession,
     logout,
     isAdmin,
     touch,
@@ -1150,10 +969,6 @@
     verifyPin,
     changePassword,
     changePin,
-    loadProviders,
-    consumeOAuthRedirect,
-    startGoogleLogin,
-    googleEnabled: false,
     renderLogin,
     renderQuote,
     renderQuoteThanks,
@@ -1161,4 +976,3 @@
     quoteEstimate,
   };
 })();
-

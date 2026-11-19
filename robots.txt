@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /fichas-rutina.html
 
 Sitemap: https://www.recoverystudio.cl/sitemap.xml

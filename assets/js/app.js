@@ -8,13 +8,13 @@
   const U = RS.util;
   const UI = RS.UI;
 
-  const USER_ROUTES = ['inicio', 'reservas', 'planes', 'pagos', 'entrenamiento', 'perfil'];
+  const USER_ROUTES = ['inicio', 'agendar', 'reservas', 'planes', 'pagos', 'entrenamiento', 'perfil'];
   const ADMIN_ROUTES = [
-    'admin', 'admin/agenda', 'admin/usuarios', 'admin/club', 'admin/alertas', 'admin/planes', 'admin/pagos',
-    'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/resenas', 'admin/biblioteca',
-    'admin/configuracion', 'admin/seguridad', 'admin/contenido',
+    'admin', 'admin/agenda', 'admin/usuarios', 'admin/planes', 'admin/pagos',
+    'admin/finanzas', 'admin/honorarios', 'admin/cotizaciones', 'admin/resenas',
+    'admin/configuracion', 'admin/seguridad',
   ];
-  const PUBLIC_ROUTES = ['login', 'cotizar', 'cotizar-gracias', 'resenas', 'sauna', 'capsulas', 'agendar'];
+  const PUBLIC_ROUTES = ['login', 'cotizar', 'cotizar-gracias', 'resenas', 'sauna'];
 
   const TITLES = {
     login: 'Ingresar',
@@ -22,7 +22,6 @@
     'cotizar-gracias': 'Solicitud recibida',
     resenas: 'Reseñas de clientes',
     sauna: 'Beneficios del sauna húmedo',
-    capsulas: 'Cápsulas de recuperación',
     inicio: 'Inicio',
     agendar: 'Agendar sesión',
     reservas: 'Mis reservas',
@@ -33,18 +32,14 @@
     admin: 'Resumen',
     'admin/agenda': 'Agenda',
     'admin/usuarios': 'Usuarios',
-    'admin/club': 'Club Recovery',
-    'admin/alertas': 'Alertas de planes',
     'admin/planes': 'Planes y servicios',
     'admin/pagos': 'Pagos',
     'admin/finanzas': 'Finanzas',
     'admin/honorarios': 'Honorarios',
     'admin/cotizaciones': 'Cotizaciones',
     'admin/resenas': 'Reseñas',
-    'admin/biblioteca': 'Biblioteca de ejercicios',
     'admin/configuracion': 'Configuración',
     'admin/seguridad': 'Seguridad',
-    'admin/contenido': 'Promociones y cápsulas',
   };
 
   function currentRoute() {
@@ -62,24 +57,19 @@
     if (role === 'admin') {
       const pending = st.payments.filter((p) => p.status === 'pendiente').length;
       const quotes = st.quotes.filter((q) => q.status === 'nueva').length;
-      const planAlerts = RS.data.planAlertCounts ? RS.data.planAlertCounts().urgent : 0;
       return [
         { label: 'Gestión', items: [
           { route: 'admin', icon: 'grid', label: 'Resumen' },
           { route: 'admin/agenda', icon: 'calendar', label: 'Agenda' },
           { route: 'admin/usuarios', icon: 'users', label: 'Usuarios' },
-          { route: 'admin/club', icon: 'award', label: 'Club Recovery' },
-          { route: 'admin/alertas', icon: 'bell', label: 'Alertas de planes', badge: planAlerts },
         ] },
         { label: 'Negocio', items: [
           { route: 'admin/planes', icon: 'layers', label: 'Planes y servicios' },
-          { route: 'admin/biblioteca', icon: 'dumbbell', label: 'Biblioteca ejercicios' },
           { route: 'admin/pagos', icon: 'credit-card', label: 'Pagos', badge: pending },
           { route: 'admin/finanzas', icon: 'bar-chart', label: 'Finanzas' },
           { route: 'admin/honorarios', icon: 'receipt', label: 'Honorarios' },
           { route: 'admin/cotizaciones', icon: 'briefcase', label: 'Cotizaciones', badge: quotes },
           { route: 'admin/resenas', icon: 'message-square', label: 'Reseñas' },
-          { route: 'admin/contenido', icon: 'play', label: 'Promociones y cápsulas' },
         ] },
         { label: 'Sistema', items: [
           { route: 'admin/configuracion', icon: 'settings', label: 'Configuración' },
@@ -94,7 +84,6 @@
         { route: 'agendar', icon: 'calendar', label: 'Agendar sesión' },
         { route: 'reservas', icon: 'calendar-check', label: 'Mis reservas' },
         { route: 'sauna', icon: 'droplet', label: 'Sauna húmedo' },
-        { route: 'capsulas', icon: 'play', label: 'Cápsulas' },
       ] },
       { label: 'Mi cuenta', items: [
         { route: 'planes', icon: 'layers', label: 'Planes' },
@@ -158,9 +147,8 @@
         <strong>${role === 'admin' ? 'Panel de administración' : 'Mi cuenta'}</strong>
       </div>
       <div class="topbar-actions">
-        <span class="local-chip" title="Tus datos se sincronizan con la nube y se actualizan automáticamente.">${UI.icon('refresh', 13)} Sincronizado</span>
+        <span class="demo-chip" title="Tu cuenta y reservas se guardan en este navegador. Las reseñas son compartidas.">${UI.icon('sparkles', 13)} Datos locales</span>
         <a class="icon-btn topbar-help" href="${RS.data.whatsappUrl('Hola Recovery Studio, necesito ayuda.')}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${UI.icon('whatsapp', 19)}</a>
-        <button class="icon-btn" type="button" data-action="sync-now" title="Sincronizar datos con la nube" aria-label="Sincronizar datos con la nube">${UI.icon('refresh', 19)}</button>
         <a class="icon-btn topbar-bell" href="#/${notificationRoute}" title="Notificaciones" aria-label="Notificaciones">${UI.icon('bell', 19)}${badge ? `<span class="bell-badge">${badge}</span>` : ''}</a>
         <a class="topbar-user" href="#/${role === 'admin' ? 'admin/seguridad' : 'perfil'}" title="Mi cuenta">
           ${UI.avatar(user ? user.name : 'Usuario', 36)}
@@ -193,7 +181,6 @@
       'cotizar-gracias': () => RS.Auth.renderQuoteThanks(),
       resenas: () => RS.Reviews.renderReviewsPage(),
       sauna: () => RS.Reviews.renderSaunaPage(),
-      capsulas: () => RS.VideoContent.renderPublic(),
       inicio: () => RS.User.renderHome(),
       agendar: () => RS.User.renderBooking(),
       reservas: () => RS.User.renderAppointments(),
@@ -204,20 +191,7 @@
       admin: () => RS.Admin.renderOverview(),
       'admin/agenda': () => RS.Admin.renderAgenda(),
       'admin/usuarios': () => RS.Admin.renderUsers(),
-      'admin/club': () => {
-        if (typeof RS.Admin.renderClub !== 'function') {
-          throw new Error('No se cargó el módulo Club Recovery (admin-club.js). Cierra la app y vuelve a abrirla.');
-        }
-        return RS.Admin.renderClub();
-      },
-      'admin/alertas': () => {
-        if (typeof RS.Admin.renderPlanAlerts !== 'function') {
-          throw new Error('No se cargó el módulo de alertas de planes (admin-alerts.js). Cierra la app y vuelve a abrirla.');
-        }
-        return RS.Admin.renderPlanAlerts();
-      },
       'admin/planes': () => RS.Admin.renderCatalog(),
-      'admin/biblioteca': () => RS.Admin.renderLibrary(),
       'admin/pagos': () => RS.Admin.renderPayments(),
       'admin/finanzas': () => RS.Admin.renderFinance(),
       'admin/honorarios': () => RS.Admin.renderHonorarios(),
@@ -225,45 +199,8 @@
       'admin/resenas': () => RS.Reviews.renderAdminPage(),
       'admin/configuracion': () => RS.Admin.renderSettings(),
       'admin/seguridad': () => RS.Admin.renderSecurity(),
-      'admin/contenido': () => RS.VideoContent.renderAdmin(),
     };
     return map[route];
-  }
-
-  function renderViewError(route, err, session) {
-    const message = err && err.message ? err.message : 'Error desconocido';
-    const title = TITLES[route] || 'esta sección';
-    const home = session ? roleHome(session.role) : 'login';
-    return `<div class="view">
-      <section class="card">
-        <div class="card-body">
-          <span class="eyebrow">Problema al cargar</span>
-          <h1 class="page-title">No pudimos abrir ${U.esc(title)}</h1>
-          <p class="page-sub">Esto suele pasar cuando la app guardó una versión antigua de un archivo. Recarga sin caché para traer la versión nueva.</p>
-          <div class="callout callout-orange"><strong>Detalle técnico:</strong> ${U.esc(message)}</div>
-          <div class="page-actions">
-            <button class="btn btn-primary" type="button" onclick="RS.App.hardReload()">${UI.icon('refresh', 17)} Recargar app</button>
-            <a class="btn btn-outline" href="#/${home}">Volver al inicio</a>
-          </div>
-        </div>
-      </section>
-    </div>`;
-  }
-
-  async function hardReload() {
-    try {
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((reg) => reg.unregister()));
-      }
-      if (window.caches) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((key) => caches.delete(key)));
-      }
-    } catch (err) {
-      console.warn('No se pudo limpiar la caché', err);
-    }
-    location.reload();
   }
 
   function render(forceScroll) {
@@ -322,30 +259,13 @@
       return;
     }
 
-    let content;
-    try {
-      content = view();
-    } catch (err) {
-      console.error('Error al renderizar', route, err);
-      content = renderViewError(route, err, session);
-    }
-
     if (PUBLIC_ROUTES.includes(route)) {
-      if (route === 'agendar' && session) {
-        app.innerHTML = renderShell(session.role, content);
-      } else {
-        app.innerHTML = content;
-      }
+      app.innerHTML = view();
     } else {
-      app.innerHTML = renderShell(session.role, content);
+      app.innerHTML = renderShell(session.role, view());
     }
     try {
       if (RS.Reviews && RS.Reviews.mount) RS.Reviews.mount(route);
-    } catch (err) {
-      console.error(err);
-    }
-    try {
-      if (route === 'reservas' && RS.User && typeof RS.User.hydrateWaitlist === 'function') RS.User.hydrateWaitlist();
     } catch (err) {
       console.error(err);
     }
@@ -459,132 +379,13 @@
     });
   };
 
-  function modalIsOpen() {
-    const root = document.getElementById('modal-root');
-    return Boolean(root && root.childElementCount);
-  }
-
-  function refreshAfterSync(result) {
-    if (!result || !result.ok || !result.merged) return;
-    const route = currentRoute();
-    UI.toast(`${result.merged} dato${result.merged === 1 ? '' : 's'} nuevo${result.merged === 1 ? '' : 's'} sincronizado${result.merged === 1 ? '' : 's'}.`, 'info', 3500);
-    if (modalIsOpen()) return;
-    const safeToRefresh = route.indexOf('admin') === 0 || ['inicio', 'reservas', 'pagos', 'perfil'].indexOf(route) !== -1;
-    if (safeToRefresh) render(false);
-  }
-
-  RS.actions['sync-now'] = async (el) => {
-    if (!RS.SupabaseSync || !RS.SupabaseSync.configured()) {
-      UI.toast('Inicia sesión con tu correo para sincronizar tus datos.', 'info');
-      return;
-    }
-    if (el) el.disabled = true;
-    try {
-      const result = await RS.SupabaseSync.syncNow();
-      if (RS.VideoContent && RS.VideoContent.load) {
-        try { await RS.VideoContent.load(); } catch (e) { /* no bloquea */ }
-      }
-      if (RS.ExerciseLibrary && RS.ExerciseLibrary.load) {
-        try { await RS.ExerciseLibrary.load(); } catch (e) { /* no bloquea */ }
-      }
-      render(false);
-      if (result && result.ok) {
-        UI.toast(result.merged ? `Sincronización completa: ${result.merged} cambio(s).` : 'Todo está al día.', 'success', 3000);
-      } else {
-        UI.toast('No pudimos sincronizar. Revisa tu conexión e inténtalo nuevamente.', 'error', 5000);
-      }
-    } catch (error) {
-      UI.toast(error.message || 'No pudimos sincronizar los datos.', 'error', 6000);
-    } finally {
-      if (el) el.disabled = false;
-    }
-  };
-
-  RS.actions['calendar-subscribe'] = async () => {
-    const user = RS.Auth.getUser();
-    if (!user) {
-      UI.toast('Ingresa a tu cuenta para ver tu calendario.', 'error');
-      return;
-    }
-    try {
-      UI.toast('Generando tu calendario privado…', 'info', 1800);
-      const feed = await RS.data.calendarFeedUrl(user);
-      UI.modal({
-        title: 'Tu calendario privado',
-        subtitle: 'Tus sesiones agendadas se actualizarán solas en Google Calendar.',
-        size: 'sm',
-        body: `<div class="callout callout-blue">${UI.icon('calendar', 17)}<span>Este enlace es <strong>privado</strong>. No lo compartas: quien lo tenga puede ver tus horas.</span></div>
-          <div class="field"><label for="calendar-feed">Enlace de suscripción</label><input class="input" id="calendar-feed" readonly value="${U.esc(feed.url)}"></div>
-          <ol class="calendar-steps">
-            <li>Abre Google Calendar en tu computador.</li>
-            <li>En “Otros calendarios”, elige <strong>Añadir por URL</strong>.</li>
-            <li>Pega el enlace y confirma.</li>
-          </ol>
-          <p class="form-hint">${UI.icon('info', 14)} También funciona en Apple Calendario y Outlook con el enlace <code>webcal://</code>.</p>`,
-        footer: `<button class="btn btn-ghost" data-action="copy" data-copy="${U.esc(feed.url)}">${UI.icon('copy', 15)} Copiar enlace</button>
-          <a class="btn btn-primary" href="${U.esc(feed.google)}" target="_blank" rel="noopener">${UI.icon('calendar', 16)} Abrir Google Calendar</a>`,
-      });
-    } catch (error) {
-      UI.toast(error.message || 'No pudimos generar tu calendario.', 'error', 7000);
-    }
-  };
-
-  let loginSyncPromise = null;
-
-  /* Carga inmediata de la nube al iniciar sesión (o al restaurar la sesión).
-     Solo descarga: no sube los datos locales del equipo nuevo para no
-     sobrescribir la agenda, los pagos ni los usuarios que ya existen. */
-  function syncAfterLogin(options) {
-    const opts = options || {};
-    if (!RS.SupabaseSync || !RS.SupabaseSync.configured()) return Promise.resolve(null);
-    if (loginSyncPromise) return loginSyncPromise;
-    loginSyncPromise = (async () => {
-      try {
-        const result = await RS.SupabaseSync.pull();
-        if (result && result.ok) {
-          if (!modalIsOpen()) render(false);
-          if (opts.toast && result.merged) {
-            UI.toast(`Datos cargados: ${result.merged} registro${result.merged === 1 ? '' : 's'} desde la nube.`, 'success', 3500);
-          }
-        } else if (opts.toast) {
-          UI.toast('No pudimos cargar los datos de la nube. Revisa tu conexión e inténtalo con Sincronizar.', 'error', 6000);
-        }
-        return result;
-      } catch (error) {
-        console.warn('No se pudieron cargar los datos al iniciar sesión:', error.message);
-        if (opts.toast) UI.toast('No pudimos cargar los datos de la nube. Revisa tu conexión.', 'error', 6000);
-        return { ok: false, reason: 'error' };
-      } finally {
-        loginSyncPromise = null;
-      }
-    })();
-    return loginSyncPromise;
-  }
-
-  function startSync() {
-    if (!RS.SupabaseSync || typeof RS.SupabaseSync.startAutoSync !== 'function') return;
-    // Se inicia siempre: en un equipo nuevo la sesión de Supabase puede
-    // llegar después del arranque, y así la sincronización queda activa.
-    RS.SupabaseSync.startAutoSync(refreshAfterSync, 45000);
-    if (RS.SupabaseSync.configured()) syncAfterLogin({ toast: false });
-  }
-
   /* --------------------------------- inicio -------------------------------- */
 
   async function boot() {
     try {
       await RS.DB.init();
-      if (RS.Auth.consumeOAuthRedirect) RS.Auth.consumeOAuthRedirect();
-      if (RS.Auth.loadProviders) await RS.Auth.loadProviders();
-      await RS.Auth.restoreSession();
       RS.ui = RS.ui || {};
-      await RS.TrainingRoutines.load();
-      if (RS.ExerciseLibrary && RS.ExerciseLibrary.load) {
-        try { await RS.ExerciseLibrary.load(); } catch (e) { console.warn('Biblioteca local', e); }
-      }
-      await RS.VideoContent.load();
       RS.Auth.initActivity();
-      startSync();
       document.addEventListener('click', onDocumentClick);
       document.addEventListener('submit', onDocumentSubmit);
       document.addEventListener('change', onDocumentChange);
@@ -612,9 +413,6 @@
     go,
     currentRoute,
     boot,
-    hardReload,
-    startSync,
-    syncAfterLogin,
   };
 
   if (document.readyState === 'loading') {
