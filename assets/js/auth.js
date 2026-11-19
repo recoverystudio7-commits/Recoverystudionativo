@@ -626,14 +626,18 @@
       <section class="auth-about">
         <div class="about-grid">
           <div class="about-card about-identity">
-            <div class="about-photo"><img src="assets/img/sauna.gif" alt="Sauna húmedo"></div>
+            <div class="about-photo"><img src="assets/img/about-perfil.jpeg" alt="Foto de Daniel"></div>
             <h2 class="about-title">¿Quién te atiende?</h2>
             <p class="about-bio">Soy Daniel Barrueto, kinesiólogo y entrenador personal. Te ayudo a recuperarte mejor con planes personalizados, siempre en un espacio cómodo y seguro donde te atiendo.</p>
             <a class="btn btn-accent" href="./index.html#/agendar">Agendar una cita ${UI.icon('arrow-right', 16)}</a>
           </div>
           <div class="about-card about-space">
-            <div class="about-space-frame"><img src="assets/img/sauna.gif" alt="Sauna húmedo"></div>
+            <div class="about-space-frame"><img src="assets/img/about-espacio.jpeg" alt="Foto del lugar de trabajo"></div>
             <span class="about-space-label">Espacio de atención de Recovery Studio</span>
+          </div>
+          <div class="about-card about-space">
+            <div class="about-space-frame"><img src="assets/img/sauna.gif" alt="Sauna húmedo"></div>
+            <span class="about-space-label">Sauna húmedo</span>
           </div>
         </div>
       </section>

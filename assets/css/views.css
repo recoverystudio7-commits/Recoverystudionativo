@@ -3917,7 +3917,7 @@
   width: 100%;
   max-width: 660px;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
   align-items: center;
 }
