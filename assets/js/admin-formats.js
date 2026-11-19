@@ -13,6 +13,39 @@
   const STUDIO_RUT = '317873';
   const STUDIO_GIRO_SII = '869092';
 
+  /* Logo del estudio para los documentos imprimibles (favicon/Icon, azul + naranjo). */
+  const LOGO_SVG = '<svg width="40" height="40" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" rx="120" fill="#2563EB"/><path d="M184 392V144h92c48 0 80 29 80 75 0 35-18 61-50 71l70 102" fill="none" stroke="#FFFFFF" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle cx="376" cy="144" r="35" fill="#E67E22"/></svg>';
+
+  /* Hoja de estilo de un documento imprimible: fondo blanco, acentos azul y naranjo. */
+  const DOC_CSS = `
+      .cf-doc{
+        --blue:#2563EB; --orange:#E67E22; --ink:#0F172A; --muted:#6a7a72; --line:#E5E7EB;
+        font-family:Arial,Helvetica,sans-serif; background:#fff; color:var(--ink);
+        margin:0; padding:20px 24px;
+      }
+      .cf-doc .cf-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding-bottom:10px; border-bottom:2px solid var(--blue); margin-bottom:12px}
+      .cf-doc .cf-logo{flex:0 0 auto}
+      .cf-doc .cf-brand{flex:1 1 auto; min-width:0}
+      .cf-doc .cf-brand-name{font-size:20px; font-weight:700; color:var(--blue)}
+      .cf-doc .cf-brand-meta{font-size:10px; color:var(--muted); margin-top:2px}
+      .cf-doc .cf-brand-rut{font-size:11px; color:var(--muted); text-align:right}
+      .cf-doc h1{font-size:18px; font-weight:700; text-align:center; margin:10px 0 4px; color:var(--blue)}
+      .cf-doc .cf-sub{font-size:10px; color:var(--muted); text-align:center; margin:0 0 14px}
+      .cf-doc h2{font-size:12px; font-weight:700; color:var(--blue); padding-bottom:5px; border-bottom:2px solid var(--orange); margin:16px 0 6px}
+      .cf-doc .kv{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:11px; margin:0 0 10px}
+      .cf-doc .kv b{font-weight:700}
+      .cf-doc table{width:100%; border-collapse:collapse; margin:6px 0}
+      .cf-doc th{color:var(--blue); font-weight:700; font-size:11px; text-align:left; padding:6px 7px; border:1px solid var(--line); border-top:2px solid var(--blue)}
+      .cf-doc td{border:1px solid var(--line); font-size:11px; padding:4px 7px}
+      .cf-doc td.m-side{width:40%} td.eva{width:10%; text-align:center} td.eva-lbl{width:46%} td.eva-obs{width:44%} td.eva-obs2{width:46%}
+      .cf-doc .hint{font-size:10px; color:var(--muted); margin:4px 0 10px}
+      .cf-doc .fase{color:var(--orange); font-weight:700}
+      .cf-doc .obs-area{min-height:40px; border:1px solid var(--line); background:#FAFAFA; margin:8px 0}
+      .cf-doc .sign{margin-top:16px; font-size:11px}
+      .cf-doc .printbar{margin-top:20px; text-align:right}
+      .cf-doc .printbar button{background:var(--blue); color:#fff; border:0; padding:8px 16px; font-weight:700; border-radius:6px; cursor:pointer}
+      @media print{.cf-doc .printbar{display:none}}`;
+
   function esc(value) {
     return U.esc ? U.esc(value) : String(value == null ? '' : value);
   }
@@ -36,6 +69,7 @@
 
   function studioHeader() {
     return `<div class="cf-head">
+      <div class="cf-logo">${LOGO_SVG}</div>
       <div class="cf-brand"><span class="cf-brand-name">Recovery Studio</span><span class="cf-brand-meta">Gorbea, Región de la Araucanía · ${esc(BRAND_PHONE())}</span></div>
       <div class="cf-brand-rut">R.S.I.S. ${STUDIO_RUT} · Giro SII ${STUDIO_GIRO_SII}</div>
     </div>`;
@@ -61,51 +95,31 @@
       'Cadera (flexión / abducción)',
       'Rodilla (flexión / extensión)',
       'Tobillo (dorsiflexión / plantarflexión)',
-    ].map((name) => `<tr><td class="m-side">${esc(name)}</td><td class="m-num"></td><td class="m-num"></td><td class="m-obs"></td></tr>`).join('');
+    ].map((name) => `<tr><td class="m-side">${esc(name)}</td><td class="eva">De °</td><td class="eva">A °</td><td class="eva-obs"></td></tr>`).join('');
     const functional = [
       'Test de empuje estático de extensión',
       'Test de palidez/centrado en articulación',
       'Prueba de flexor funcional (músculos agonistas)',
       'Prueba de fuerza en rango',
       'Prueba de alta / especial',
-    ].map((name) => `<tr><td>${esc(name)}</td><td class="m-obs2"></td><td class="m-num2"></td><td class="m-obs"></td></tr>`).join('');
+    ].map((name) => `<tr><td>${esc(name)}</td><td class="eva-obs"></td><td class="eva-obs"></td><td class="eva-obs"></td></tr>`).join('');
     const evaRows = [
       'Cuello', 'Hombro', 'Cadera', 'Rodilla', 'Tobillo', 'Vuelo / costado',
-    ].map((region) => `<tr><td class="m-side">${esc(region)}</td><td class="m-num"></td><td class="m-obs"></td></tr>`).join('');
+    ].map((region) => `<tr><td class="eva-lbl">${esc(region)}</td><td class="eva"><b>/</b></td><td class="eva-obs"></td></tr>`).join('');
     const evaTable = `
       <h2>EVA (Escala Visual Analógica)</h2>
       <table><thead><tr><th>Región</th><th>MDC EVA (0–10)</th><th>Observaciones</th></tr></thead><tbody>${evaRows}</tbody></table>
-      <p class="hint">EVA: 0 = nada, 1-3 leve, 4-6 moderado, 7-8 fuerte, 9-10 intenso. MDC = máxima dolor que puede interpretar en escala 0 a 10.</p>`;
-    const romTables = (title, bodyRows) => `
-      <h2>${esc(title)}</h2>
-      <table><thead><tr><th>Región</th><th>Movimiento / Prueba</th><th>De °</th><th>A °</th><th>Observaciones</th></tr></thead><tbody>${bodyRows}</tbody></table>`;
+      <p class="hint">EVA: 0 = nada, 1-3 leve, 4-6 moderado, 7-8 fuerte, 9-10 intenso. MDC = máximo dolor que puede interpretar en escala 0 a 10.</p>`;
+    const romTable = `
+      <h2>Rango de movimiento según región</h2>
+      <table><thead><tr><th>Región</th><th>Movimiento / Prueba</th><th>De °</th><th>A °</th><th>Observaciones</th></tr></thead><tbody>${rows}</tbody></table>`;
     return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Ficha clínica Kinésica · ${esc(u.name || '')}</title>
-    <style>
-      body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:22px;padding:0}
-      .cf-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1E2C25;padding-bottom:8px;margin-bottom:14px}
-      .cf-brand-name{font-size:20px;font-weight:700;color:#1E2C25}
-      .cf-brand-meta{font-size:10px;color:#555}
-      .cf-brand-rut{font-size:11px;color:#555;text-align:right}
-      h1{font-size:18px;font-weight:700;text-align:center;margin:0 0 6px}
-      .cf-sub{font-size:10px;color:#555;text-align:center;margin:0 0 14px}
-      h2{font-size:13px;font-weight:700;border-bottom:1px solid #999;padding-bottom:2px;margin:14px 0 6px}
-      .kv{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0 0 10px;font-size:11px}
-      .kv b{font-weight:700}
-      .hint{font-size:10px;color:#555;margin:4px 0 10px}
-      table{width:100%;border-collapse:collapse;margin-top:4px}
-      td{border:1px solid #999;padding:3px 4px;font-size:11px}
-      td.m-side{width:46%}td.m-num{width:16%;text-align:center}td.m-obs{width:38%;font-size:10px}
-      td.m-num2{width:26%;text-align:center}td.m-obs2{width:28%;font-size:10px}
-      .obs-area{min-height:42px;border:1px solid #999;margin:8px 0}
-      .sign{margin-top:18px;font-size:11px}
-      .printbar{margin-top:20px;text-align:right}
-      .printbar button{background:#2563EB;color:#fff;border:0;padding:8px 16px;font-weight:700;border-radius:6px;cursor:pointer}
-      @media print{.printbar{display:none}}
-    </style></head><body>
+    <style>${DOC_CSS}</style></head><body>
+      <div class="cf-doc">
       ${studioHeader()}
       <h1>FICHA CLÍNICA KINÉSICA · MINSAL SIS</h1>
-      <p class="cf-sub">Evaluación clínica · Fecha: ${esc(todayISO())}</p>
+      <p class="cf-sub">Evaluación clínica de movilidad y recuperación · Fecha: ${esc(todayISO())}</p>
       <h2>Datos del usuario</h2>
       <div class="kv">
         <span>Nombre: <b>${esc(u.name || '')}</b></span>
@@ -118,12 +132,12 @@
       <div class="kv">
         <span>Diagnóstico / Evaluado: <b>_____</b></span>
         <span>Mecanismo de lesión: <b>_____</b></span>
-        <span>Tiempo desde el inicio: <b>_____</b> (ej. hace 2 semanas)</span>
-        <span>Fase clínica: <b>ACUOSO · SUBAGUDO · CRÓNICO</b></span>
+        <span>Tiempo desde el inicio: <b>_____</b></span>
+        <span>Fase clínica: <b class="fase">_____</b></span>
       </div>
-      <p class="hint">Fases con ejemplos de tiempo (conceptos estándar de Kinésica Clínica): Acuoso (hasta 72 h tras traumatismo agudo); Subagudo (de ~2 semanas a 6 semanas tras lesión aguda); Crónico (a partir de ~6 semanas o más de 6 semanas tras lesión repetitiva o recaída).</p>
+      <p class="hint">Ejemplos de tiempo: Acuoso/Agudo — durante los primeros días y hasta ~2 semanas (hasta 72 h tras traumatismo agudo); Subagudo — de ~2 a 6 semanas tras lesión aguda; Crónico — a partir de ~6 semanas o más de 6 semanas tras lesión repetitiva o recaída. Fases: ACUOSO/AGUDO · SUBAGUDO · CRÓNICO.</p>
       ${evaTable}
-      ${romTables('Rango de movimiento según región (De ° a °)', rows)}
+      ${romTable}
       <h2>Pruebas funcionales</h2>
       <table><thead><tr><th>Prueba</th><th>Resultado / Observación</th><th>Estado</th><th>Notas</th></tr></thead><tbody>${functional}</tbody></table>
       <h2>Fuerza y control</h2>
@@ -132,6 +146,7 @@
       <div class="obs-area"></div>
       <div class="sign">Firma del coach / evaluado: _________________________ · ${esc(id.coachName || 'Coach')} · ${esc(id.coachProfession || '')} · Fecha: ${esc(todayISO())}</div>
       ${printBar()}
+      </div>
     </body></html>`;
   }
 
@@ -144,22 +159,8 @@
     const kv = (label, value) => `<span>${esc(label)}: <b>${esc(value)}</b></span>`;
     return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reembolso Isapire / Fonasa · ${esc(u.name || '')}</title>
-    <style>
-      body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:22px;padding:0}
-      .cf-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #1E2C25;padding-bottom:8px;margin-bottom:14px}
-      .cf-brand-name{font-size:20px;font-weight:700;color:#1E2C25}
-      .cf-brand-meta{font-size:10px;color:#555}
-      .cf-brand-rut{font-size:11px;color:#555;text-align:right}
-      h1{font-size:17px;font-weight:700;text-align:center;margin:0 0 6px}
-      .cf-sub{font-size:10px;color:#555;text-align:center;margin:0 0 14px}
-      h2{font-size:13px;font-weight:700;border-bottom:1px solid #999;padding-bottom:2px;margin:14px 0 6px}
-      .kv{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0 0 10px;font-size:11px}
-      .kv b{font-weight:700}
-      .sign{margin-top:18px;font-size:11px}
-      .printbar{margin-top:20px;text-align:right}
-      .printbar button{background:#2563EB;color:#fff;border:0;padding:8px 16px;font-weight:700;border-radius:6px;cursor:pointer}
-      @media print{.printbar{display:none}}
-    </style></head><body>
+    <style>${DOC_CSS}</style></head><body>
+      <div class="cf-doc">
       ${studioHeader()}
       <h1>SOLICITUD DE REEMBOLSO · ISAPIRE / FONASA</h1>
       <p class="cf-sub">Evaluación Kinésica de ${esc(u.name || '')} · Fecha: ${esc(today)}</p>
@@ -183,10 +184,11 @@
         ${kv('Porcentaje gravable', 'Según propia normativa de Isapire/Fonasa')}
       </div>
       <h2>Justificación médica</h2>
-      <p>Se adjunta la ficha clínica Kinésica (MINSAL SIS) con la evaluación de movilidad,Range de articulaciones y observaciones del coach.</p>
-      <p>Lmotivo del reembolso: evaluación preventiva de movilidad y recuperación muscular para ${esc(u.name || '')}. ${esc(u.goal ? '(' + u.goal + ')' : '')}</p>
+      <p>Se adjunta la ficha clínica Kinésica (MINSAL SIS) con la evaluación de movilidad y rango de articulaciones obtenida en el estudio.</p>
+      <p>Motivo del reembolso: evaluación preventiva de movilidad y recuperación muscular para ${esc(u.name || '')}. ${esc(u.goal ? '(' + u.goal + ')' : '')}</p>
       <div class="sign">Firma del coach / coach responsable: _________________________ · ${esc(id.coachName || 'Coach')} · Fecha: ${esc(today)}</div>
       ${printBar()}
+      </div>
     </body></html>`;
   }
 

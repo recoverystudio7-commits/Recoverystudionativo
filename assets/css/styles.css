@@ -3,33 +3,33 @@
    ========================================================================== */
 
 :root {
-  /* Dirección visual "Nordic Athletic Sanctuary": pino profundo, arcilla y arena cálida */
-  --sand: #f7f4ee;
-  --sand-2: #ebdccb;
-  --sand-3: #fbfbf9;
-  --ink: #14221a;
+  /* Página: fondo blanco, acentos azul y naranjo */
+  --sand: #ffffff;
+  --sand-2: #ffffff;
+  --sand-3: #ffffff;
+  --ink: #0F172A;
   --ink-soft: #6a7b72;
-  --clay: #b5603c;
-  --clay-soft: #d27c56;
-  --clay-deep: #8f4426;
-  --pine: #1e2e25;
-  --pine-deep: #14221a;
-  --pine-soft: #3a6351;
+  --clay: #E67E22;
+  --clay-soft: #F5D9BF;
+  --clay-deep: #C4540C;
+  --pine: #2563EB;
+  --pine-deep: #1D4ED8;
+  --pine-soft: #DCEBFF;
 
   --navy: var(--pine);
   --navy-700: var(--pine-deep);
   --navy-600: var(--pine-soft);
-  --blue: var(--pine-soft);
+  --blue: #3B82F6;
   --blue-600: var(--pine);
-  --blue-50: #e8f0ea;
+  --blue-50: #DCEBFF;
   --orange: var(--clay);
   --orange-600: var(--clay-deep);
-  --orange-50: #fbece4;
+  --orange-50: #FDF0E7;
   --bg: var(--sand);
   --surface: var(--sand-3);
-  --surface-2: #f7f4ee;
-  --border: rgba(30, 46, 37, 0.12);
-  --border-strong: rgba(30, 46, 37, 0.28);
+  --surface-2: #ffffff;
+  --border: rgba(37, 99, 235, 0.16);
+  --border-strong: rgba(37, 99, 235, 0.3);
   --text: var(--ink);
   --text-2: var(--ink-soft);
   --muted: #6a7b72;
@@ -2276,5 +2276,46 @@ select.input {
 
   .topbar-logout {
     display: none;
+  }
+}
+
+/* --------------------------------- impresión -------------------------------- */
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+
+  /* Imprime solo el modal: la página detrás (incluida la tabla de usuarios)
+     y las toasts quedan ocultas. */
+  #app,
+  #toast-root {
+    display: none !important;
+  }
+
+  .modal-backdrop {
+    position: static !important;
+    display: block !important;
+    padding: 0;
+    opacity: 1 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .modal-x {
+    display: none !important;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    box-shadow: none;
+    transform: none !important;
+  }
+
+  .modal-head {
+    padding-top: 10px;
   }
 }
