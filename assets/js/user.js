@@ -379,16 +379,6 @@
 
   /* ------------------------------- agendar -------------------------------- */
 
-  function openDates(count) {
-    const list = [];
-    let cursor = U.todayISO();
-    for (let i = 0; i < count; i += 1) {
-      list.push({ date: cursor, open: RS.data.hoursForDay(cursor).enabled });
-      cursor = U.addDays(cursor, 1);
-    }
-    return list;
-  }
-
   function nextAvailableDate(serviceId, from) {
     let cursor = from || U.todayISO();
     for (let i = 0; i < 21; i += 1) {
@@ -414,182 +404,14 @@
     if (!('guestName' in b)) b.guestName = '';
     if (!('guestPhone' in b)) b.guestPhone = '';
     if (!('guestEmail' in b)) b.guestEmail = '';
+    if (!b.step || b.step < 1) b.step = 1;
+    if (b.step > 4) b.step = 4;
     return b;
   }
 
-  function renderBooking() {
+    function renderBooking() {
     const user = me();
-    const ui = ensureUi();
-    const b = bookingState();
-    const services = st().services.filter((s) => s.active && (s.kind === 'Sesión' || s.kind === 'Asesoría'));
-    const service = RS.data.getService(b.serviceId);
-    const slots = RS.data.availableSlots(b.date, b.serviceId);
-    const price = service ? Number(service.price) : 0;
-    const useCredit = !!b.useCredit && (user ? user.credits > 0 : false);
-    const total = useCredit ? 0 : price;
-    const hasSessions = user ? RS.data.userSessions(user.id).length > 0 : false;
-    const trialService = st().services.find((s) => s.id === 'srv-training' && s.active);
-    const trialEligible = !!trialService && !hasSessions && st().settings.freeTrialEnabled !== false;
-    const trial = !!b.trial && trialEligible;
-    const displayPrice = trial ? 0 : price;
-    const displayTotal = trial ? 0 : total;
-    const dates = openDates(21);
-    const today = U.todayISO();
-
-    const bookingHtml = `<div class="view view-booking">
-      <div class="page-head">
-        <div><span class="eyebrow">Agenda online</span><h1 class="page-title">Reserva tu sesión</h1><p class="page-sub">Elige tu servicio, fecha y hora. ${user ? 'Así de simple.' : 'Sin registros complicados.'}</p></div>
-        <div class="head-chip">${UI.icon('shield-check', 16)} Reserva segura</div>
-      </div>
-
-      <div class="booking-layout">
-        <div class="booking-main">
-          <section class="card">
-            <div class="card-head"><div class="step-head"><span class="step-num">1</span><div><h2 class="card-title">Elige tu servicio</h2><p class="card-sub">Sesiones individuales y asesorías.</p></div></div></div>
-            <div class="card-body">
-              ${trialEligible ? `<button type="button" class="trial-banner ${trial ? 'selected' : ''}" data-action="book-trial">
-               <span class="trial-emoji">🎁</span>
-               <span class="trial-body"><strong>Primera clase gratis</strong><span>${U.esc(trialService.name)} · sin costo, solo una vez</span></span>
-               <span class="trial-price">$0</span>
-             </button>` : ''}
-             <div class="service-grid">
-                ${services.map((s) => `<button type="button" class="service-option ${s.id === b.serviceId ? 'selected' : ''}" data-action="book-service" data-id="${s.id}">
-                  <span class="service-option-top"><span class="service-option-icon">${UI.icon(s.kind === 'Asesoría' ? 'smartphone' : 'activity', 18)}</span>${s.popular ? '<span class="tag-popular">Popular</span>' : ''}</span>
-                  <strong>${U.esc(s.name)}</strong>
-                  <span class="service-option-desc">${U.esc(s.description)}</span>
-                  <span class="service-option-foot"><span>${UI.icon('clock', 13)} ${s.duration} min · ${Math.ceil(s.duration / 30)} ${Math.ceil(s.duration / 30) === 1 ? 'slot' : 'slots'}</span><b>${U.fmtMoney(s.price)}</b></span>
-                </button>`).join('')}
-              </div>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card-head"><div class="step-head"><span class="step-num">2</span><div><h2 class="card-title">Elige fecha y hora</h2><p class="card-sub">Disponibilidad actualizada en tiempo real.</p></div></div></div>
-            <div class="card-body">
-              <div class="date-strip-wrap">
-                <div class="date-strip">
-                  ${dates.map((d) => {
-                    const dateObj = U.parseISO(d.date);
-                    return `<button type="button" class="date-chip ${d.date === b.date ? 'selected' : ''} ${d.open ? '' : 'disabled'}" data-action="book-date" data-date="${d.date}" ${d.open ? '' : 'disabled'}>
-                      <span>${U.DAYS_SHORT[dateObj.getDay()]}</span>
-                      <strong>${dateObj.getDate()}</strong>
-                      <em>${U.MONTHS_SHORT[dateObj.getMonth()]}</em>
-                      ${d.date === today ? '<i>Hoy</i>' : ''}
-                    </button>`;
-                  }).join('')}
-                </div>
-              </div>
-              <div class="slot-head">
-                <h3>${U.fmtDate(b.date, 'long')}</h3>
-                <span>${slots.filter((s) => s.available).length} horarios disponibles</span>
-              </div>
-              <div class="slot-grid">
-                ${slots.length ? slots.map((s) => `<button type="button" class="slot ${s.time === b.time ? 'selected' : ''} ${s.available ? '' : 'disabled'}" data-action="book-time" data-time="${s.time}" ${s.available ? '' : 'disabled'} title="${U.esc(s.reason || 'Disponible')}">
-                  ${U.esc(s.time)}${s.available ? '' : `<span>${U.esc(s.reason)}</span>`}
-                </button>`).join('') : `<div class="slot-empty">${UI.icon('calendar', 20)} No hay horarios este día. Prueba con otra fecha.</div>`}
-              </div>
-              <div class="slot-legend"><span><i class="dot free"></i> Disponible</span><span><i class="dot selected"></i> Seleccionado</span><span><i class="dot busy"></i> Ocupado / fuera de plazo</span></div>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card-head"><div class="step-head"><span class="step-num">3</span><div><h2 class="card-title">Confirma tu reserva</h2><p class="card-sub">${user ? 'Revisa las condiciones antes de continuar.' : 'Ingresa tus datos de contacto para enviarte la confirmación.'}</p></div></div></div>
-            <div class="card-body">
-              ${!user ? `
-              <div class="callout callout-green" style="margin-bottom:16px;">
-                <strong>${UI.icon('check-circle', 15)} Reserva directa:</strong> Agenda tu hora sin necesidad de crear una cuenta previa.
-              </div>
-              <div class="field" style="margin-bottom:14px;">
-                <label for="booking-guest-name"><strong>Tu nombre completo *</strong></label>
-                <div class="input-icon">
-                  ${UI.icon('user', 18)}
-                  <input class="input" id="booking-guest-name" name="guestName" type="text" placeholder="Ej: María González" value="${U.esc(b.guestName || '')}" autocomplete="name" data-input="booking-guest-name" required>
-                </div>
-              </div>
-              <div class="grid grid-2 gap-sm" style="margin-bottom:14px;">
-                <div class="field">
-                  <label for="booking-guest-phone"><strong>WhatsApp / Teléfono *</strong></label>
-                  <div class="input-icon">
-                    ${UI.icon('phone', 18)}
-                    <input class="input" id="booking-guest-phone" name="guestPhone" type="tel" placeholder="+56 9 1234 5678" value="${U.esc(b.guestPhone || '')}" autocomplete="tel" data-input="booking-guest-phone" required>
-                  </div>
-                </div>
-                <div class="field">
-                  <label for="booking-guest-email"><strong>Correo electrónico *</strong></label>
-                  <div class="input-icon">
-                    ${UI.icon('mail', 18)}
-                    <input class="input" id="booking-guest-email" name="guestEmail" type="email" placeholder="tu@correo.cl" value="${U.esc(b.guestEmail || '')}" autocomplete="email" data-input="booking-guest-email" required>
-                  </div>
-                </div>
-              </div>` : ''}
-
-              ${user && user.credits > 0 ? `<div class="pay-choice">
-                <label class="choice-card ${useCredit ? 'selected' : ''}">
-                  <input type="radio" name="paymode" value="credit" ${useCredit ? 'checked' : ''} data-change="booking-credit" data-value="credit">
-                  <span class="choice-icon">${UI.icon('layers', 18)}</span>
-                  <span class="choice-body"><strong>Usar 1 sesión de mi plan</strong><span>Te quedan ${user.credits} sesiones · ${U.esc(user.planLabel || 'Plan activo')}</span></span>
-                  <span class="choice-check">${UI.icon('check', 14)}</span>
-                </label>
-                <label class="choice-card ${!useCredit ? 'selected' : ''}">
-                  <input type="radio" name="paymode" value="pay" ${!useCredit ? 'checked' : ''} data-change="booking-credit" data-value="pay">
-                  <span class="choice-icon">${UI.icon('credit-card', 18)}</span>
-                  <span class="choice-body"><strong>Pagar esta sesión</strong><span>${U.fmtMoney(displayPrice)} · transferencia o recepción</span></span>
-                  <span class="choice-check">${UI.icon('check', 14)}</span>
-                </label>
-              </div>` : ''}
-
-              ${(!useCredit && !trial) ? `<div class="pay-methods">
-                <label class="method-card ${b.method === 'Transferencia' ? 'selected' : ''}">
-                  <input type="radio" name="method" value="Transferencia" ${b.method === 'Transferencia' ? 'checked' : ''} data-change="booking-method" data-value="Transferencia">
-                  <span class="method-icon">${UI.icon('building', 17)}</span>
-                  <span><strong>Transferencia</strong><span>Envía tu comprobante después de reservar.</span></span>
-                </label>
-                <label class="method-card ${b.method === 'Efectivo' ? 'selected' : ''}">
-                  <input type="radio" name="method" value="Efectivo" ${b.method === 'Efectivo' ? 'checked' : ''} data-change="booking-method" data-value="Efectivo">
-                  <span class="method-icon">${UI.icon('wallet', 17)}</span>
-                  <span><strong>Pagar en recepción</strong><span>Coordina el pago al llegar al studio.</span></span>
-                </label>
-              </div>` : ''}
-
-              <label class="policy-check">
-                <input type="checkbox" id="booking-policy" ${b.policy ? 'checked' : ''} data-change="booking-policy">
-                <span>Confirmo que puedo reagendar o cancelar hasta <strong>${st().settings.policyHours} horas antes</strong>. Si aviso con menos tiempo, la sesión no será reagendada y se considerará utilizada.</span>
-              </label>
-            </div>
-          </section>
-        </div>
-
-        <aside class="booking-summary">
-          <div class="summary-card card">
-            <div class="summary-head"><span>Resumen de reserva</span>${UI.icon('receipt', 18)}</div>
-            <div class="summary-service">
-              <span class="summary-icon">${UI.icon(service && service.kind === 'Asesoría' ? 'smartphone' : 'activity', 20)}</span>
-              <div><strong>${U.esc(service ? service.name : 'Selecciona un servicio')}</strong><span>${service ? `${service.duration} min · 1:1` : '—'}</span></div>
-            </div>
-            <div class="summary-rows">
-              <div><span>Fecha</span><strong>${b.time ? U.fmtDate(b.date, 'short') : U.fmtDate(b.date, 'short')}</strong></div>
-              <div><span>Hora</span><strong>${b.time || 'Por elegir'}</strong></div>
-              <div><span>Profesional</span><strong>Daniel Barrueto</strong></div>
-            </div>
-            <div class="summary-total">
-              <div><span>Valor sesión</span><strong>${U.fmtMoney(displayPrice)}</strong></div>
-              ${useCredit ? `<div class="summary-credit"><span>Uso de plan</span><strong>− ${U.fmtMoney(displayPrice)}</strong></div>` : ''}
-              <div class="summary-grand"><span>Total a pagar</span><strong>${U.fmtMoney(displayTotal)}</strong></div>
-            </div>
-            ${useCredit ? `<p class="summary-note">${UI.icon('layers', 14)} Se descontará 1 sesión de tu plan al confirmar.</p>` : `<p class="summary-note">${UI.icon('info', 14)} Si eliges transferencia, podrás adjuntar el comprobante al finalizar.</p>`}
-            <button class="btn btn-accent btn-block btn-lg" data-action="book-confirm">
-              ${UI.icon('calendar-check', 18)} ${useCredit ? 'Confirmar con mi plan' : (trial ? 'Confirmar mi clase gratis' : 'Confirmar reserva')}
-            </button>
-            <p class="summary-policy">${UI.icon('refresh', 14)} Reagendamiento hasta ${st().settings.policyHours} h antes. ${UI.icon('mail', 14)} Enviaremos confirmaci��n por correo cuando sea posible.</p>
-          </div>
-          <div class="help-card">
-            <span class="help-icon">${UI.icon('whatsapp', 20)}</span>
-            <div><strong>¿Necesitas ayuda?</strong><span>Escríbenos y te ayudamos a agendar.</span></div>
-            <a class="btn btn-ghost btn-sm" href="${RS.data.whatsappUrl('Hola Recovery Studio, necesito ayuda para agendar una sesión.')}" target="_blank" rel="noopener">WhatsApp</a>
-          </div>
-        </aside>
-      </div>
-    </div>`;
+    const bookingHtml = RS.BookingWizard.renderBooking();
 
     if (!user) {
       return `<div class="public-page">
@@ -614,7 +436,7 @@
     return bookingHtml;
   }
 
-  function showBookingSuccess(session) {
+function showBookingSuccess(session) {
     const service = RS.data.getService(session.serviceId);
     UI.modal({
       title: 'Reserva confirmada',
@@ -1275,55 +1097,8 @@
 
   /* ------------------------------- acciones -------------------------------- */
 
-  RS.actions['book-service'] = (el) => {
-    const b = bookingState();
-    b.serviceId = el.dataset.id;
-    b.time = null;
-    b.date = nextAvailableDate(b.serviceId, b.date);
-    RS.App.render();
-  };
-
-  RS.actions['book-date'] = (el) => {
-    const b = bookingState();
-    b.date = el.dataset.date;
-    b.time = null;
-    RS.App.render();
-  };
-
-  RS.actions['book-time'] = (el) => {
-    const b = bookingState();
-    b.time = el.dataset.time;
-    RS.App.render();
-  };
-
-  RS.changes['booking-credit'] = (el) => {
-    const b = bookingState();
-    b.useCredit = el.value === 'credit';
-    RS.App.render();
-  };
-
-  RS.changes['booking-method'] = (el) => {
-    const b = bookingState();
-    b.method = el.value;
-    RS.App.render();
-  };
-
-  RS.inputs['booking-guest-name'] = (el) => { bookingState().guestName = el.value; };
-  RS.inputs['booking-guest-phone'] = (el) => { bookingState().guestPhone = el.value; };
-  RS.inputs['booking-guest-email'] = (el) => { bookingState().guestEmail = el.value; };
-
-  RS.changes['booking-policy'] = (el) => {
-    const b = bookingState();
-    b.policy = el.checked;
-  };
-
-  RS.actions['book-trial'] = () => {
-    const b = bookingState();
-    b.trial = !b.trial;
-    RS.App.render();
-  };
-
   RS.actions['book-confirm'] = () => {
+    RS.ui.booking.step = 1;
     let user = me();
     const b = bookingState();
     const service = RS.data.getService(b.serviceId);

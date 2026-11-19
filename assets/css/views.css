@@ -18,10 +18,28 @@
   position: relative;
   overflow: hidden;
   display: flex;
-  color: #fff;
-  background:
-    radial-gradient(900px 600px at 8% 0%, rgba(74, 97, 82, 0.55), transparent 62%),
-    linear-gradient(160deg, #2e4238 0%, #1e2c25 58%, #16211b 100%);
+  color: var(--text);
+  background: var(--sand);
+}
+
+.auth-hero .hero-eyebrow {
+  color: var(--pine);
+}
+
+.auth-hero .hero-eyebrow > svg {
+  color: var(--orange);
+}
+
+.auth-hero .hero-copy h1 {
+  color: var(--text);
+}
+
+.auth-hero .hero-copy h1 em {
+  color: var(--clay-deep);
+}
+
+.auth-hero .hero-lead {
+  color: var(--text-2);
 }
 
 .hero-orb {
@@ -36,7 +54,7 @@
   height: 520px;
   top: -220px;
   right: -140px;
-  background: radial-gradient(circle, rgba(192, 106, 69, 0.28), transparent 68%);
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.2), transparent 66%);
 }
 
 .hero-orb-2 {
@@ -44,7 +62,7 @@
   height: 460px;
   bottom: -200px;
   left: -140px;
-  background: radial-gradient(circle, rgba(74, 97, 82, 0.42), transparent 68%);
+  background: radial-gradient(circle, rgba(230, 126, 34, 0.15), transparent 66%);
 }
 
 .hero-grid {
@@ -370,6 +388,49 @@
   border-radius: var(--radius-lg);
   box-shadow: 0 30px 70px -40px rgba(43, 36, 29, 0.35);
   padding: 26px 26px 24px;
+}
+
+.auth-trial {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  background: var(--gold-soft);
+  border: 1px solid var(--gold);
+  border-left: 6px solid var(--gold);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-trial-icon {
+  font-size: 17px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.auth-trial-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.auth-trial-title {
+  display: inline-block;
+  align-self: flex-start;
+  background: var(--gold);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+.auth-trial-sub {
+  font-size: 12.5px;
+  color: var(--text-2);
 }
 
 .auth-tabs {
@@ -3842,6 +3903,105 @@
   box-shadow: 0 10px 25px -14px rgba(43, 36, 29, 0.5);
 }
 
+/* ---------------------------- ¿Quién te atiende? ---------------------------- */
+
+.auth-about {
+  display: flex;
+  justify-content: center;
+  padding: 34px 56px 26px;
+  background: var(--sand);
+  border-top: 1px solid var(--border);
+}
+
+.about-grid {
+  width: 100%;
+  max-width: 660px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 22px;
+  align-items: center;
+}
+
+.about-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 22px;
+  text-align: center;
+}
+
+.about-photo {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  border: 3px solid var(--pine);
+  overflow: hidden;
+}
+
+.about-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.about-title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 20px;
+  color: var(--text);
+}
+
+.about-bio {
+  margin: 0 0 18px;
+  max-width: 430px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text-2);
+}
+
+.about-space {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.about-space-frame {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.about-space-frame img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  display: block;
+}
+
+.about-space-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.auth-about .btn-accent {
+  margin-top: 6px;
+}
+
+@media (max-width: 768px) {
+  .auth-about {
+    padding: 26px 20px 20px;
+  }
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .about-space {
+    order: 0;
+  }
+}
+
 .profile-card > h2 {
   margin: 10px 16px 2px;
   font-size: 17px;
@@ -7307,6 +7467,34 @@
   gap: 38px;
 }
 
+.sauna-video-section {
+  margin-top: 4px;
+}
+
+.sauna-video-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+  text-align: center;
+}
+
+.sauna-video-player {
+  width: 100%;
+  max-height: 380px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--pine);
+  display: block;
+}
+
+.sauna-video-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .sauna-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
@@ -7793,5 +7981,209 @@
 
   .sauna-notice {
     padding: 16px;
+  }
+}
+
+/* Wizard de agendamiento: zona clic amplia, tipografía grande y feedback visual. */
+.wiz-progress {
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface-2);
+}
+
+.wiz-progress-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.wiz-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.wiz-step {
+  display: none;
+}
+
+.wiz-step.active {
+  display: block;
+}
+
+.wiz-step-head {
+  margin-bottom: 10px;
+}
+
+.wiz-step-lock {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wiz-step .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 15px;
+  color: var(--text-2);
+}
+
+.wiz-step .field {
+  font-size: 15px;
+}
+
+.wiz-step input,
+.wiz-step select,
+.wiz-step textarea {
+  font-size: 15px;
+}
+
+.wiz-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 10px;
+  border: 3px solid var(--border-strong);
+  border-radius: 50%;
+  color: #fff;
+  background: var(--blue-600);
+  flex: 0 0 auto;
+}
+
+.wiz-check svg {
+  display: block;
+}
+
+.wiz-step-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.wiz-continue {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
+  border-radius: 14px;
+}
+
+.wiz-confirm {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 17px;
+  border-radius: 14px;
+}
+
+.wiz-back-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wiz-back-links button {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.trial-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--orange-50);
+  background: #fff7e9;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.trial-emoji {
+  font-size: 32px;
+}
+
+.trial-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trial-price {
+  margin-left: auto;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.wiz-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wiz-summary h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.wiz-summary-sub {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.wiz-summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wiz-summary-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.wiz-summary-rows strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.wiz-summary-rows span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.wiz-summary-grand strong {
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+@media (max-width: 640px) {
+  .booking-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-summary {
+    order: -1;
+    min-width: 0;
+  }
+
+  .wiz-step .card-body {
+    font-size: 15px;
   }
 }

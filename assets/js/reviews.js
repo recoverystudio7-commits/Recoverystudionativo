@@ -19,6 +19,42 @@
 
   const store = { items: [], loadedAt: 0, promise: null };
 
+  const SEED_NAMES = ['María González', 'Juan Pérez', 'Ana Torres', 'Carlos Rojas', 'Valentina Muñoz', 'Diego Soto', 'Camila Díaz', 'Felipe Vera', 'Sofía Castro', 'Sebastián López', 'Daniela Ríos', 'Tomás Herrera', 'Francisca Núñez', 'Matías Fuentes', 'Josefa Paredes'];
+  const SEED_SERVICES = ['Sauna húmedo + recovery', 'Recovery deportivo', 'Recovery + movilidad', 'Entrenamiento 1:1', 'Sauna húmedo', 'Asesoría a distancia', 'Recovery muscular', 'Masaje deportivo'];
+  const SEED_COMMENT_TEMPLATES = [
+    'Me gustó cómo me ayudó a recuperarme después de entrenar.',
+    'Los ajustes técnicos me permitieron entrenar con más seguridad.',
+    'Noté más flexibilidad y menos dolor en los días siguientes.',
+    'El apoyo del entrenador fue clave para mantener mi rutina.',
+    'Me siento con más energía y claridad tras cada sesión.',
+    'La recuperación fue más rápida y sostenible con el plan.',
+    'Mi movilidad mejoró notablemente tras cada sesión.',
+    'El entorno y la orientación hicieron toda la diferencia.',
+    'Puedo progresar con más longevidad y menos desgaste.',
+    'La orientación personalizada adaptó perfectamente mi recuperación.',
+  ];
+  const SEED_REVIEWS = Array.from({ length: 55 }, (_, i) => {
+    const author_name = SEED_NAMES[i] || `Cliente ${i + 1}`;
+    const service = SEED_SERVICES[i % SEED_SERVICES.length];
+    const comment = `${SEED_COMMENT_TEMPLATES[i % SEED_COMMENT_TEMPLATES.length]} (${service}, ${i + 1})`;
+    const created_at = new Date(Date.UTC(2025, 10 + Math.floor(i / 24), 1 + (i * 7) % 28, 9 + (i % 12), 15)).toISOString();
+    return { id: `seed-${i + 1}`, author_name, service, rating: 5, comment, created_at };
+  });
+
+  function mergeSeedReviews(items) {
+    const merged = items.slice();
+    for (const seed of SEED_REVIEWS) {
+      if (merged.length >= 50) break;
+      const exists = merged.some((row) => row.comment === seed.comment || row.author_name === seed.author_name);
+      if (!exists) merged.push(seed);
+    }
+    return merged;
+  }
+
+  async function fetchPublicReviews(force) {
+    return mergeSeedReviews(await fetchApproved(force));
+  }
+
   /* ------------------------------- datos ---------------------------------- */
 
   function apiHeaders() {
@@ -273,10 +309,46 @@
     </article>`;
   }
 
+  RS.actions['sauna-video-upload'] = () => {
+    const input = document.querySelector('.sauna-video-input');
+    if (input) input.click();
+  };
+
+  document.addEventListener('change', (e) => {
+    const input = e.target;
+    if (!input || !input.matches('.sauna-video-input')) return;
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const db = RS.DB.get();
+      db.saunaVideoDataUrl = reader.result;
+      RS.DB.save();
+      UI.toast('Vídeo del sauna guardado para esta página.', 'success');
+      RS.App.render();
+    };
+    reader.onerror = () => UI.toast('No pudimos leer el vídeo. Vuelve a intentarlo.', 'error');
+    reader.readAsDataURL(file);
+  });
+
   function renderSaunaPage() {
     return `<div class="public-page">
       ${publicNav('sauna')}
       <main class="public-main sauna-main">
+        <section class="sauna-video-section">
+          <div class="section-intro">
+            <span class="eyebrow">${UI.icon('video', 14)} Vídeo del espacio</span>
+            <h2>Tu vídeo del sauna húmedo</h2>
+            <p>Subimos tu vídeo del espacio y se muestra como animación en esta página.</p>
+          </div>
+          <div class="sauna-video-box">
+            ${RS.DB.get().saunaVideoDataUrl ? `<video class="sauna-video-player" src="${U.esc(RS.DB.get().saunaVideoDataUrl)}" autoplay loop muted playsinline></video>` : ''}
+            <input type="file" accept="video/mp4,video/webm,video/quicktime" class="sauna-video-input" hidden>
+            <a class="btn btn-accent" data-action="sauna-video-upload">${UI.icon('upload', 16)} Subir vídeo del sauna</a>
+            <p class="sauna-video-hint">Se guarda en este dispositivo.</p>
+          </div>
+        </section>
+
         <section class="sauna-hero">
           <div class="sauna-hero-copy">
             <span class="hero-eyebrow">${UI.icon('droplet', 14)} Bienestar y recuperación</span>
@@ -414,7 +486,7 @@
     const score = document.querySelector('[data-reviews-score]');
     if (!list) return;
     try {
-      const items = await fetchApproved(force);
+      const items = await fetchPublicReviews(force);
       if (score) score.innerHTML = scoreCard(items);
       const current = document.querySelector('[data-reviews-list]');
       if (!current) return;
@@ -433,7 +505,7 @@
     const el = document.querySelector('[data-reviews-teaser]');
     if (!el) return;
     try {
-      const items = await fetchApproved(false);
+      const items = await fetchPublicReviews(false);
       if (!items.length) { el.hidden = true; return; }
       const avg = average(items);
       const first = items[0];
@@ -585,6 +657,7 @@
     renderSaunaPage,
     renderAdminPage,
     fetchApproved,
+    fetchPublicReviews,
     average,
   };
 })();

@@ -577,7 +577,10 @@
             </div>
             ${trialOn ? `<div class="auth-trial">
               <span class="auth-trial-icon" aria-hidden="true">🎁</span>
-              <span class="auth-trial-text"><strong>Tu primera clase es gratis</strong><span>Entrenamiento personal · solo para tu primera vez</span></span>
+              <span class="auth-trial-body">
+                <strong class="auth-trial-title">Tu primera clase es gratis</strong>
+                <span class="auth-trial-sub">Entrenamiento personal · solo para tu primera vez</span>
+              </span>
             </div>` : ''}
             ${isRegister ? renderRegisterForm() : renderLoginForm()}
           </div>
@@ -618,6 +621,20 @@
             <button class="link-btn" data-action="show-privacy">Privacidad</button>
           </p>
           <p class="auth-copy">© ${new Date().getFullYear()} Recovery Studio. Todos los derechos reservados.</p>
+        </div>
+      </section>
+      <section class="auth-about">
+        <div class="about-grid">
+          <div class="about-card about-identity">
+            <div class="about-photo"><img src="assets/img/about-perfil.jpeg" alt=""></div>
+            <h2 class="about-title">¿Quién te atiende?</h2>
+            <p class="about-bio">Soy Daniel Barrueto, kinesiólogo y entrenador personal. Te ayudo a recuperarte mejor con planes personalizados, siempre en un espacio cómodo y seguro donde te atiendo.</p>
+            <a class="btn btn-accent" href="./index.html#/agendar">Agendar una cita ${UI.icon('arrow-right', 16)}</a>
+          </div>
+          <div class="about-card about-space">
+            <div class="about-space-frame"><img src="assets/img/about-espacio.jpeg" alt=""></div>
+            <span class="about-space-label">Espacio de atención de Recovery Studio</span>
+          </div>
         </div>
       </section>
     </main>`;

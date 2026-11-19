@@ -15,6 +15,9 @@
   --pine: #2563EB;
   --pine-deep: #1D4ED8;
   --pine-soft: #DCEBFF;
+  --gold: #D4A017;
+  --gold-deep: #B88C0F;
+  --gold-soft: #FDF3E0;
 
   --navy: var(--pine);
   --navy-700: var(--pine-deep);
