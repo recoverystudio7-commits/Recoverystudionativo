@@ -5,6 +5,10 @@
   'use strict';
 
   const RS = (window.RS = window.RS || {});
+  RS.SupabaseConfig = RS.SupabaseConfig || {
+    url: 'https://bkvjlpdkyjrfvvokqjsx.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrdmpscGRreWpyZnZ2b2txanN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MDk4MTcsImV4cCI6MjEwOTI4NTgxN30.wo4oeEBtBckp1niB06cMBP5iOuUprg4vlrAC7uiXXrE',
+  };
   const U = RS.util;
   const UI = RS.UI;
 
@@ -87,6 +91,93 @@
     };
     saveSession();
   }
+
+  function readUrlSession() {
+    const params = new URLSearchParams();
+    const search = location.search.replace(/^\?/, '');
+    const hash = location.hash.replace(/^#/, '');
+    if (search) new URLSearchParams(search).forEach((value, key) => params.set(key, value));
+    if (hash) new URLSearchParams(hash).forEach((value, key) => params.set(key, value));
+    const accessToken = params.get('access_token');
+    if (!accessToken) return null;
+    return {
+      access_token: accessToken,
+      refresh_token: params.get('refresh_token') || '',
+      expires_in: Number(params.get('expires_in') || 0),
+      token_type: params.get('token_type') || 'bearer',
+    };
+  }
+
+  async function syncUserFromSupabase(authUser) {
+    const st = state();
+    const email = String((authUser.email || '') || '').trim().toLowerCase();
+    const meta = authUser.user_metadata || authUser.raw_user_meta_data || {};
+    const metaName = String((meta.full_name || meta.name) || '').trim();
+    let profile = null;
+    try {
+      const rows = await RS.Supabase.request(
+        `/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=id,email,full_name,phone,goal,role,active`,
+        { method: 'GET' },
+        (RS.Supabase.readSession() || {}).access_token
+      );
+      profile = Array.isArray(rows) ? rows[0] : null;
+    } catch (error) {
+      profile = null;
+    }
+    const user = st.users.find((u) => U.normalize(u.email) === U.normalize(email));
+    if (user) {
+      if (profile) {
+        user.name = profile.full_name || user.name;
+        user.phone = profile.phone || user.phone;
+        user.goal = profile.goal || user.goal;
+        user.role = profile.role === 'admin' ? 'admin' : user.role;
+        user.active = profile.active !== false;
+      }
+      RS.DB.save();
+      return user;
+    }
+    const newUser = {
+      id: authUser.id,
+      role: profile && profile.role === 'admin' ? 'admin' : 'user',
+      name: (profile && profile.full_name) || metaName || email.split('@')[0],
+      email,
+      phone: profile ? (profile.phone || '') : '',
+      goal: profile ? (profile.goal || '') : '',
+      active: !profile || profile.active !== false,
+      credits: 0,
+      planLabel: 'Sin plan activo',
+      notes: '',
+      createdAt: new Date().toISOString(),
+      source: 'supabase',
+    };
+    st.users.push(newUser);
+    RS.DB.save();
+    return newUser;
+  }
+
+  async function restoreFromSupabase() {
+    try {
+      if (!RS.Supabase || !RS.Supabase.auth || !RS.Supabase.auth.getUser) return;
+      const session = readUrlSession();
+      if (!session) return;
+      RS.Supabase.writeSession(session);
+      const authUser = await RS.Supabase.auth.getUser();
+      if (!authUser) return;
+      const user = await syncUserFromSupabase(authUser);
+      if (!user) return;
+      startSession(user);
+    } catch (error) {
+      console.error('No pudimos restaurar la sesión de Google:', error);
+    }
+  }
+
+  RS.actions['google-login'] = () => {
+    try {
+      RS.Supabase.auth.signInWithGoogle();
+    } catch (error) {
+      loginError(error.message || 'No pudimos iniciar sesión con Google.');
+    }
+  };
 
   function logout(options) {
     const o = options || {};
@@ -500,6 +591,8 @@
         </div>
         <button class="btn btn-primary btn-block btn-lg" type="submit" data-login-submit>Ingresar a mi cuenta ${UI.icon('arrow-right', 18)}</button>
       </form>
+      <div class="auth-divider"><span>o inicia sesión con Google</span></div>
+      <button class="btn btn-outline btn-block" type="button" data-action="google-login">Iniciar sesión con Google</button>
       <div class="auth-divider"><span>o explora la demo</span></div>
       <div class="demo-grid">
         <button class="demo-btn" type="button" data-action="demo-login" data-role="user">
@@ -880,6 +973,14 @@
     setLoading(submitter, false);
     UI.toast('¡Cuenta creada! Agenda tu primera sesión.', 'success');
     RS.App.go('agendar');
+    // Registra el perfil en Supabase: los datos se ven en todos los dispositivos
+    void (async () => {
+      try {
+        await RS.Supabase.auth.signUp(user.email, form.password.value, { full_name: user.name, phone: user.phone });
+      } catch (error) {
+        console.warn('No pudimos crear el perfil en Supabase:', error.message);
+      }
+    })();
   };
 
   RS.forms.quote = async (form, submitter) => {
@@ -974,5 +1075,6 @@
     renderQuoteThanks,
     clearSession,
     quoteEstimate,
+    restoreFromSupabase,
   };
 })();

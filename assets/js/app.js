@@ -384,6 +384,9 @@
   async function boot() {
     try {
       await RS.DB.init();
+      if (RS.Auth.restoreFromSupabase) {
+        await RS.Auth.restoreFromSupabase();
+      }
       RS.ui = RS.ui || {};
       RS.Auth.initActivity();
       document.addEventListener('click', onDocumentClick);
