@@ -1160,3 +1160,16 @@ h1 em {
     animation-duration: 0.01ms !important;
   }
 }
+
+.sauna-gif-section {
+  margin-bottom: 16px;
+}
+
+.sauna-gif {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
