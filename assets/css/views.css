@@ -111,7 +111,7 @@
   font-weight: 400;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.66);
+  color: var(--pine);
 }
 
 .hero-eyebrow > svg {
@@ -133,20 +133,20 @@
   font-weight: 300;
   letter-spacing: -0.02em;
   line-height: 1.02;
-  color: #fff;
+  color: var(--text);
 }
 
 .hero-copy h1 em {
   font-style: italic;
   font-weight: 400;
-  color: #ffd9bc;
+  color: var(--pine);
 }
 
 .hero-lead {
   max-width: 460px;
   font-size: 14px;
   line-height: 1.65;
-  color: rgba(255, 255, 255, 0.64);
+  color: var(--text-2);
 }
 
 .hero-list {
@@ -161,7 +161,7 @@
   align-items: flex-start;
   gap: 9px;
   font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.76);
+  color: var(--text-2);
 }
 
 .hero-list li svg {
@@ -189,12 +189,12 @@
   font-size: 23px;
   font-weight: 800;
   letter-spacing: -0.04em;
-  color: #fff;
+  color: var(--pine);
 }
 
 .hero-stats span {
   font-size: 10.5px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-2);
 }
 
 .hero-preview {
@@ -234,7 +234,7 @@
 
 .preview-muted {
   font-size: 10.5px;
-  color: rgba(255, 255, 255, 0.46);
+  color: var(--text-2);
 }
 
 .preview-main {
@@ -292,7 +292,7 @@
   align-items: center;
   gap: 5px;
   font-size: 10.5px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-2);
 }
 
 .preview-check {
@@ -309,12 +309,12 @@
 
 .preview-plan-top {
   font-size: 10.5px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-2);
   margin-bottom: 7px;
 }
 
 .preview-plan-top strong {
-  color: #fff;
+  color: var(--pine);
   font-size: 10.5px;
 }
 
@@ -337,7 +337,7 @@
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 9.5px;
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--text-2);
 }
 
 .preview-foot span {
@@ -349,7 +349,7 @@
 .hero-foot {
   margin-top: auto;
   font-size: 10.5px;
-  color: rgba(255, 255, 255, 0.32);
+  color: var(--text-2);
 }
 
 .hero-foot svg {
@@ -7465,6 +7465,18 @@
   display: flex;
   flex-direction: column;
   gap: 38px;
+}
+
+.sauna-gif-section {
+  margin-top: 6px;
+}
+
+.sauna-gif {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .sauna-video-section {

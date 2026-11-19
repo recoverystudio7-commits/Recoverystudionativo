@@ -335,6 +335,9 @@
     return `<div class="public-page">
       ${publicNav('sauna')}
       <main class="public-main sauna-main">
+        <section class="sauna-gif-section">
+          <img class="sauna-gif" src="assets/img/sauna.gif" alt="Sauna húmedo">
+        </section>
         <section class="sauna-video-section">
           <div class="section-intro">
             <span class="eyebrow">${UI.icon('video', 14)} Vídeo del espacio</span>
