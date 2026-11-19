@@ -1,27 +1,28 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v5';
+const CACHE = 'recovery-studio-v20';
 const ASSETS = [
   './',
   './index.html',
-  './gracias.html',
   './manifest.webmanifest',
   './sitemap.xml',
   './robots.txt',
   './assets/icon.svg',
-  './assets/css/styles.css',
-  './assets/css/views.css',
+  './assets/css/styles.css?v=4',
+  './assets/css/views.css?v=6',
   './assets/css/landing.css',
-  './assets/js/data.js',
-  './assets/js/analytics.js',
-  './assets/js/ui.js',
-  './assets/js/auth.js',
-  './assets/js/user.js',
-  './assets/js/admin-base.js',
-  './assets/js/admin-people.js',
-  './assets/js/admin-money.js',
-  './assets/js/admin-system.js',
-  './assets/js/reviews.js',
-  './assets/js/app.js',
+  './assets/js/data.js?v=5',
+  './assets/js/ui.js?v=2',
+  './assets/js/auth.js?v=6',
+  './assets/js/user.js?v=7',
+  './assets/js/admin-base.js?v=2',
+  './assets/js/admin-people.js?v=5',
+  './assets/js/admin-money.js?v=4',
+  './assets/js/admin-system.js?v=3',
+  './assets/js/content.js?v=3',
+  './assets/js/reviews.js?v=3',
+  './assets/js/supabase-client.js?v=2',
+  './assets/js/routine-sync.js?v=1',
+  './assets/js/app.js?v=5',
   './kinesiologia.html',
   './masajes.html',
   './sauna.html',
@@ -46,7 +47,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'reload' })
       .then((response) => {
         const copy = response.clone();
         caches.open(CACHE).then((cache) => cache.put(event.request, copy)).catch(() => {});
