@@ -8199,3 +8199,10 @@
     font-size: 15px;
   }
 }
+/* móvil: hero de login con más cuerpo visual, sin ser recargado */
+@media (max-width: 760px){
+  .hero-copy{align-items:center;text-align:center}
+  .brand-link{margin:0 auto 8px}
+  .hero-eyebrow{justify-content:center}
+  .hero-lead{text-align:center}
+}
