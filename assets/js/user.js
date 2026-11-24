@@ -1097,7 +1097,7 @@ function showBookingSuccess(session) {
 
   /* ------------------------------- acciones -------------------------------- */
 
-  RS.actions['book-confirm'] = () => {
+  RS.actions['book-confirm'] = async () => {
     RS.ui.booking.step = 1;
     let user = me();
     const b = bookingState();
@@ -1193,6 +1193,14 @@ function showBookingSuccess(session) {
     st().sessions.push(session);
     RS.DB.save();
     RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${trial ? ' (clase de prueba gratis)' : useCredit ? ' con crédito de plan' : ''}.`);
+    // Sube la reserva antes de redirigir: si no, la página gracias.html cancela la petición.
+    try {
+      await RS.SupabaseSync.pushAppointment(session);
+    } catch (error) {
+      console.warn('No se pudo sincronizar la reserva con Supabase:', error && error.message);
+      session.dirty = true;
+      RS.DB.save();
+    }
     RS.data.bookingNotification(session, user, service, st().settings).catch((error) => {
       console.error('No se pudieron enviar los correos de la reserva:', error);
     });
