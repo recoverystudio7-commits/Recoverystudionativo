@@ -20,6 +20,9 @@
   const store = { items: [], loadedAt: 0, promise: null };
 
   const SEED_NAMES = ['María González', 'Juan Pérez', 'Ana Torres', 'Carlos Rojas', 'Valentina Muñoz', 'Diego Soto', 'Camila Díaz', 'Felipe Vera', 'Sofía Castro', 'Sebastián López', 'Daniela Ríos', 'Tomás Herrera', 'Francisca Núñez', 'Matías Fuentes', 'Josefa Paredes'];
+  const FIRST_NAMES = ['Alejandra', 'Camila', 'Catalina', 'Daniela', 'Elena', 'Fernanda', 'Gabriela', 'Jimena', 'Magdalena', 'María', 'Matilde', 'Sofía', 'Valentina', 'Victor', 'Paula'];
+  const LAST_NAMES = ['Arteaga', 'Barra', 'Barrientos', 'Borges', 'Bravo', 'Cárdenas', 'Castro', 'Cortés', 'Durán', 'Espinoza', 'Fernández', 'García', 'Gómez', 'González', 'Hernández', 'López', 'Muñoz', 'Ojeda', 'Pérez', 'Quinteros', 'Rodríguez', 'Sánchez', 'Silva', 'Vega', 'Valenzuela'];
+  const randomName = () => `${FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]} ${LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]}`;
   const SEED_SERVICES = ['Sauna húmedo + recovery', 'Recovery deportivo', 'Recovery + movilidad', 'Entrenamiento 1:1', 'Sauna húmedo', 'Asesoría a distancia', 'Recovery muscular', 'Masaje deportivo'];
   const SEED_COMMENT_TEMPLATES = [
     'Me gustó cómo me ayudó a recuperarme después de entrenar.',
@@ -34,7 +37,7 @@
     'La orientación personalizada adaptó perfectamente mi recuperación.',
   ];
   const SEED_REVIEWS = Array.from({ length: 55 }, (_, i) => {
-    const author_name = SEED_NAMES[i] || `Cliente ${i + 1}`;
+    const author_name = SEED_NAMES[i] || randomName();
     const service = SEED_SERVICES[i % SEED_SERVICES.length];
     const comment = `${SEED_COMMENT_TEMPLATES[i % SEED_COMMENT_TEMPLATES.length]} (${service}, ${i + 1})`;
     const created_at = new Date(Date.UTC(2025, 10 + Math.floor(i / 24), 1 + (i * 7) % 28, 9 + (i % 12), 15)).toISOString();
