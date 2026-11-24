@@ -1307,8 +1307,47 @@ async function notifyBoth(client, subject, text, html, adminSubject, adminText) 
   return results;
 }
 
+/* Deja rastro de la reserva al enviar el correo: crea/actualiza la sesión en
+   Supabase aunque el cliente no tenga cuenta (la función crea un perfil oculto). */
+async function recordBooking(session, user, service) {
+  const config = RS.SupabaseConfig;
+  if (!config || !config.url || !RS.SupabaseSync || !RS.SupabaseSync.chileToIso) return { ok: false };
+  const startsAt = RS.SupabaseSync.chileToIso(session.date, session.time);
+  if (!startsAt) return { ok: false };
+  const duration = Number(session.duration) || (service && Number(service.duration)) || 60;
+  const endsAt = new Date(Date.parse(startsAt) + duration * 60000).toISOString();
+  const payment = ['plan', 'pagado', 'rechazado'].indexOf(session.payment) >= 0 ? session.payment : 'pendiente';
+  const payload = {
+    session: {
+      id: session.id,
+      serviceId: session.serviceId,
+      startsAt,
+      endsAt,
+      status: session.status === 'confirmada' ? 'confirmada' : 'pendiente',
+      paymentStatus: payment,
+      coach: session.coach || 'Daniel Barrueto',
+      notes: session.notes || '',
+      createdAt: session.createdAt || new Date().toISOString(),
+    },
+    client: { name: user.name, email: user.email, phone: user.phone || '' },
+  };
+  const res = await fetch(`${config.url.replace(/\/$/, '')}/functions/v1/record-booking`, {
+    method: 'POST',
+    headers: { apikey: config.anonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
 function bookingNotification(session, user, service, settings) {
   const U = RS.util;
+  // keepalive permite que el registro sobreviva a la redirección a gracias.html.
+  recordBooking(session, user, service).catch((error) => {
+    console.warn('No se pudo dejar rastro de la reserva en Supabase:', error.message);
+  });
   const mail = appointmentConfirmationEmail(session, user, service, settings);
   const cal = googleCalendarUrl(session);
   const html = emailShell(

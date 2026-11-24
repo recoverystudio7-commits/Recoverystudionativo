@@ -1,5 +1,5 @@
 /* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v21';
+const CACHE = 'recovery-studio-v22';
 const ASSETS = [
   './',
   './index.html',
@@ -10,10 +10,10 @@ const ASSETS = [
   './assets/css/styles.css?v=4',
   './assets/css/views.css?v=6',
   './assets/css/landing.css',
-  './assets/js/data.js?v=5',
+  './assets/js/data.js?v=6',
   './assets/js/ui.js?v=2',
   './assets/js/auth.js?v=6',
-  './assets/js/user.js?v=8',
+  './assets/js/user.js?v=9',
   './assets/js/admin-base.js?v=2',
   './assets/js/admin-people.js?v=5',
   './assets/js/admin-money.js?v=4',

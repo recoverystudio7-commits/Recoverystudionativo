@@ -4,6 +4,9 @@ project_id = "bkvjlpdkyjrfvvokqjsx"
 [functions.send-email]
 verify_jwt = false
 
+[functions.record-booking]
+verify_jwt = false
+
 [functions.calendar-ics]
 verify_jwt = false
 

@@ -1194,12 +1194,16 @@ function showBookingSuccess(session) {
     RS.DB.save();
     RS.data.addAudit(user.name, 'Sesión agendada', `${service.name} · ${U.fmtDate(b.date, 'long')} ${b.time} h${trial ? ' (clase de prueba gratis)' : useCredit ? ' con crédito de plan' : ''}.`);
     // Sube la reserva antes de redirigir: si no, la página gracias.html cancela la petición.
-    try {
-      await RS.SupabaseSync.pushAppointment(session);
-    } catch (error) {
-      console.warn('No se pudo sincronizar la reserva con Supabase:', error && error.message);
-      session.dirty = true;
-      RS.DB.save();
+    // Un invitado no tiene token: recordBooking() lo registra como perfil oculto.
+    const authSession = RS.Supabase.readSession && RS.Supabase.readSession();
+    if (authSession && authSession.access_token) {
+      try {
+        await RS.SupabaseSync.pushAppointment(session);
+      } catch (error) {
+        console.warn('No se pudo sincronizar la reserva con Supabase:', error && error.message);
+        session.dirty = true;
+        RS.DB.save();
+      }
     }
     RS.data.bookingNotification(session, user, service, st().settings).catch((error) => {
       console.error('No se pudieron enviar los correos de la reserva:', error);
