@@ -257,28 +257,32 @@ a:hover { color: var(--pine-dark); }
   margin-top: auto;
 }
 
-/* ---------- Sección "¿Quién te atiende?" ---------- */
-.auth-about {
-  display: flex;
-  justify-content: center;
-  padding: 34px 24px 26px;
-  background: var(--sand);
-  border-top: 1px solid var(--line);
+/* ---------- Bloque destacado arriba del inicio ---------- */
+.auth-intro {
+  grid-column: 1 / -1;
+  position: relative;
+  overflow: hidden;
+  padding: 26px 24px 28px;
+  background:
+    radial-gradient(620px 200px at 6% 0%, rgba(37, 99, 235, 0.14), transparent 70%),
+    radial-gradient(460px 200px at 94% 100%, rgba(230, 126, 34, 0.12), transparent 70%),
+    var(--sand-soft);
+  border-bottom: 1px solid var(--line);
 }
 .about-grid {
   width: 100%;
-  max-width: 900px;
+  max-width: 1120px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-  align-items: center;
+  gap: 16px;
+  align-items: stretch;
 }
 .about-card {
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--sand);
-  padding: 22px;
-  text-align: center;
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 18px;
   box-shadow: var(--shadow);
   transition: all var(--transition);
 }
@@ -287,10 +291,19 @@ a:hover { color: var(--pine-dark); }
   box-shadow: var(--shadow-md);
   border-color: var(--pine);
 }
+.about-identity {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  gap: 4px 16px;
+  align-items: start;
+  text-align: left;
+}
 .about-photo {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 14px;
+  grid-row: 1 / span 3;
+  width: 88px;
+  height: 88px;
+  margin: 0;
   border-radius: 50%;
   border: 3px solid var(--pine);
   overflow: hidden;
@@ -302,7 +315,15 @@ a:hover { color: var(--pine-dark); }
   object-fit: cover;
   display: block;
 }
+.about-space {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  margin: 0;
+}
 .about-space-frame {
+  flex: 1;
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -310,41 +331,42 @@ a:hover { color: var(--pine-dark); }
 }
 .about-space-frame img {
   width: 100%;
-  height: 130px;
+  height: 190px;
   object-fit: cover;
   display: block;
 }
 .about-title {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 18px;
   color: var(--ink);
 }
 .about-bio {
-  margin: 0 0 16px;
-  font-size: 14px;
-  line-height: 1.6;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
   color: var(--text-2);
 }
 .about-space-label {
   font-size: 11px;
-  color: var(--muted);
+  font-weight: 700;
+  color: var(--pine);
   display: block;
-  margin-top: 10px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .about-card .btn-accent {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
+  justify-self: start;
+  width: auto;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-top: 10px;
 }
 @media (max-width: 768px) {
-  .about-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .about-photo { width: 90px; height: 90px; }
-  .about-space-frame img { height: 100px; }
+  .auth-intro { padding: 22px 18px 24px; }
+  .about-grid { grid-template-columns: 1fr; gap: 14px; }
+  .about-identity { grid-template-columns: 76px minmax(0, 1fr); }
+  .about-photo { width: 76px; height: 76px; }
+  .about-space-frame img { height: 170px; }
 }
 
 /* ---------- Utilidades ---------- */
