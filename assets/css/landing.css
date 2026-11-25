@@ -4,7 +4,87 @@
    Tipografía: Fraunces (display) + DM Sans (body) + DM Mono (etiquetas y cifras)
    ========================================================================== */
 
-/* Importar variables base de styles.css - landing.css usa las mismas variables */
+:root {
+  /* Paleta principal unificada */
+  --ink: #0F172A;
+  --ink-soft: #64748b;
+  --ink-muted: #94a3b8;
+  --white: #FFFFFF;
+  --gray-50: #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+
+  --blue: #2563EB;
+  --blue-600: #1D4ED8;
+  --blue-700: #1E40AF;
+  --blue-50: #EFF6FF;
+  --blue-100: #DBEAFE;
+
+  --orange: #E67E22;
+  --orange-600: #D97706;
+  --orange-700: #B45309;
+  --orange-50: #FFF7ED;
+  --orange-100: #FFEDD5;
+
+  --gold: #D4A017;
+  --gold-600: #B45309;
+  --gold-50: #FFFBEB;
+  --gold-100: #FEF3C7;
+
+  --success: #15803D;
+  --success-50: #DCFCE7;
+  --success-100: #BBF7D0;
+
+  --warning: #D97706;
+  --warning-50: #FEF3C7;
+  --warning-100: #FDE68A;
+
+  --danger: #DC2626;
+  --danger-50: #FEF2F2;
+  --danger-100: #FECACA;
+
+  /* Alias de compatibilidad */
+  --navy: var(--blue);
+  --navy-700: var(--blue-700);
+  --navy-600: var(--blue-50);
+  --clay: var(--orange);
+  --clay-deep: var(--orange-600);
+  --clay-soft: var(--orange-50);
+  --pine: var(--blue);
+  --pine-deep: var(--blue-700);
+  --pine-soft: var(--blue-50);
+
+  /* Fondos y superficies */
+  --bg: var(--white);
+  --surface: var(--white);
+  --surface-2: var(--gray-50);
+  --surface-3: var(--gray-100);
+  --border: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --text: var(--ink);
+  --text-2: var(--ink-soft);
+  --muted: var(--ink-muted);
+  --muted-2: var(--ink-muted);
+
+  /* Espaciado y forma */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 28px -8px rgba(15, 23, 42, 0.12), 0 4px 8px -4px rgba(15, 23, 42, 0.06);
+  --shadow-xl: 0 20px 40px -12px rgba(15, 23, 42, 0.15), 0 8px 16px -8px rgba(15, 23, 42, 0.08);
+
+  /* Tipografía */
+  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font: var(--font-body);
+}
 
 /* ==========================================================================
    Reset & Base específicos para landing
