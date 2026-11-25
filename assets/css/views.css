@@ -345,15 +345,15 @@
 .chart-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
 .chart-legend .dot.income { background: var(--success); }
 .chart-legend .dot.expense { background: var(--orange); }
-.chart { display: flex; align-items: flex-end; gap: 12px; height: 200px; padding: 16px 0; position: relative; }
-.chart-grid-lines { position: absolute; inset: 0 0 56px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.chart { display: flex; align-items: flex-end; gap: 12px; height: 220px; padding: 16px 0; position: relative; }
+.chart-grid-lines { position: absolute; inset: 0 0 64px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; z-index: 0; }
 .chart-grid-lines span { border-top: 1px solid var(--border); }
-.chart-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
-.chart-bars { display: flex; align-items: flex-end; gap: 8px; width: 100%; height: 100%; justify-content: center; }
-.bar { width: 28px; border-radius: 5px 5px 0 0; transition: height 0.5s var(--ease-out); min-height: 8px; }
-.bar-income { background: var(--success); box-shadow: 0 0 8px rgba(21,128,61,0.3); }
-.bar-expense { background: var(--orange); box-shadow: 0 0 8px rgba(230,126,34,0.3); }
-.chart-values { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-top: 10px; font-size: 13px; font-family: var(--font-display); font-weight: 600; color: var(--ink); }
+.chart-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; height: 100%; }
+.chart-bars { display: flex; align-items: flex-end; gap: 8px; width: 100%; flex: 1; min-height: 40px; justify-content: center; position: relative; z-index: 1; }
+.bar { width: 32px; border-radius: 6px 6px 0 0; transition: height 0.5s var(--ease-out); min-height: 12px; position: relative; z-index: 1; }
+.bar-income { background: var(--success); box-shadow: 0 0 10px rgba(21,128,61,0.4); }
+.bar-expense { background: var(--orange); box-shadow: 0 0 10px rgba(230,126,34,0.4); }
+.chart-values { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-top: 10px; font-size: 15px; font-family: var(--font-display); font-weight: 700; color: var(--ink); }
 .chart-month { margin-top: 12px; font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--ink); text-transform: uppercase; }
 .week-nav { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
 .week-label { display: flex; flex-direction: column; gap: 2px; text-align: center; }
