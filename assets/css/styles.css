@@ -1130,7 +1130,21 @@ select.input {
 .session-list { display: flex; flex-direction: column; gap: 12px; }
 .session-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); transition: border-color 0.15s, box-shadow 0.15s; }
 .session-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
-.session-compact { padding: 14px 16px; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; }
+.session-compact {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.session-compact:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
 
 .date-badge { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 64px; height: 74px; border-radius: var(--radius); background: var(--gray-50); border: 1px solid var(--border); line-height: 1; flex: 0 0 auto; }
 .session-compact .date-badge { width: 56px; height: 64px; }
@@ -1150,25 +1164,30 @@ select.input {
 .session-compact .session-actions { grid-column: 2; }
 
 .training-widget .card-body { display: flex; flex-direction: column; gap: 14px; }
-.routine-mini { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius); background: var(--gray-50); border: 1px solid var(--border); }
-.routine-mini-icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: var(--radius); background: var(--blue-50); color: var(--blue); flex: 0 0 auto; }
+.routine-mini { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--radius); background: var(--white); border: 1px solid var(--border); box-shadow: var(--shadow-xs); transition: border-color 0.15s, box-shadow 0.15s; }
+.routine-mini:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.routine-mini-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius); background: var(--blue-50); color: var(--blue); flex: 0 0 auto; }
 .routine-mini > div { display: flex; flex-direction: column; min-width: 0; }
-.routine-mini strong { font-size: 12.5px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.routine-mini span { font-size: 10.5px; color: var(--muted); }
+.routine-mini strong { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.routine-mini span { font-size: 11px; color: var(--ink-soft); }
 
-.max-mini-list { display: flex; flex-direction: column; gap: 8px; }
-.max-mini { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+.max-mini-list { display: flex; flex-direction: column; gap: 6px; }
+.max-mini { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius); background: var(--white); border: 1px solid var(--border); transition: border-color 0.15s, box-shadow 0.15s; }
+.max-mini:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
 .max-mini:last-child { border-bottom: none; }
-.max-mini-icon { display: inline-flex; color: var(--muted); }
-.max-mini-name { flex: 1; min-width: 0; font-size: 12px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.max-mini strong { font-family: var(--font-display); font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.max-mini-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius); background: var(--gray-100); color: var(--muted); flex: 0 0 auto; }
+.max-mini-name { flex: 1; min-width: 0; font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.max-mini strong { font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: var(--ink); }
 
 .quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.quick-action { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--gray-50); transition: border-color 0.15s, background 0.15s, transform 0.12s, box-shadow 0.15s; }
-.quick-action:hover { border-color: var(--border-strong); background: var(--white); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.quick-action > span:first-child { display: inline-flex; color: var(--blue); margin-bottom: 4px; }
-.quick-action strong { font-size: 12.5px; font-weight: 700; color: var(--ink); }
-.quick-action span:last-child { font-size: 10.5px; color: var(--muted); }
+.quick-action { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--white); transition: border-color 0.15s, background 0.15s, transform 0.12s, box-shadow 0.15s; box-shadow: var(--shadow-xs); }
+.quick-action:hover { border-color: var(--border-strong); background: var(--gray-50); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.quick-action > span:first-child { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius); background: var(--blue-50); color: var(--blue); margin-bottom: 6px; }
+.quick-action strong { font-size: 13px; font-weight: 700; color: var(--ink); }
+.quick-action span:last-child { font-size: 11px; color: var(--ink-soft); }
+
+/* Empty state for upcoming sessions */
+.session-list .empty { padding: 32px 20px; }
 
 /* ==========================================================================
    Booking layout (logged in)
