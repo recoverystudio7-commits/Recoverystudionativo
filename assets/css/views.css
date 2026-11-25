@@ -430,9 +430,9 @@
 .breakdown-total strong { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--ink); }
 
 .expense-list { display: flex; flex-direction: column; gap: 10px; }
-.expense-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 16px; align-items: center; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--white); transition: border-color 0.15s, box-shadow 0.15s; }
+.expense-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--white); transition: border-color 0.15s, box-shadow 0.15s; }
 .expense-row:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
-.expense-cat { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--blue-50); color: var(--blue); font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+.expense-cat { display: inline-flex; align-items: center; gap: 6px; justify-self: start; padding: 4px 10px; border-radius: 999px; background: var(--blue-50); color: var(--blue); font-size: 10.5px; font-weight: 700; white-space: nowrap; }
 .expense-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .expense-info strong { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .expense-info span { font-size: 11px; color: var(--muted); }
@@ -564,8 +564,9 @@
   .week-day { min-width: 72px; padding: 8px 6px; }
   .agenda-item { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
   .agenda-actions { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: center; width: 100%; grid-column: 1 / -1; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
-  .expense-row { grid-template-columns: 1fr auto; gap: 12px; }
-  .expense-amount { grid-column: 2; }
+  .expense-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .expense-info { flex: 1 1 100%; order: 3; }
+  .expense-amount { margin-left: auto; }
   .honorarios-note { grid-template-columns: repeat(3, 1fr); }
   .formula { gap: 12px; }
   .formula-step { min-width: 120px; padding: 12px 16px; }
@@ -592,7 +593,6 @@
   .agenda-main .avatar { align-self: flex-start; }
   .agenda-info p { margin: 0; }
   .agenda-actions { flex-direction: row; flex-wrap: wrap; width: 100%; justify-content: flex-start; }
-  .expense-row { grid-template-columns: 1fr; }
   .expense-amount { text-align: left; }
   .honorarios-note { grid-template-columns: 1fr; }
   .formula { flex-direction: column; gap: 12px; }
