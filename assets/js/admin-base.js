@@ -121,10 +121,10 @@
         <div class="chart-grid-lines"><span></span><span></span><span></span><span></span></div>
         ${rows.map((r) => `<div class="chart-col" title="${U.esc(U.monthLabel(r.key))}: ingresos ${U.fmtMoney(r.income)} · gastos ${U.fmtMoney(r.expenses)}">
           <div class="chart-bars">
-            <span class="bar bar-income" style="height:${Math.max(2, (r.income / max) * 100)}%"></span>
-            <span class="bar bar-expense" style="height:${Math.max(2, (r.expenses / max) * 100)}%"></span>
+            <span class="bar bar-income" style="height:${Math.max(5, (r.income / max) * 100)}%"></span>
+            <span class="bar bar-expense" style="height:${Math.max(5, (r.expenses / max) * 100)}%"></span>
           </div>
-          <div class="chart-values"><span>${compactMoney(r.income)}</span><span>${compactMoney(r.expenses)}</span></div>
+          <div class="chart-values"><span>${U.fmtMoney(r.income)}</span><span>${U.fmtMoney(r.expenses)}</span></div>
           <span class="chart-month">${U.esc(U.MONTHS_SHORT[Number(r.key.slice(5, 7)) - 1])}</span>
         </div>`).join('')}
       </div>
