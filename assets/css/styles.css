@@ -87,6 +87,11 @@
   --font-mono: 'DM Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --font: var(--font-body);
 
+  /* Alias heredados de la v1 (usados por estilos de vistas restaurados) */
+  --mono: var(--font-mono);
+  --serif: var(--font-display);
+  --sand: var(--gray-100);
+
   /* Layout */
   --sidebar-w: 280px;
   --topbar-h: 72px;

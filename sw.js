@@ -1,5 +1,5 @@
-/* Recovery Studio — Service worker (solo cuando se sirve por HTTP/HTTPS) */
-const CACHE = 'recovery-studio-v31';
+/* Recovery Studio â€” Service worker (solo cuando se sirve por HTTP/HTTPS) */
+const CACHE = 'recovery-studio-v32';
 const ASSETS = [
   './',
   './index.html',
@@ -7,8 +7,8 @@ const ASSETS = [
   './sitemap.xml',
   './robots.txt',
   './assets/icon.svg',
-  './assets/css/styles.css?v=8',
-  './assets/css/views.css?v=12',
+  './assets/css/styles.css?v=9',
+  './assets/css/views.css?v=13',
   './assets/css/premium.css?v=4',
   './assets/css/landing.css?v=5',
   './assets/js/data.js?v=7',
@@ -42,8 +42,8 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-/* Red primero: así las actualizaciones del sitio se ven de inmediato.
-   Si no hay conexión, se responde con la copia en caché. */
+/* Red primero: asÃ­ las actualizaciones del sitio se ven de inmediato.
+   Si no hay conexiÃ³n, se responde con la copia en cachÃ©. */
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
