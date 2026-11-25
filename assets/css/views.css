@@ -325,7 +325,120 @@
 .admin-review-date { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; }
 
 /* ==========================================================================
-   9. Sauna page (embed en app)
+   9. Agenda (admin)
+   ========================================================================== */
+
+.week-card { margin-bottom: 20px; }
+.week-nav { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.week-label { display: flex; flex-direction: column; gap: 2px; text-align: center; }
+.week-label span { font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.week-label strong { font-family: var(--font-display); font-size: 16px; color: var(--ink); }
+
+.week-strip { display: flex; gap: 8px; overflow-x: auto; padding: 12px 20px; scrollbar-width: thin; }
+.week-day { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 0 0 auto; min-width: 84px; padding: 10px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--gray-50); color: var(--ink-soft); font-size: 12.5px; transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s; cursor: pointer; }
+.week-day:hover:not(.selected) { border-color: var(--border-strong); background: var(--white); color: var(--ink); }
+.week-day.selected { border-color: var(--blue); background: var(--blue); color: var(--white); box-shadow: 0 6px 16px -8px rgba(37,99,235,0.4); }
+.week-day.today { border-color: var(--orange); }
+.week-day.today:not(.selected) { background: var(--orange-50); }
+.week-day span { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: inherit; opacity: 0.7; }
+.week-day strong { font-family: var(--font-display); font-size: 20px; font-weight: 700; line-height: 1; color: inherit; }
+.week-day em { font-style: normal; font-size: 10.5px; font-weight: 600; color: inherit; opacity: 0.8; }
+.week-day.selected em { color: var(--gold); }
+
+.agenda-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+.agenda-day-card { min-height: 500px; }
+.agenda-timeline { display: flex; flex-direction: column; gap: 12px; }
+.agenda-item { display: grid; grid-template-columns: 72px minmax(0, 1fr) 80px; gap: 16px; align-items: start; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); transition: border-color 0.15s, box-shadow 0.15s; }
+.agenda-item:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+.agenda-item.is-cancelled { opacity: 0.5; background: var(--gray-50); }
+.agenda-time { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12.5px; color: var(--muted); }
+.agenda-time strong { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--ink); }
+.agenda-card { display: flex; gap: 12px; min-width: 0; }
+.agenda-line { width: 2px; background: linear-gradient(180deg, var(--blue), var(--orange)); border-radius: 1px; flex: 0 0 auto; margin-top: 4px; }
+.agenda-main { display: flex; gap: 12px; flex: 1; min-width: 0; }
+.agenda-main .avatar { width: 40px; height: 40px; font-size: 14px; flex: 0 0 auto; }
+.agenda-info { flex: 1; min-width: 0; }
+.agenda-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.agenda-name strong { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.agenda-info p { margin: 0; font-size: 12px; color: var(--ink-soft); }
+.agenda-note { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+.agenda-pay { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: var(--muted); margin-top: 4px; }
+.agenda-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+
+.agenda-side { display: flex; flex-direction: column; gap: 16px; }
+.free-slots { display: flex; flex-direction: column; gap: 8px; }
+.free-slot-row { display: flex; align-items: center; gap: 8px; }
+.free-slot { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--gray-50); font-size: 12.5px; font-weight: 600; color: var(--ink-soft); transition: border-color 0.15s, background 0.15s, color 0.15s; white-space: nowrap; cursor: pointer; }
+.free-slot:hover { border-color: var(--blue); background: var(--blue-50); color: var(--blue); }
+.blocked-slots { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.blocked-slots strong { display: block; font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+.blocked-slot-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; font-size: 12.5px; color: var(--ink-soft); }
+.free-legend { margin-top: 12px; font-size: 11.5px; color: var(--muted); }
+
+.recurring-list { display: flex; flex-direction: column; gap: 8px; }
+.recurring-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--white); }
+.recurring-row > div { display: flex; flex-direction: column; gap: 2px; }
+.recurring-row strong { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.recurring-row span { font-size: 11.5px; color: var(--muted); }
+
+.day-summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+.day-summary > div { display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--gray-50); text-align: center; }
+.day-summary span { font-size: 10.5px; color: var(--muted); }
+.day-summary strong { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--ink); }
+
+/* ==========================================================================
+   10. Finanzas (admin)
+   ========================================================================== */
+
+.finance-grid { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 20px; align-items: start; }
+
+.breakdown { display: flex; flex-direction: column; gap: 8px; }
+.breakdown-row { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--white); transition: border-color 0.15s; }
+.breakdown-row:hover { border-color: var(--border-strong); }
+.breakdown-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.breakdown-top span { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.breakdown-top em { font-style: normal; font-size: 11px; color: var(--muted); }
+.breakdown-top strong { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--ink); }
+.breakdown-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--border); }
+.breakdown-total span { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.breakdown-total strong { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--ink); }
+
+.expense-list { display: flex; flex-direction: column; gap: 10px; }
+.expense-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 16px; align-items: center; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--white); transition: border-color 0.15s, box-shadow 0.15s; }
+.expense-row:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.expense-cat { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--blue-50); color: var(--blue); font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+.expense-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.expense-info strong { font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.expense-info span { font-size: 11px; color: var(--muted); }
+.expense-amount { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--ink); text-align: right; white-space: nowrap; }
+
+.expense-breakdown { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.breakdown-mini { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; font-size: 12px; }
+.breakdown-mini span { color: var(--ink-soft); }
+.breakdown-mini strong { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--ink); }
+
+/* ==========================================================================
+   11. Honorarios (admin)
+   ========================================================================== */
+
+.honorarios-note { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.honorarios-note > div { display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--gray-50); text-align: center; }
+.honorarios-note span { font-size: 11px; color: var(--muted); }
+.honorarios-note strong { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--ink); }
+
+.formula { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px; padding: 24px 16px; }
+.formula-step { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); min-width: 140px; text-align: center; }
+.formula-step span { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.formula-step strong { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--ink); }
+.formula-step.accent { border-color: var(--orange); background: var(--orange-50); }
+.formula-step.accent strong { color: var(--orange-600); }
+.formula-step.success { border-color: var(--success); background: var(--success-50); }
+.formula-step.success strong { color: var(--success); }
+.formula-op { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--muted); line-height: 1; }
+.formula-note { margin-top: 16px !important; font-size: 12px; color: var(--muted); text-align: center; }
+
+/* ==========================================================================
+   12. Sauna page (embed en app)
    ========================================================================== */
 
 .sauna-page { max-width: 880px; margin: 0 auto; }
@@ -406,6 +519,9 @@
   .alert-actions { justify-content: flex-start; }
   .content-grid { grid-template-columns: 1fr; }
   .library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .agenda-layout { grid-template-columns: 1fr; }
+  .finance-grid { grid-template-columns: 1fr; }
+  .honorarios-note { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
@@ -419,6 +535,15 @@
   .admin-review-meta { flex-wrap: wrap; }
   .library-grid { grid-template-columns: 1fr; }
   .club-stats { grid-template-columns: 1fr; }
+  .week-day { min-width: 72px; padding: 8px 6px; }
+  .agenda-item { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
+  .agenda-actions { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: center; width: 100%; grid-column: 1 / -1; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .expense-row { grid-template-columns: 1fr auto; gap: 12px; }
+  .expense-amount { grid-column: 2; }
+  .honorarios-note { grid-template-columns: repeat(3, 1fr); }
+  .formula { gap: 12px; }
+  .formula-step { min-width: 120px; padding: 12px 16px; }
+  .formula-op { font-size: 24px; }
 }
 
 @media (max-width: 640px) {
@@ -430,4 +555,21 @@
   .sauna-cta-band { flex-direction: column; align-items: flex-start; padding: 28px 20px; }
   .sauna-cta-actions { width: 100%; }
   .sauna-cta-actions .btn { width: 100%; }
+  .week-strip { padding: 8px 12px; }
+  .week-day { min-width: 64px; padding: 8px 4px; }
+  .week-day strong { font-size: 16px; }
+  .agenda-item { grid-template-columns: 1fr; gap: 8px; padding: 12px; }
+  .agenda-time { flex-direction: row; justify-content: space-between; align-items: center; width: 100%; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .agenda-card { flex-direction: column; gap: 8px; }
+  .agenda-line { display: none; }
+  .agenda-main { flex-direction: column; }
+  .agenda-main .avatar { align-self: flex-start; }
+  .agenda-info p { margin: 0; }
+  .agenda-actions { flex-direction: row; flex-wrap: wrap; width: 100%; justify-content: flex-start; }
+  .expense-row { grid-template-columns: 1fr; }
+  .expense-amount { text-align: left; }
+  .honorarios-note { grid-template-columns: 1fr; }
+  .formula { flex-direction: column; gap: 12px; }
+  .formula-op { display: none; }
+  .formula-step { width: 100%; min-width: 0; }
 }
